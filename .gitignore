@@ -56,3 +56,10 @@ samconfig.toml
 
 # TypeORM
 *.db
+
+# TypeScript incremental build
+*.tsbuildinfo
+
+# Python coverage binary
+.coverage
+.coverage.*

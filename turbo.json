@@ -14,7 +14,8 @@
     "test": {
       "dependsOn": ["^build"],
       "inputs": ["src/**", "test/**", "package.json"],
-      "outputs": ["coverage/**"]
+      "outputs": ["coverage/**"],
+      "cache": false
     },
     "lint": {
       "inputs": ["src/**", "test/**", "eslint.config.mjs", ".eslintignore"]

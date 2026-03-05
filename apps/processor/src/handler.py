@@ -5,6 +5,7 @@ Two event types are handled:
   1. SQS trigger  — document processing (parse a death certificate)
   2. Direct invoke — document generation (render a legal letter template to PDF)
 """
+
 import json
 import logging
 from typing import Any

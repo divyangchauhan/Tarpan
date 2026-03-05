@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git fetch:*)"
+      "Bash(git fetch:*)",
+      "Bash(pnpm test:*)",
+      "Bash(poetry:*)",
+      "Bash(cd /home/divyang/claude-code/AfterLight && pnpm lint && pnpm typecheck && pnpm test 2>&1)"
     ]
   }
 }

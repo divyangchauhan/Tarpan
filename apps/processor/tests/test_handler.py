@@ -1,6 +1,6 @@
 """Basic smoke tests for the Lambda handler routing logic."""
+
 import json
-from unittest.mock import patch
 
 from src.handler import handler
 
