@@ -18,11 +18,11 @@
 | ID | Task | Status | Notes |
 |---|---|---|---|
 | P0-01 | README, ARCHITECTURE, TASKS, CLAUDE.md docs | ✅ | PR #1 |
-| P0-02 | Monorepo scaffold (pnpm workspaces + Turborepo) | ⬜ | |
-| P0-03 | Docker Compose for local dev (PostgreSQL, LocalStack) | ⬜ | |
-| P0-04 | CI pipeline (GitHub Actions: lint, type-check, test) | ⬜ | |
-| P0-05 | ESLint + Prettier config (shared across workspaces) | ⬜ | |
-| P0-06 | Shared TypeScript types package (`packages/shared`) | ⬜ | |
+| P0-02 | Monorepo scaffold (pnpm workspaces + Turborepo) | ✅ | PR #2 |
+| P0-03 | Docker Compose for local dev (PostgreSQL, LocalStack) | ✅ | PR #2 |
+| P0-04 | CI pipeline (GitHub Actions: lint, type-check, test) | ✅ | PR #2 |
+| P0-05 | ESLint + Prettier config (shared across workspaces) | ✅ | PR #2 |
+| P0-06 | Shared TypeScript types package (`packages/shared`) | ✅ | PR #2 |
 
 ---
 
