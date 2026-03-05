@@ -1,0 +1,58 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+.next/
+.nuxt/
+out/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+*.pyc
+
+# CDK
+cdk.out/
+cdk.context.json
+
+# Coverage
+coverage/
+.nyc_output/
+htmlcov/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Turborepo
+.turbo/
+
+# Logs
+*.log
+logs/
+
+# AWS
+.aws-sam/
+samconfig.toml
+
+# TypeORM
+*.db
