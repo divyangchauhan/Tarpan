@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ─── TypeScript: lint, typecheck, test ───────────────────────────────────────
+  typescript:
+    name: TypeScript (lint · typecheck · test)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build shared package
+        run: pnpm --filter @afterlight/shared build
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Type check
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test
+
+  # ─── Python: lint, typecheck, test ───────────────────────────────────────────
+  python:
+    name: Python (ruff · mypy · pytest)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: apps/processor
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Poetry
+        run: pip install "poetry>=2.0.0"
+
+      - name: Install dependencies
+        run: poetry install --with dev
+
+      - name: Lint (ruff)
+        run: poetry run ruff check src tests
+
+      - name: Format check (black)
+        run: poetry run black --check src tests
+
+      - name: Type check (mypy)
+        run: poetry run mypy src
+
+      - name: Test (pytest)
+        run: poetry run pytest
+        env:
+          ANTHROPIC_API_KEY: sk-ant-test
+          API_CALLBACK_URL: http://localhost:3001
+          INTERNAL_API_SECRET: test-secret
