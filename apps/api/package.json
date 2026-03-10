@@ -70,7 +70,8 @@
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
     "moduleNameMapper": {
-      "^@afterlight/shared(.*)$": "<rootDir>/../../packages/shared/src$1"
+      "^@afterlight/shared(.*)$": "<rootDir>/../../../packages/shared/src$1",
+      "^@api/(.*)$": "<rootDir>/$1"
     }
   }
 }
