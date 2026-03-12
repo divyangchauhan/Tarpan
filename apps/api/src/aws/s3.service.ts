@@ -15,8 +15,14 @@ export class S3Service {
   private readonly client: S3Client;
 
   constructor(private readonly config: ConfigService) {
+    const endpoint = config.get<string>('AWS_ENDPOINT_URL');
     this.client = new S3Client({
       region: config.getOrThrow<string>('AWS_REGION'),
+      requestChecksumCalculation: 'WHEN_REQUIRED',
+      ...(endpoint && {
+        endpoint,
+        forcePathStyle: true, // required for LocalStack — virtual-hosted style doesn't work locally
+      }),
     });
   }
 
