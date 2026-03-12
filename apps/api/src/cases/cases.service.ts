@@ -60,10 +60,10 @@ export class CasesService {
     }
 
     if (dto.deceasedInfo !== undefined) {
-      caseEntity.deceasedInfo = {
-        ...caseEntity.deceasedInfo,
-        ...dto.deceasedInfo,
-      };
+      const patch = Object.fromEntries(
+        Object.entries(dto.deceasedInfo).filter(([, v]) => v !== undefined),
+      );
+      caseEntity.deceasedInfo = { ...caseEntity.deceasedInfo, ...patch };
     }
 
     const updated = await this.caseRepository.save(caseEntity);
