@@ -48,7 +48,7 @@ export class DocumentsService {
       : 'bin';
     const s3Key = `cases/${caseEntity.id}/documents/${documentId}.${extension}`;
 
-    const bucket = this.config.getOrThrow<string>('AWS_S3_BUCKET');
+    const bucket = this.config.getOrThrow<string>('S3_UPLOADS_BUCKET');
     const uploadUrl = await this.s3Service.generateUploadUrl(
       bucket,
       s3Key,
@@ -115,7 +115,7 @@ export class DocumentsService {
       s3Key: document.s3Key,
     };
 
-    const queueUrl = this.config.getOrThrow<string>('AWS_SQS_QUEUE_URL');
+    const queueUrl = this.config.getOrThrow<string>('SQS_DOCUMENT_PROCESSING_QUEUE_URL');
     await this.sqsService.sendMessage(queueUrl, job as unknown as Record<string, unknown>);
 
     this.logger.log(`Enqueued processing for document ${documentId}`);

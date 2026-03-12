@@ -14,7 +14,7 @@ export class InternalSecretGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<Request>();
     const incomingSecret = request.headers['x-internal-secret'];
-    const expectedSecret = this.config.getOrThrow<string>('API_INTERNAL_SECRET');
+    const expectedSecret = this.config.getOrThrow<string>('INTERNAL_API_SECRET');
 
     if (!incomingSecret || incomingSecret !== expectedSecret) {
       throw new UnauthorizedException('Invalid internal secret');
