@@ -49,12 +49,12 @@
 
 | ID | Task | Status | Notes |
 |---|---|---|---|
-| P2-01 | Lambda project scaffold (Poetry, handler structure) | ⬜ | |
-| P2-02 | S3 download helper | ⬜ | |
-| P2-03 | PDF-to-image preprocessing (PDFPlumber + Pillow) | ⬜ | |
-| P2-04 | Claude API integration: death certificate extraction prompt | ⬜ | |
-| P2-05 | Structured output parsing & validation (Pydantic) | ⬜ | |
-| P2-06 | Result upload back to S3 + API PATCH callback | ⬜ | |
+| P2-01 | Lambda project scaffold (Poetry, handler structure) | ✅ | PR #4 |
+| P2-02 | S3 download helper | ✅ | PR #4 |
+| P2-03 | PDF-to-image preprocessing (PDFPlumber + Pillow) | ✅ | PR #4 |
+| P2-04 | Claude API integration: death certificate extraction prompt | ✅ | PR #4 |
+| P2-05 | Structured output parsing & validation (Pydantic) | ✅ | PR #4 |
+| P2-06 | Result upload back to S3 + API PATCH callback | ✅ | PR #4 |
 | P2-07 | Institution template engine (Jinja2 → HTML → PDF via WeasyPrint) | ⬜ | |
 | P2-08 | Template: Social Security Administration (SSA-721) | ⬜ | |
 | P2-09 | Template: Medicare notification | ⬜ | |
