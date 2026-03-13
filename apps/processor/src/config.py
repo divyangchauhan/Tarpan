@@ -15,6 +15,11 @@ class Settings(BaseSettings):
     # Anthropic
     anthropic_api_key: str
 
+    # SQS
+    sqs_document_processing_queue_url: str = (
+        "http://localhost:4566/000000000000/afterlight-document-processing"
+    )
+
     # API callback
     api_callback_url: str
     internal_api_secret: str
