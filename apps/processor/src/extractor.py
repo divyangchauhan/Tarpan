@@ -88,7 +88,7 @@ def extract_certificate_data(
 
     logger.info("Calling Claude API for extraction", extra={"block_count": len(content)})
 
-    response = client.messages.create(
+    response = client.messages.create(  # type: ignore[call-overload]
         model=_MODEL,
         max_tokens=1024,
         system=_SYSTEM_PROMPT,
