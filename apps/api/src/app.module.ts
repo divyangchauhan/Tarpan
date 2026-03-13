@@ -2,6 +2,12 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { DatabaseModule } from './database/database.module';
+import { AwsModule } from './aws/aws.module';
+import { AuthModule } from './auth/auth.module';
+import { CasesModule } from './cases/cases.module';
+import { DocumentsModule } from './documents/documents.module';
+import { EventsModule } from './events/events.module';
 
 @Module({
   imports: [
@@ -9,12 +15,12 @@ import { AppService } from './app.service';
       isGlobal: true,
       envFilePath: '.env',
     }),
-    // Feature modules will be imported here in subsequent PRs:
-    // TypeOrmModule.forRootAsync(...),
-    // AuthModule,
-    // CasesModule,
-    // DocumentsModule,
-    // GenerationModule,
+    DatabaseModule,
+    AwsModule,
+    AuthModule,
+    CasesModule,
+    DocumentsModule,
+    EventsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,0 +1,826 @@
+{
+  "info": {
+    "name": "AfterLight API",
+    "_postman_id": "afterlight-api-collection-v1",
+    "description": "AfterLight API — all endpoints for local development.\n\nBase URL: http://localhost:3001\n\n## Quick Start\n1. Run `docker compose up -d` (Postgres + LocalStack)\n2. Run `pnpm --filter api dev`\n3. Call **Auth / Register** or **Auth / Login** — the collection auto-saves `access_token` and `refresh_token` to variables.\n4. All protected routes use `{{access_token}}` automatically.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3001",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "case_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "document_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/health",
+              "host": ["{{base_url}}"],
+              "path": ["api", "health"]
+            },
+            "description": "Returns API status and current timestamp. No authentication required."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/api/health",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "health"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"status\": \"ok\",\n  \"timestamp\": \"2026-03-12T10:00:00.000Z\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.accessToken) {",
+                  "  pm.collectionVariables.set('access_token', res.accessToken);",
+                  "  pm.collectionVariables.set('refresh_token', res.refreshToken);",
+                  "  console.log('Tokens saved to collection variables.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jane.doe@example.com\",\n  \"password\": \"SecurePass123\",\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Doe\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "register"]
+            },
+            "description": "Register a new user. On success, `access_token` and `refresh_token` are automatically saved to collection variables."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"jane.doe@example.com\",\n  \"password\": \"SecurePass123\",\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Doe\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/auth/register",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "auth", "register"]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"refreshToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.accessToken) {",
+                  "  pm.collectionVariables.set('access_token', res.accessToken);",
+                  "  pm.collectionVariables.set('refresh_token', res.refreshToken);",
+                  "  console.log('Tokens saved to collection variables.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jane.doe@example.com\",\n  \"password\": \"SecurePass123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "login"]
+            },
+            "description": "Login with email and password. On success, `access_token` and `refresh_token` are automatically saved to collection variables."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"jane.doe@example.com\",\n  \"password\": \"SecurePass123\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/auth/login",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "auth", "login"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"refreshToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.accessToken) {",
+                  "  pm.collectionVariables.set('access_token', res.accessToken);",
+                  "  pm.collectionVariables.set('refresh_token', res.refreshToken);",
+                  "  console.log('Tokens refreshed and saved.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{refresh_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/refresh",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "refresh"]
+            },
+            "description": "Exchange a refresh token for a new access token + refresh token pair. Uses `{{refresh_token}}` from collection variables."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Authorization", "value": "Bearer {{refresh_token}}" }],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/auth/refresh",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "auth", "refresh"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"refreshToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "logout"]
+            },
+            "description": "Logout the current user. Invalidates the session. Returns 204 No Content."
+          },
+          "response": [
+            {
+              "name": "204 No Content",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/auth/logout",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "auth", "logout"]
+                }
+              },
+              "status": "No Content",
+              "code": 204,
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Cases",
+      "item": [
+        {
+          "name": "List Cases",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/cases",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "cases"]
+            },
+            "description": "List all cases belonging to the authenticated user."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/cases",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "cases"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "[\n  {\n    \"id\": \"a1b2c3d4-e5f6-7890-abcd-ef1234567890\",\n    \"status\": \"ACTIVE\",\n    \"deceasedInfo\": {\n      \"firstName\": \"Robert\",\n      \"middleName\": \"James\",\n      \"lastName\": \"Smith\",\n      \"dateOfBirth\": \"1945-06-15\",\n      \"dateOfDeath\": \"2026-02-28\",\n      \"placeOfDeath\": \"Chicago, IL\",\n      \"socialSecurityNumber\": \"***-**-1234\"\n    },\n    \"createdAt\": \"2026-03-01T09:00:00.000Z\",\n    \"updatedAt\": \"2026-03-01T09:00:00.000Z\"\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Create Case",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) {",
+                  "  pm.collectionVariables.set('case_id', res.id);",
+                  "  console.log('case_id saved: ' + res.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deceasedInfo\": {\n    \"firstName\": \"Robert\",\n    \"middleName\": \"James\",\n    \"lastName\": \"Smith\",\n    \"dateOfBirth\": \"1945-06-15\",\n    \"dateOfDeath\": \"2026-02-28\",\n    \"placeOfDeath\": \"Chicago, IL\",\n    \"socialSecurityNumber\": \"123-45-6789\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/cases",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "cases"]
+            },
+            "description": "Create a new estate case. On success, `case_id` is automatically saved to collection variables.\n\n`middleName` and `socialSecurityNumber` are optional."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{access_token}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"deceasedInfo\": {\n    \"firstName\": \"Robert\",\n    \"middleName\": \"James\",\n    \"lastName\": \"Smith\",\n    \"dateOfBirth\": \"1945-06-15\",\n    \"dateOfDeath\": \"2026-02-28\",\n    \"placeOfDeath\": \"Chicago, IL\",\n    \"socialSecurityNumber\": \"123-45-6789\"\n  }\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/cases",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "cases"]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"id\": \"a1b2c3d4-e5f6-7890-abcd-ef1234567890\",\n  \"status\": \"ACTIVE\",\n  \"deceasedInfo\": {\n    \"firstName\": \"Robert\",\n    \"middleName\": \"James\",\n    \"lastName\": \"Smith\",\n    \"dateOfBirth\": \"1945-06-15\",\n    \"dateOfDeath\": \"2026-02-28\",\n    \"placeOfDeath\": \"Chicago, IL\"\n  },\n  \"createdAt\": \"2026-03-12T10:00:00.000Z\",\n  \"updatedAt\": \"2026-03-12T10:00:00.000Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Case",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/cases/{{case_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "cases", "{{case_id}}"]
+            },
+            "description": "Get a single case by ID. Uses `{{case_id}}` from collection variables (auto-set by Create Case)."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/cases/{{case_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "cases", "{{case_id}}"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": \"a1b2c3d4-e5f6-7890-abcd-ef1234567890\",\n  \"status\": \"ACTIVE\",\n  \"deceasedInfo\": {\n    \"firstName\": \"Robert\",\n    \"middleName\": \"James\",\n    \"lastName\": \"Smith\",\n    \"dateOfBirth\": \"1945-06-15\",\n    \"dateOfDeath\": \"2026-02-28\",\n    \"placeOfDeath\": \"Chicago, IL\"\n  },\n  \"documents\": [],\n  \"createdAt\": \"2026-03-12T10:00:00.000Z\",\n  \"updatedAt\": \"2026-03-12T10:00:00.000Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Case",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"IN_PROGRESS\",\n  \"deceasedInfo\": {\n    \"placeOfDeath\": \"Cook County, Chicago, IL\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/cases/{{case_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "cases", "{{case_id}}"]
+            },
+            "description": "Partially update a case. All fields are optional. Valid `status` values: `ACTIVE`, `IN_PROGRESS`, `COMPLETED`, `ARCHIVED`."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{access_token}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"IN_PROGRESS\",\n  \"deceasedInfo\": {\n    \"placeOfDeath\": \"Cook County, Chicago, IL\"\n  }\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/cases/{{case_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "cases", "{{case_id}}"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": \"a1b2c3d4-e5f6-7890-abcd-ef1234567890\",\n  \"status\": \"IN_PROGRESS\",\n  \"deceasedInfo\": {\n    \"firstName\": \"Robert\",\n    \"middleName\": \"James\",\n    \"lastName\": \"Smith\",\n    \"dateOfBirth\": \"1945-06-15\",\n    \"dateOfDeath\": \"2026-02-28\",\n    \"placeOfDeath\": \"Cook County, Chicago, IL\"\n  },\n  \"createdAt\": \"2026-03-12T10:00:00.000Z\",\n  \"updatedAt\": \"2026-03-12T10:30:00.000Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Case",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/cases/{{case_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "cases", "{{case_id}}"]
+            },
+            "description": "Delete a case by ID. Returns 204 No Content."
+          },
+          "response": [
+            {
+              "name": "204 No Content",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/cases/{{case_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "cases", "{{case_id}}"]
+                }
+              },
+              "status": "No Content",
+              "code": 204,
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Documents",
+      "item": [
+        {
+          "name": "List Documents",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/cases/{{case_id}}/documents",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "cases", "{{case_id}}", "documents"]
+            },
+            "description": "List all documents for a case."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/cases/{{case_id}}/documents",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "cases", "{{case_id}}", "documents"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "[\n  {\n    \"id\": \"d1e2f3a4-b5c6-7890-abcd-ef1234567890\",\n    \"caseId\": \"a1b2c3d4-e5f6-7890-abcd-ef1234567890\",\n    \"fileName\": \"death-certificate.pdf\",\n    \"contentType\": \"application/pdf\",\n    \"status\": \"UPLOADED\",\n    \"extractedData\": null,\n    \"createdAt\": \"2026-03-12T10:05:00.000Z\",\n    \"updatedAt\": \"2026-03-12T10:05:00.000Z\"\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Initiate Upload",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.documentId) {",
+                  "  pm.collectionVariables.set('document_id', res.documentId);",
+                  "  console.log('document_id saved: ' + res.documentId);",
+                  "}",
+                  "if (res.uploadUrl) {",
+                  "  console.log('Pre-signed S3 upload URL: ' + res.uploadUrl);",
+                  "  console.log('PUT this URL directly with the file binary — no auth header needed.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"caseId\": \"{{case_id}}\",\n  \"fileName\": \"death-certificate.pdf\",\n  \"contentType\": \"application/pdf\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/cases/{{case_id}}/documents/initiate-upload",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "cases", "{{case_id}}", "documents", "initiate-upload"]
+            },
+            "description": "Step 1 of 2 for uploading a document.\n\nReturns a pre-signed S3 URL. Use the `uploadUrl` from the response to PUT the file directly to S3 (no auth header on that PUT).\n\nOn success, `document_id` is automatically saved to collection variables.\n\nSupported `contentType` values: `application/pdf`, `image/jpeg`, `image/png`, `image/tiff`."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{access_token}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"caseId\": \"{{case_id}}\",\n  \"fileName\": \"death-certificate.pdf\",\n  \"contentType\": \"application/pdf\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/cases/{{case_id}}/documents/initiate-upload",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "cases", "{{case_id}}", "documents", "initiate-upload"]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"documentId\": \"d1e2f3a4-b5c6-7890-abcd-ef1234567890\",\n  \"uploadUrl\": \"https://afterlight-uploads.s3.amazonaws.com/cases/a1b2c3d4/death-certificate.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256&...\",\n  \"expiresIn\": 900\n}"
+            }
+          ]
+        },
+        {
+          "name": "Upload File to S3 (Pre-signed PUT)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/pdf",
+                "description": "Must match the contentType used in Initiate Upload"
+              }
+            ],
+            "body": {
+              "mode": "file",
+              "file": {
+                "src": ""
+              }
+            },
+            "url": {
+              "raw": "PASTE_UPLOAD_URL_FROM_INITIATE_UPLOAD_RESPONSE",
+              "host": ["PASTE_UPLOAD_URL_FROM_INITIATE_UPLOAD_RESPONSE"]
+            },
+            "description": "Step 2 of 2. Paste the `uploadUrl` from the Initiate Upload response into the URL field.\n\nDO NOT add an Authorization header — the pre-signed URL includes embedded credentials.\n\nSet the request body to Binary and select your PDF or image file.\n\nExpires 15 minutes after Initiate Upload."
+          },
+          "response": [
+            {
+              "name": "200 OK (S3)",
+              "originalRequest": {
+                "method": "PUT",
+                "url": {
+                  "raw": "https://afterlight-uploads.s3.amazonaws.com/...",
+                  "host": ["afterlight-uploads.s3.amazonaws.com"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "body": ""
+            }
+          ]
+        },
+        {
+          "name": "Get Document",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/cases/{{case_id}}/documents/{{document_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "cases", "{{case_id}}", "documents", "{{document_id}}"]
+            },
+            "description": "Get a single document by ID. Check `status` field for processing state."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/cases/{{case_id}}/documents/{{document_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "cases", "{{case_id}}", "documents", "{{document_id}}"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": \"d1e2f3a4-b5c6-7890-abcd-ef1234567890\",\n  \"caseId\": \"a1b2c3d4-e5f6-7890-abcd-ef1234567890\",\n  \"fileName\": \"death-certificate.pdf\",\n  \"contentType\": \"application/pdf\",\n  \"status\": \"PROCESSED\",\n  \"extractedData\": {\n    \"fullName\": \"Robert James Smith\",\n    \"dateOfBirth\": \"1945-06-15\",\n    \"dateOfDeath\": \"2026-02-28\",\n    \"placeOfDeath\": \"Chicago, IL\",\n    \"causeOfDeath\": \"[REDACTED]\",\n    \"certifierName\": \"Dr. Emily Chen\"\n  },\n  \"createdAt\": \"2026-03-12T10:05:00.000Z\",\n  \"updatedAt\": \"2026-03-12T10:10:00.000Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Enqueue Document Processing",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/cases/{{case_id}}/documents/{{document_id}}/process",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "cases", "{{case_id}}", "documents", "{{document_id}}", "process"]
+            },
+            "description": "Triggers AI processing (Claude Vision) for the uploaded document. Sends a message to SQS and the Lambda processor picks it up asynchronously.\n\nReturns 202 Accepted immediately. Poll Get Document or listen to WebSocket `document:status` event for completion."
+          },
+          "response": [
+            {
+              "name": "202 Accepted",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/cases/{{case_id}}/documents/{{document_id}}/process",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "cases", "{{case_id}}", "documents", "{{document_id}}", "process"]
+                }
+              },
+              "status": "Accepted",
+              "code": 202,
+              "body": "{\n  \"id\": \"d1e2f3a4-b5c6-7890-abcd-ef1234567890\",\n  \"status\": \"PROCESSING\",\n  \"fileName\": \"death-certificate.pdf\",\n  \"caseId\": \"a1b2c3d4-e5f6-7890-abcd-ef1234567890\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "[Internal] Processing Result Callback",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "X-Internal-Secret",
+                "value": "change-me-in-production",
+                "description": "Must match INTERNAL_API_SECRET env var"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"documentId\": \"{{document_id}}\",\n  \"status\": \"PROCESSED\",\n  \"extractedData\": {\n    \"fullName\": \"Robert James Smith\",\n    \"dateOfBirth\": \"1945-06-15\",\n    \"dateOfDeath\": \"2026-02-28\",\n    \"placeOfDeath\": \"Chicago, IL\",\n    \"certifierName\": \"Dr. Emily Chen\",\n    \"certificateNumber\": \"IL-2026-00482\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/documents/{{document_id}}/processing-result",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "documents", "{{document_id}}", "processing-result"]
+            },
+            "description": "Called by the Python Lambda after processing a document. Not intended for end users.\n\nAuth: `X-Internal-Secret` header (matches `INTERNAL_API_SECRET` env var, default: `change-me-in-production` locally).\n\nUse `status: \"FAILED\"` with `errorMessage` to simulate a processing failure."
+          },
+          "response": [
+            {
+              "name": "200 OK — Processed",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  { "key": "X-Internal-Secret", "value": "change-me-in-production" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"documentId\": \"{{document_id}}\",\n  \"status\": \"PROCESSED\",\n  \"extractedData\": {\n    \"fullName\": \"Robert James Smith\",\n    \"dateOfBirth\": \"1945-06-15\",\n    \"dateOfDeath\": \"2026-02-28\",\n    \"placeOfDeath\": \"Chicago, IL\",\n    \"certifierName\": \"Dr. Emily Chen\",\n    \"certificateNumber\": \"IL-2026-00482\"\n  }\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/documents/{{document_id}}/processing-result",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "documents", "{{document_id}}", "processing-result"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": \"d1e2f3a4-b5c6-7890-abcd-ef1234567890\",\n  \"status\": \"PROCESSED\",\n  \"extractedData\": {\n    \"fullName\": \"Robert James Smith\",\n    \"dateOfBirth\": \"1945-06-15\",\n    \"dateOfDeath\": \"2026-02-28\",\n    \"placeOfDeath\": \"Chicago, IL\",\n    \"certifierName\": \"Dr. Emily Chen\",\n    \"certificateNumber\": \"IL-2026-00482\"\n  },\n  \"updatedAt\": \"2026-03-12T10:10:00.000Z\"\n}"
+            },
+            {
+              "name": "200 OK — Failed",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  { "key": "X-Internal-Secret", "value": "change-me-in-production" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"documentId\": \"{{document_id}}\",\n  \"status\": \"FAILED\",\n  \"errorMessage\": \"Document is not a valid death certificate — insufficient text confidence score.\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/documents/{{document_id}}/processing-result",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "documents", "{{document_id}}", "processing-result"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": \"d1e2f3a4-b5c6-7890-abcd-ef1234567890\",\n  \"status\": \"FAILED\",\n  \"errorMessage\": \"Document is not a valid death certificate — insufficient text confidence score.\",\n  \"updatedAt\": \"2026-03-12T10:10:00.000Z\"\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

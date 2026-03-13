@@ -3,15 +3,15 @@
   "compilerOptions": {
     "module": "commonjs",
     "outDir": "./dist",
-    "rootDir": "./src",
     "baseUrl": "./",
     "paths": {
-      "@afterlight/shared": ["../../packages/shared/src"]
+      "@afterlight/shared": ["../../packages/shared/src"],
+      "@api/*": ["./src/*"]
     },
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "incremental": true
   },
-  "include": ["src"],
+  "include": ["src", "../../packages/shared/src"],
   "exclude": ["node_modules", "dist", "test"]
 }

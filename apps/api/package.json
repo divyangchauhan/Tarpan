@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "dev": "nest start --watch",
+    "dev": "ts-node -r tsconfig-paths/register src/main.ts",
     "build": "nest build",
     "start": "node dist/main",
     "lint": "eslint src",
@@ -70,7 +70,8 @@
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
     "moduleNameMapper": {
-      "^@afterlight/shared(.*)$": "<rootDir>/../../packages/shared/src$1"
+      "^@afterlight/shared(.*)$": "<rootDir>/../../../packages/shared/src$1",
+      "^@api/(.*)$": "<rootDir>/$1"
     }
   }
 }

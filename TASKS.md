@@ -30,14 +30,14 @@
 
 | ID | Task | Status | Notes |
 |---|---|---|---|
-| P1-01 | NestJS app scaffold with module structure | ⬜ | |
-| P1-02 | TypeORM entities: User, Case, Document, GeneratedDocument + initial migration | ⬜ | |
-| P1-03 | Auth module: JWT register/login/refresh | ⬜ | |
-| P1-04 | Cases module: CRUD for a family's estate case | ⬜ | |
-| P1-05 | Documents module: upload initiation, S3 pre-signed URL generation | ⬜ | |
-| P1-06 | SQS publisher: enqueue document for Lambda processing | ⬜ | |
-| P1-07 | Documents module: PATCH endpoint for Lambda to report results | ⬜ | |
-| P1-08 | WebSocket gateway: push processing status updates to client | ⬜ | |
+| P1-01 | NestJS app scaffold with module structure | ✅ | PR #3 |
+| P1-02 | TypeORM entities: User, Case, Document, GeneratedDocument + initial migration | ✅ | PR #3 |
+| P1-03 | Auth module: JWT register/login/refresh | ✅ | PR #3 |
+| P1-04 | Cases module: CRUD for a family's estate case | ✅ | PR #3 |
+| P1-05 | Documents module: upload initiation, S3 pre-signed URL generation | ✅ | PR #3 |
+| P1-06 | SQS publisher: enqueue document for Lambda processing | ✅ | PR #3 |
+| P1-07 | Documents module: PATCH endpoint for Lambda to report results | ✅ | PR #3 |
+| P1-08 | WebSocket gateway: push processing status updates to client | ✅ | PR #3 |
 | P1-09 | Templates module: list available institution templates | ⬜ | |
 | P1-10 | Generation module: trigger Lambda for PDF generation, return download URL | ⬜ | |
 | P1-11 | API unit tests (Jest) — target 80% coverage | ⬜ | |
