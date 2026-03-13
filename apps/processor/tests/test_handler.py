@@ -77,9 +77,8 @@ class TestHandlerRouting:
             pdf_processor=MagicMock(),
             extractor=MagicMock(),
             api_client=MagicMock(report_failure=MagicMock(side_effect=RuntimeError("API down"))),
-        ):
-            with pytest.raises(RuntimeError, match="API down"):
-                handler(event, object())
+        ), pytest.raises(RuntimeError, match="API down"):
+            handler(event, object())
 
 
 class TestHandleProcessing:

@@ -108,5 +108,5 @@ class TestExtractCertificateData:
             mock_client.messages.create.return_value = mock_response
             mock_anthropic_cls.return_value = mock_client
 
-            with pytest.raises(Exception):
+            with pytest.raises(ValueError):
                 extract_certificate_data(_TEXT_CONTENT)

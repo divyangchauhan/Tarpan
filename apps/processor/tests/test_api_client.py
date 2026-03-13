@@ -68,6 +68,7 @@ class TestReportFailure:
 
     def test_raises_on_http_error(self) -> None:
         mock_client = _make_mock_client(status_code=500)
-        with patch("src.api_client.httpx.Client", return_value=mock_client):
-            with pytest.raises(httpx.HTTPStatusError):
-                report_failure(_DOC_ID, "some error")
+        with patch("src.api_client.httpx.Client", return_value=mock_client), pytest.raises(
+            httpx.HTTPStatusError
+        ):
+            report_failure(_DOC_ID, "some error")

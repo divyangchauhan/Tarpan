@@ -43,5 +43,7 @@ class TestS3Client:
 
     def test_download_missing_key_raises(self) -> None:
         self._create_bucket()
-        with pytest.raises(Exception):
+        from botocore.exceptions import ClientError
+
+        with pytest.raises(ClientError):
             download_object(_BUCKET, "nonexistent/key.pdf")
