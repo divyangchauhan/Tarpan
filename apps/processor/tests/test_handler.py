@@ -71,13 +71,18 @@ class TestHandlerRouting:
     def test_sqs_reraises_on_infrastructure_failure(self) -> None:
         """If api_client.report_failure itself raises, the SQS record should error."""
         event = _make_sqs_event({"documentId": "doc-123", "s3Key": "uploads/doc-123.pdf"})
-        with patch.multiple(
-            "src.handler",
-            s3_client=MagicMock(download_object=MagicMock(side_effect=RuntimeError("S3 down"))),
-            pdf_processor=MagicMock(),
-            extractor=MagicMock(),
-            api_client=MagicMock(report_failure=MagicMock(side_effect=RuntimeError("API down"))),
-        ), pytest.raises(RuntimeError, match="API down"):
+        with (
+            patch.multiple(
+                "src.handler",
+                s3_client=MagicMock(download_object=MagicMock(side_effect=RuntimeError("S3 down"))),
+                pdf_processor=MagicMock(),
+                extractor=MagicMock(),
+                api_client=MagicMock(
+                    report_failure=MagicMock(side_effect=RuntimeError("API down"))
+                ),
+            ),
+            pytest.raises(RuntimeError, match="API down"),
+        ):
             handler(event, object())
 
 
@@ -94,9 +99,7 @@ class TestHandleProcessing:
         mock_api = MagicMock(report_success=MagicMock(), report_failure=MagicMock())
         with patch.multiple(
             "src.handler",
-            s3_client=MagicMock(
-                download_object=MagicMock(side_effect=ValueError("corrupt file"))
-            ),
+            s3_client=MagicMock(download_object=MagicMock(side_effect=ValueError("corrupt file"))),
             pdf_processor=MagicMock(),
             extractor=MagicMock(),
             api_client=mock_api,

@@ -20,12 +20,14 @@ def _make_mock_client(status_code: int = 200) -> MagicMock:
     mock_response = MagicMock()
     mock_response.status_code = status_code
     mock_response.raise_for_status = MagicMock(
-        side_effect=None
-        if status_code < 400
-        else httpx.HTTPStatusError(
-            "error",
-            request=MagicMock(),
-            response=mock_response,
+        side_effect=(
+            None
+            if status_code < 400
+            else httpx.HTTPStatusError(
+                "error",
+                request=MagicMock(),
+                response=mock_response,
+            )
         )
     )
     mock_client_instance = MagicMock()
@@ -68,7 +70,8 @@ class TestReportFailure:
 
     def test_raises_on_http_error(self) -> None:
         mock_client = _make_mock_client(status_code=500)
-        with patch("src.api_client.httpx.Client", return_value=mock_client), pytest.raises(
-            httpx.HTTPStatusError
+        with (
+            patch("src.api_client.httpx.Client", return_value=mock_client),
+            pytest.raises(httpx.HTTPStatusError),
         ):
             report_failure(_DOC_ID, "some error")

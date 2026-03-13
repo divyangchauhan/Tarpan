@@ -36,9 +36,7 @@ def _patch_processing_result(
     extracted_data: dict[str, Any] | None = None,
     error_message: str | None = None,
 ) -> None:
-    url = (
-        f"{settings.api_callback_url}/api/v1/documents/{document_id}/processing-result"
-    )
+    url = f"{settings.api_callback_url}/api/v1/documents/{document_id}/processing-result"
     payload: dict[str, Any] = {"documentId": document_id, "status": status}
     if extracted_data is not None:
         payload["extractedData"] = extracted_data
