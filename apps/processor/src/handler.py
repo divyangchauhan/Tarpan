@@ -10,8 +10,20 @@ import json
 import logging
 from typing import Any
 
+from src import api_client, extractor, pdf_processor, s3_client
+from src.config import settings
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+_CONTENT_TYPE_MAP: dict[str, str] = {
+    "pdf": "application/pdf",
+    "jpg": "image/jpeg",
+    "jpeg": "image/jpeg",
+    "png": "image/png",
+    "tiff": "image/tiff",
+    "tif": "image/tiff",
+}
 
 
 def handler(event: dict[str, Any], context: object) -> dict[str, Any]:
@@ -40,21 +52,39 @@ def handler(event: dict[str, Any], context: object) -> dict[str, Any]:
 
 
 def _handle_processing(body: dict[str, Any]) -> dict[str, Any]:
-    """
-    Process a death certificate upload.
-    Full implementation in PR #4 (P2-01 to P2-06).
-    """
+    """Download, extract, and report results for a single document."""
     document_id: str = body["documentId"]
     s3_key: str = body["s3Key"]
 
     logger.info("Processing document", extra={"document_id": document_id, "s3_key": s3_key})
 
-    # TODO (P2-03): pre-process PDF/image
-    # TODO (P2-04): call Claude API for extraction
-    # TODO (P2-05): validate extracted data with Pydantic
-    # TODO (P2-06): upload result to S3 + PATCH API callback
+    try:
+        # P2-02: Download from S3
+        file_bytes = s3_client.download_object(settings.s3_uploads_bucket, s3_key)
+        content_type = _content_type_from_key(s3_key)
 
-    return {"documentId": document_id, "status": "stub"}
+        # P2-03: Convert to content blocks for Claude
+        content = pdf_processor.prepare_content_for_claude(file_bytes, content_type)
+
+        # P2-04 / P2-05: Extract with Claude + validate with Pydantic
+        extracted = extractor.extract_certificate_data(content)
+
+        # P2-06: Report success to API
+        api_client.report_success(
+            document_id,
+            extracted.model_dump(exclude_none=True),
+        )
+
+        logger.info("Document processed successfully", extra={"document_id": document_id})
+        return {"documentId": document_id, "status": "PROCESSED"}
+
+    except Exception as exc:
+        # Use only the exception type — not the message — to avoid logging PII
+        error_msg = f"Processing failed: {type(exc).__name__}"
+        logger.exception("Document processing failed", extra={"document_id": document_id})
+        # If report_failure raises (e.g. API unreachable), propagate so SQS can retry / DLQ
+        api_client.report_failure(document_id, error_msg)
+        return {"documentId": document_id, "status": "FAILED"}
 
 
 def _handle_generation(event: dict[str, Any]) -> dict[str, Any]:
@@ -70,3 +100,9 @@ def _handle_generation(event: dict[str, Any]) -> dict[str, Any]:
     # TODO: upload PDF to S3 + PATCH API callback
 
     return {"generatedDocumentId": generated_document_id, "status": "stub"}
+
+
+def _content_type_from_key(s3_key: str) -> str:
+    """Derive content type from the S3 key file extension."""
+    ext = s3_key.rsplit(".", 1)[-1].lower() if "." in s3_key else ""
+    return _CONTENT_TYPE_MAP.get(ext, "application/pdf")
