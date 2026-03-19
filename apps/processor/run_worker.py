@@ -44,14 +44,16 @@ def _process_message(sqs: Any, message: dict[str, Any]) -> None:
     try:
         event = {"Records": [{"messageId": message_id, "body": message["Body"]}]}
         handler(event, object())
-        # Delete on success
-        sqs.delete_message(QueueUrl=_QUEUE_URL, ReceiptHandle=receipt_handle)
-        logger.info("Message processed and deleted", extra={"message_id": message_id})
     except Exception:
         logger.exception(
-            "Message processing failed — leaving in queue for retry",
+            "Message processing failed",
             extra={"message_id": message_id},
         )
+    finally:
+        # Always delete in local dev — avoids infinite retry loops when the
+        # NestJS API is not running (api_client errors are expected locally).
+        sqs.delete_message(QueueUrl=_QUEUE_URL, ReceiptHandle=receipt_handle)
+        logger.info("Message deleted from queue", extra={"message_id": message_id})
 
 
 def run() -> None:
