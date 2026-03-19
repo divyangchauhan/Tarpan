@@ -14,7 +14,6 @@ All data is entirely fabricated.  No real personal information is used.
 
 from __future__ import annotations
 
-import io
 import sys
 from pathlib import Path
 
