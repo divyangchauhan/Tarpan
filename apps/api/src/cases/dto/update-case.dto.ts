@@ -1,6 +1,7 @@
 import { Type } from 'class-transformer';
 import {
   IsDateString,
+  IsEmail,
   IsEnum,
   IsOptional,
   IsString,
@@ -38,6 +39,28 @@ export class UpdateDeceasedInfoDto {
   socialSecurityNumber?: string;
 }
 
+export class UpdateExecutorInfoDto {
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  address?: string;
+
+  @IsOptional()
+  @IsString()
+  relationship?: string;
+
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @IsOptional()
+  @IsEmail()
+  email?: string;
+}
+
 export class UpdateCaseDto {
   @IsOptional()
   @IsEnum(CaseStatus)
@@ -47,4 +70,9 @@ export class UpdateCaseDto {
   @ValidateNested()
   @Type(() => UpdateDeceasedInfoDto)
   deceasedInfo?: UpdateDeceasedInfoDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => UpdateExecutorInfoDto)
+  executorInfo?: UpdateExecutorInfoDto;
 }

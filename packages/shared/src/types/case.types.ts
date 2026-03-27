@@ -4,6 +4,14 @@ export enum CaseStatus {
   ARCHIVED = 'ARCHIVED',
 }
 
+export interface ExecutorInfo {
+  name: string;
+  address: string;
+  relationship: string;
+  phone?: string;
+  email?: string;
+}
+
 export interface DeceasedInfo {
   firstName: string;
   middleName?: string;
@@ -19,6 +27,7 @@ export interface Case {
   userId: string;
   status: CaseStatus;
   deceasedInfo: DeceasedInfo;
+  executorInfo?: ExecutorInfo;
   createdAt: Date;
   updatedAt: Date;
 }
