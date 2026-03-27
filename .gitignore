@@ -66,3 +66,6 @@ samconfig.toml
 # Python coverage binary
 .coverage
 .coverage.*
+
+# E2E test artifacts
+apps/processor/scripts/downloaded-pdfs/

@@ -55,22 +55,22 @@
 | P2-04 | Claude API integration: death certificate extraction prompt | ✅ | PR #4 |
 | P2-05 | Structured output parsing & validation (Pydantic) | ✅ | PR #4 |
 | P2-06 | Result upload back to S3 + API PATCH callback | ✅ | PR #4 |
-| P2-07 | Institution template engine (Jinja2 → HTML → PDF via WeasyPrint) | ⬜ | |
-| P2-08 | Template: Social Security Administration (SSA-721) | ⬜ | |
-| P2-09 | Template: Medicare notification | ⬜ | |
-| P2-10 | Template: Generic bank account closure letter | ⬜ | |
-| P2-11 | Template: Generic credit card cancellation letter | ⬜ | |
-| P2-12 | Template: Subscription cancellation (streaming, utilities) | ⬜ | |
-| P2-13 | Template: IRS notification | ⬜ | |
-| P2-14 | Template: State DMV / driver's license notification | ⬜ | |
-| P2-15 | Template: Voter registration cancellation | ⬜ | |
-| P2-16 | Template: USPS mail forwarding / deceased notification | ⬜ | |
-| P2-17 | Template: Life insurance claim initiation | ⬜ | |
-| P2-18 | Template: Pension / 401(k) beneficiary notification | ⬜ | |
-| P2-19 | Template: Veterans Affairs notification | ⬜ | |
-| P2-20 | Template: Passport cancellation | ⬜ | |
-| P2-21 | Template: Professional license board notification | ⬜ | |
-| P2-22 | Template: Employer / HR notification | ⬜ | |
+| P2-07 | Institution template engine (Jinja2 → HTML → PDF via WeasyPrint) | ✅ | PR #5 |
+| P2-08 | Template: Social Security Administration (SSA-721) | ✅ | PR #5 |
+| P2-09 | Template: Medicare notification | ✅ | PR #5 |
+| P2-10 | Template: Generic bank account closure letter | ✅ | PR #5 |
+| P2-11 | Template: Generic credit card cancellation letter | ✅ | PR #5 |
+| P2-12 | Template: Subscription cancellation (streaming, utilities) | ✅ | PR #5 |
+| P2-13 | Template: IRS notification | ✅ | PR #5 |
+| P2-14 | Template: State DMV / driver's license notification | ✅ | PR #5 |
+| P2-15 | Template: Voter registration cancellation | ✅ | PR #5 |
+| P2-16 | Template: USPS mail forwarding / deceased notification | ✅ | PR #5 |
+| P2-17 | Template: Life insurance claim initiation | ✅ | PR #5 |
+| P2-18 | Template: Pension / 401(k) beneficiary notification | ✅ | PR #5 |
+| P2-19 | Template: Veterans Affairs notification | ✅ | PR #5 |
+| P2-20 | Template: Passport cancellation | ✅ | PR #5 |
+| P2-21 | Template: Professional license board notification | ✅ | PR #5 |
+| P2-22 | Template: Employer / HR notification | ✅ | PR #5 |
 | P2-23 | Lambda unit tests (pytest) — target 90% on parser logic | ⬜ | |
 | P2-24 | Lambda integration test with LocalStack S3 + SQS | ⬜ | |
 
