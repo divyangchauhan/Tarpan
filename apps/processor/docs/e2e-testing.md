@@ -1,7 +1,11 @@
 # Processor — End-to-End Testing Guide
 
-Tests the full pipeline locally:
-**S3 upload → SQS message → Lambda handler → Claude extraction → API callback**
+Two pipelines can be tested end-to-end locally:
+
+| Pipeline | Trigger | What it tests |
+|---|---|---|
+| **Processing** | SQS → Lambda | S3 download → Claude extraction → API callback |
+| **Generation** | Direct invoke | GenerationRequest → Jinja2/WeasyPrint → S3 upload |
 
 ---
 
@@ -12,7 +16,9 @@ Tests the full pipeline locally:
 | Docker running | `docker info` |
 | AWS CLI installed | `aws --version` |
 | Poetry installed | `poetry --version` |
-| Real Anthropic API key | `echo $ANTHROPIC_API_KEY` |
+| Real Anthropic API key | see `.env` setup below |
+
+> **Generation-only testing** (`generate` mode) does not need the NestJS API running and does not call the real Claude API — templates render from pre-supplied data.
 
 ---
 
@@ -21,19 +27,39 @@ Tests the full pipeline locally:
 ```bash
 cd apps/processor
 
-# 1. Add your real API key to .env first (one-time setup)
+# One-time setup: copy .env and set your real API key
 cp .env.example .env
 # Edit .env → set ANTHROPIC_API_KEY=sk-ant-...
 
-# 2. Run the automated setup + test script
-./scripts/e2e-test.sh
-```
+# Test processing pipeline only (typed + scanned fixtures)
+./scripts/e2e-test.sh both --email user@example.com --password s3cr3t
 
-The script handles everything from Step 2 onwards. See below for what it does and how to run steps manually.
+# Test generation pipeline only (no API auth needed)
+./scripts/e2e-test.sh generate
+
+# Test a specific template
+./scripts/e2e-test.sh generate --template irs-notification
+
+# Test everything
+./scripts/e2e-test.sh all --email user@example.com --password s3cr3t
+```
 
 ---
 
-## Manual Steps
+## Available Modes
+
+| Mode | Description | Requires API? |
+|---|---|---|
+| `typed` | Process typed/text-extractable fixture via SQS | Yes |
+| `scanned` | Process scanned/image-only fixture via SQS (Claude Vision) | Yes |
+| `minimal` | Process minimal-fields fixture via SQS | Yes |
+| `both` | `typed` + `scanned` (default) | Yes |
+| `generate` | Direct-invoke handler with generation event, verify PDF in S3 | No |
+| `all` | `both` + `generate` | Yes |
+
+---
+
+## Manual Steps — Processing Pipeline
 
 ### Step 1 — Configure `.env`
 
@@ -64,6 +90,7 @@ docker compose logs -f localstack
 
 This automatically creates:
 - S3 bucket: `afterlight-uploads`
+- S3 bucket: `afterlight-generated-docs`
 - SQS queue: `afterlight-document-processing`
 
 ---
@@ -141,8 +168,7 @@ INFO src.pdf_processor PDF has insufficient text; falling back to vision
 
 ### Step 7 — Inspect the extracted data (optional)
 
-Add a temporary print to verify what Claude returned, or check logs for the
-`Extraction complete` line. The extracted fields map to `ExtractedCertificateData`:
+The extracted fields map to `ExtractedCertificateData`:
 
 | Field | Expected value (typed fixture) |
 |---|---|
@@ -156,18 +182,111 @@ Add a temporary print to verify what Claude returned, or check logs for the
 
 ---
 
-## API Callback
+## Manual Steps — Generation Pipeline
 
-The worker calls `PATCH /api/v1/documents/{id}/processing-result` on the NestJS API after extraction.
+The generation pipeline is triggered by a **direct Lambda invocation** (no SQS). The handler renders a Jinja2 template to PDF via WeasyPrint and uploads the result to S3.
 
-- **NestJS running** → full round-trip completes.
-- **NestJS not running** → the worker logs an error after extraction but the extraction itself still succeeds. This is expected during isolated processor testing.
+### Step 1 — Ensure LocalStack is running and buckets exist
 
-To silence the callback error without starting the API, set in `.env`:
+```bash
+# From repo root
+docker compose up localstack -d
 
+# Create the generated-docs bucket if it doesn't already exist
+aws --endpoint-url=http://localhost:4566 --region us-east-1 \
+  s3 mb s3://afterlight-generated-docs 2>/dev/null || true
 ```
-API_CALLBACK_URL=https://httpbin.org/patch
+
+### Step 2 — Direct-invoke the handler
+
+```bash
+cd apps/processor
+
+poetry run python - <<'EOF'
+import json
+from src.handler import handler
+
+event = {
+    "generatedDocumentId": "test-gen-001",
+    "templateId": "ssa-721",          # any registered template ID
+    "caseId": "test-case-001",
+    "deceased": {
+        "full_name": "Jane A. Smith",
+        "first_name": "Jane",
+        "last_name": "Smith",
+        "date_of_birth": "1945-03-15",
+        "date_of_death": "2024-11-20",
+        "place_of_death": "Springfield, IL",
+        "state": "IL",
+        "certificate_number": "2024-IL-001234",
+        "certifier_name": "Dr. John Doe",
+        "certifier_title": "Attending Physician",
+    },
+    "executorName": "Robert Smith",
+    "executorAddress": "456 Elm Street\nSpringfield, IL 62701",
+    "executorRelationship": "Son",
+    "executorPhone": "(217) 555-0100",
+    "executorEmail": "robert.smith@example.com",
+}
+
+result = handler(event, object())
+print(json.dumps(result, indent=2))
+EOF
 ```
+
+#### Expected output
+
+```json
+{
+  "generatedDocumentId": "test-gen-001",
+  "status": "COMPLETED",
+  "s3Key": "generated/test-case-001/ssa-721/test-gen-001.pdf"
+}
+```
+
+> **Note:** The `status` will be `COMPLETED` only if the API callback succeeds. If NestJS is not running or the `/api/v1/generated-documents/{id}/result` endpoint is not yet implemented (task P1-10), the handler returns `FAILED` after a successful S3 upload. Check S3 directly to confirm the PDF was generated.
+
+### Step 3 — Verify the PDF in S3
+
+```bash
+aws --endpoint-url=http://localhost:4566 --region us-east-1 \
+  s3 ls s3://afterlight-generated-docs/generated/ --recursive
+```
+
+Download and inspect:
+
+```bash
+aws --endpoint-url=http://localhost:4566 --region us-east-1 \
+  s3 cp s3://afterlight-generated-docs/generated/test-case-001/ssa-721/test-gen-001.pdf \
+  /tmp/test-gen-001.pdf
+
+open /tmp/test-gen-001.pdf   # macOS
+xdg-open /tmp/test-gen-001.pdf  # Linux
+```
+
+---
+
+## Available Template IDs
+
+| Template ID | Institution |
+|---|---|
+| `ssa-721` | Social Security Administration |
+| `medicare` | Centers for Medicare & Medicaid Services |
+| `bank-closure` | Generic bank account closure |
+| `credit-card-cancellation` | Generic credit card cancellation |
+| `subscription-cancellation` | Streaming / utility subscriptions |
+| `irs-notification` | Internal Revenue Service |
+| `dmv-notification` | State DMV / driver's license |
+| `voter-registration` | State Board of Elections |
+| `usps-notification` | USPS mail forwarding |
+| `life-insurance` | Life insurance claim initiation |
+| `pension-401k` | Pension / 401(k) beneficiary |
+| `veterans-affairs` | U.S. Department of Veterans Affairs |
+| `passport-cancellation` | U.S. Department of State |
+| `professional-license` | State professional licensing board |
+| `employer-notification` | Employer / HR department |
+
+Generic templates (`bank-closure`, `credit-card-cancellation`, `subscription-cancellation`, `dmv-notification`, `voter-registration`, `professional-license`, `employer-notification`) accept optional `institutionName` and `institutionAddress` fields in the generation event to customise the recipient block.
 
 ---
 
@@ -190,6 +309,25 @@ poetry run python tests/fixtures/generate_fixtures.py
 
 ---
 
+## API Callback Behaviour
+
+| Callback | Endpoint | Status |
+|---|---|---|
+| Processing result | `PATCH /api/v1/documents/{id}/processing-result` | Implemented (PR #3) |
+| Generation result | `PATCH /api/v1/generated-documents/{id}/result` | Pending (task P1-10) |
+
+- **NestJS running** → full round-trip completes for both pipelines.
+- **NestJS not running (processing)** → worker logs an error after extraction but extraction still succeeds.
+- **NestJS not running (generation)** → handler returns `FAILED` but the PDF is still uploaded to S3.
+
+To silence callback errors without starting the API, set in `.env`:
+
+```
+API_CALLBACK_URL=https://httpbin.org/patch
+```
+
+---
+
 ## Cleanup
 
 ```bash
@@ -199,4 +337,8 @@ docker compose down
 # Remove uploaded test objects
 aws --endpoint-url=http://localhost:4566 --region us-east-1 \
   s3 rm s3://afterlight-uploads/documents/ --recursive
+
+# Remove generated PDFs
+aws --endpoint-url=http://localhost:4566 --region us-east-1 \
+  s3 rm s3://afterlight-generated-docs/generated/ --recursive
 ```
