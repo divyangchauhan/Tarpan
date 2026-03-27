@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}IRS Notification of Death — {{ deceased.full_name }}{% endblock %}
+
+{% block recipient %}
+<p><strong>Internal Revenue Service</strong></p>
+<p>Stop 6552</p>
+<p>Kansas City, MO 64999-0002</p>
+{% endblock %}
+
+{% block subject %}
+Notification of Taxpayer Death — {{ deceased.full_name }}{% if deceased.date_of_birth %} (DOB: {{ deceased.date_of_birth }}){% endif %}
+{% endblock %}
+
+{% block salutation %}Dear Internal Revenue Service:{% endblock %}
+
+{% block body %}
+<p>
+  I am writing to notify the Internal Revenue Service of the death of
+  <strong>{{ deceased.full_name }}</strong>{% if deceased.date_of_birth %}, born {{ deceased.date_of_birth }},{% endif %}
+  who passed away on <strong>{{ deceased.date_of_death }}</strong> in {{ deceased.place_of_death }}.
+  I am the {{ executor_relationship }} of the deceased and the authorized representative of the estate.
+</p>
+
+<p>
+  A final individual income tax return (Form 1040) will be filed on behalf of
+  {{ deceased.full_name }} for the tax year ending on the date of death. The word "DECEASED,"
+  the name of the deceased, and the date of death will be written across the top of the return
+  in accordance with IRS Publication 559.
+</p>
+
+<p>
+  If the estate generates income, a fiduciary return (Form 1041) will be filed as required.
+  Please direct all IRS correspondence for {{ deceased.full_name }} to the executor at the
+  address listed above.
+</p>
+
+<p>
+  A certified copy of the death certificate and Form 56 (Notice Concerning Fiduciary Relationship)
+  are enclosed. Please advise if additional documentation is required.
+</p>
+{% endblock %}
+
+{% block attachments %}
+<div class="attachments">
+  <p><strong>Enclosures:</strong></p>
+  <p>1. Certified copy of death certificate</p>
+  <p>2. IRS Form 56 — Notice Concerning Fiduciary Relationship</p>
+  <p>3. Letters testamentary (if applicable)</p>
+</div>
+{% endblock %}

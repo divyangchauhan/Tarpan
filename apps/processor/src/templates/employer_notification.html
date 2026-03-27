@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Employer / HR Notification of Death — {{ deceased.full_name }}{% endblock %}
+
+{% block recipient %}
+{% if institution_name %}
+<p><strong>{{ institution_name }}</strong></p>
+{% if institution_address %}
+{% for line in institution_address.splitlines() %}
+<p>{{ line }}</p>
+{% endfor %}
+{% endif %}
+{% else %}
+<p><strong>Human Resources Department</strong></p>
+{% endif %}
+{% endblock %}
+
+{% block subject %}
+Notification of Death of Employee — {{ deceased.full_name }}
+{% endblock %}
+
+{% block salutation %}Dear Human Resources Department:{% endblock %}
+
+{% block body %}
+<p>
+  I am writing to formally notify you of the death of <strong>{{ deceased.full_name }}</strong>
+  {% if deceased.date_of_birth %}, born {{ deceased.date_of_birth }},{% endif %}
+  who passed away on <strong>{{ deceased.date_of_death }}</strong> in {{ deceased.place_of_death }}.
+  I am the {{ executor_relationship }} of the deceased.
+</p>
+
+<p>
+  I am requesting your assistance in settling the following estate matters:
+</p>
+
+<p>
+  (1) <strong>Final paycheck</strong> — Please issue any outstanding wages, accrued vacation,
+  or other earned compensation owed to {{ deceased.full_name }} as of the date of death,
+  payable to the Estate of {{ deceased.full_name }};<br /><br />
+  (2) <strong>Benefits</strong> — Please provide information on any life insurance, retirement
+  plan, or other employee benefits that may be payable to the estate or named beneficiaries;<br /><br />
+  (3) <strong>Benefits continuation</strong> — Please advise on COBRA continuation coverage
+  options for any dependents currently covered under {{ deceased.full_name }}'s health plan;<br /><br />
+  (4) <strong>Company property</strong> — Please advise on the return of any company property
+  issued to {{ deceased.full_name }}.
+</p>
+
+<p>
+  A certified copy of the death certificate is enclosed. Please contact me at the address
+  above{% if executor_phone %} or by phone at {{ executor_phone }}{% endif %} to coordinate
+  the above items.
+</p>
+{% endblock %}
+
+{% block attachments %}
+<div class="attachments">
+  <p><strong>Enclosures:</strong></p>
+  <p>1. Certified copy of death certificate</p>
+  <p>2. Executor identification</p>
+  <p>3. Letters testamentary (if available)</p>
+</div>
+{% endblock %}

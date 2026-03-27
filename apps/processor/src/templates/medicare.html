@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Medicare Notification of Death{% endblock %}
+
+{% block recipient %}
+<p><strong>Centers for Medicare &amp; Medicaid Services</strong></p>
+<p>Medicare Beneficiary Contact Center</p>
+<p>P.O. Box 790355</p>
+<p>St. Louis, MO 63179-0355</p>
+{% endblock %}
+
+{% block subject %}
+Medicare Beneficiary Death Notification — {{ deceased.full_name }}
+{% endblock %}
+
+{% block salutation %}Dear Medicare Beneficiary Contact Center:{% endblock %}
+
+{% block body %}
+<p>
+  I am writing to notify the Centers for Medicare &amp; Medicaid Services of the death of
+  <strong>{{ deceased.full_name }}</strong>{% if deceased.date_of_birth %}, born {{ deceased.date_of_birth }},{% endif %}
+  who passed away on <strong>{{ deceased.date_of_death }}</strong> in {{ deceased.place_of_death }}.
+  I am the {{ executor_relationship }} of the deceased.
+</p>
+
+<p>
+  Please close the Medicare account associated with {{ deceased.full_name }} and cancel all
+  Medicare Part A, Part B, Part C, and Part D coverage effective the date of death.
+  Any Medicare Advantage or prescription drug plan enrollments should also be terminated.
+</p>
+
+<p>
+  If there are any outstanding claims or pending reimbursements, please process them through
+  the estate. Please send any correspondence regarding the estate to the address listed above.
+</p>
+
+{% if deceased.certificate_number %}
+<p>
+  The state-issued death certificate number is <strong>{{ deceased.certificate_number }}</strong>.
+  A certified copy is enclosed for your records.
+</p>
+{% endif %}
+
+<p>
+  Please contact me if you require additional documentation or information to process this request.
+</p>
+{% endblock %}
+
+{% block attachments %}
+<div class="attachments">
+  <p><strong>Enclosures:</strong></p>
+  <p>1. Certified copy of death certificate</p>
+  <p>2. Medicare card (if available)</p>
+</div>
+{% endblock %}

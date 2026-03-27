@@ -30,6 +30,24 @@ def report_failure(document_id: str, error_message: str) -> None:
     )
 
 
+def report_generation_success(generated_document_id: str, s3_key: str) -> None:
+    """Report a successful PDF generation result to the API."""
+    _patch_generation_result(
+        generated_document_id=generated_document_id,
+        status="COMPLETED",
+        s3_key=s3_key,
+    )
+
+
+def report_generation_failure(generated_document_id: str, error_message: str) -> None:
+    """Report a PDF generation failure to the API."""
+    _patch_generation_result(
+        generated_document_id=generated_document_id,
+        status="FAILED",
+        error_message=error_message,
+    )
+
+
 def _patch_processing_result(
     document_id: str,
     status: str,
@@ -46,6 +64,35 @@ def _patch_processing_result(
     logger.info(
         "Reporting processing result",
         extra={"document_id": document_id, "status": status},
+    )
+
+    with httpx.Client(timeout=_TIMEOUT_SECONDS) as client:
+        response = client.patch(
+            url,
+            json=payload,
+            headers={"X-Internal-Secret": settings.internal_api_secret},
+        )
+        response.raise_for_status()
+
+
+def _patch_generation_result(
+    generated_document_id: str,
+    status: str,
+    s3_key: str | None = None,
+    error_message: str | None = None,
+) -> None:
+    url = (
+        f"{settings.api_callback_url}/api/v1/generated-documents" f"/{generated_document_id}/result"
+    )
+    payload: dict[str, Any] = {"generatedDocumentId": generated_document_id, "status": status}
+    if s3_key is not None:
+        payload["s3Key"] = s3_key
+    if error_message is not None:
+        payload["errorMessage"] = error_message
+
+    logger.info(
+        "Reporting generation result",
+        extra={"generated_document_id": generated_document_id, "status": status},
     )
 
     with httpx.Client(timeout=_TIMEOUT_SECONDS) as client:

@@ -10,8 +10,9 @@ import json
 import logging
 from typing import Any
 
-from src import api_client, extractor, pdf_processor, s3_client
+from src import api_client, extractor, pdf_processor, s3_client, template_engine
 from src.config import settings
+from src.models import GenerationRequest
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -88,18 +89,87 @@ def _handle_processing(body: dict[str, Any]) -> dict[str, Any]:
 
 
 def _handle_generation(event: dict[str, Any]) -> dict[str, Any]:
-    """
-    Generate a legal document PDF from a template.
-    Full implementation in PR #5 (P2-07 to P2-22).
-    """
-    generated_document_id: str = event["generatedDocumentId"]
+    """Generate a legal document PDF from a template and upload it to S3."""
+    # Normalize camelCase event keys to snake_case for Pydantic
+    request = GenerationRequest(
+        generated_document_id=event["generatedDocumentId"],
+        template_id=event["templateId"],
+        case_id=event["caseId"],
+        deceased=event["deceased"],
+        executor_name=event["executorName"],
+        executor_address=event["executorAddress"],
+        executor_relationship=event["executorRelationship"],
+        executor_phone=event.get("executorPhone"),
+        executor_email=event.get("executorEmail"),
+        institution_name=event.get("institutionName"),
+        institution_address=event.get("institutionAddress"),
+    )
 
-    logger.info("Generating document", extra={"generated_document_id": generated_document_id})
+    logger.info(
+        "Generating document",
+        extra={
+            "generated_document_id": request.generated_document_id,
+            "template_id": request.template_id,
+        },
+    )
 
-    # TODO (P2-07): render Jinja2 template → HTML → PDF via WeasyPrint
-    # TODO: upload PDF to S3 + PATCH API callback
+    try:
+        pdf_bytes = template_engine.render(request)
 
-    return {"generatedDocumentId": generated_document_id, "status": "stub"}
+        s3_key = (
+            f"generated/{request.case_id}"
+            f"/{request.template_id}"
+            f"/{request.generated_document_id}.pdf"
+        )
+        s3_client.upload_object(
+            settings.s3_generated_docs_bucket,
+            s3_key,
+            pdf_bytes,
+            "application/pdf",
+        )
+
+    except Exception as exc:
+        error_msg = f"Generation failed: {type(exc).__name__}"
+        logger.exception(
+            "Document generation failed",
+            extra={"generated_document_id": request.generated_document_id},
+        )
+        try:
+            api_client.report_generation_failure(request.generated_document_id, error_msg)
+        except Exception:
+            logger.warning(
+                "Failed to report generation failure to API",
+                extra={"generated_document_id": request.generated_document_id},
+            )
+        return {
+            "generatedDocumentId": request.generated_document_id,
+            "status": "FAILED",
+        }
+
+    # PDF rendered and uploaded to S3 — notify API (best-effort; log warning on failure)
+    try:
+        api_client.report_generation_success(request.generated_document_id, s3_key)
+    except Exception:
+        logger.warning(
+            "Generated PDF uploaded to S3 but API callback failed",
+            extra={
+                "generated_document_id": request.generated_document_id,
+                "s3_key": s3_key,
+            },
+        )
+
+    logger.info(
+        "Document generated successfully",
+        extra={
+            "generated_document_id": request.generated_document_id,
+            "s3_key": s3_key,
+        },
+    )
+    return {
+        "generatedDocumentId": request.generated_document_id,
+        "status": "COMPLETED",
+        "s3Key": s3_key,
+    }
 
 
 def _content_type_from_key(s3_key: str) -> str:

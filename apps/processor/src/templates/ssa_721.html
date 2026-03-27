@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}SSA-721 — Statement of Death by Funeral Director{% endblock %}
+
+{% block recipient %}
+<p><strong>Social Security Administration</strong></p>
+<p>Office of Earnings Operations</p>
+<p>P.O. Box 33003</p>
+<p>Baltimore, MD 21290-3003</p>
+{% endblock %}
+
+{% block subject %}
+Notification of Death — {{ deceased.full_name }}{% if deceased.date_of_birth %} (DOB: {{ deceased.date_of_birth }}){% endif %}
+{% endblock %}
+
+{% block salutation %}Dear Social Security Administration:{% endblock %}
+
+{% block body %}
+<p>
+  I am writing to formally notify the Social Security Administration of the death of
+  <strong>{{ deceased.full_name }}</strong>{% if deceased.date_of_birth %}, born {{ deceased.date_of_birth }},{% endif %}
+  who passed away on <strong>{{ deceased.date_of_death }}</strong> in {{ deceased.place_of_death }}.
+  I am the {{ executor_relationship }} of the deceased and am authorized to act on behalf of the estate.
+</p>
+
+<p>
+  Please discontinue all Social Security benefit payments issued to {{ deceased.full_name }} effective
+  the date of death. Any payments issued after {{ deceased.date_of_death }} must be returned and should
+  not be negotiated.
+</p>
+
+{% if deceased.certificate_number %}
+<p>
+  The death certificate registration number is <strong>{{ deceased.certificate_number }}</strong>, issued
+  by the state of {{ deceased.state or "the issuing state" }}.
+</p>
+{% endif %}
+
+<p>
+  Please contact me at the address above{% if executor_phone %} or by telephone at {{ executor_phone }}{% endif %}
+  if any additional information or documentation is required.
+  A certified copy of the death certificate is enclosed.
+</p>
+{% endblock %}
+
+{% block attachments %}
+<div class="attachments">
+  <p><strong>Enclosures:</strong></p>
+  <p>1. Certified copy of death certificate</p>
+  <p>2. Photo identification of executor</p>
+</div>
+{% endblock %}

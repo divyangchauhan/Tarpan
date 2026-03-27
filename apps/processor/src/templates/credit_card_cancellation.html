@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Credit Card Cancellation — Estate of {{ deceased.full_name }}{% endblock %}
+
+{% block recipient %}
+{% if institution_name %}
+<p><strong>{{ institution_name }}</strong></p>
+{% if institution_address %}
+{% for line in institution_address.splitlines() %}
+<p>{{ line }}</p>
+{% endfor %}
+{% endif %}
+{% else %}
+<p><strong>Credit Card Bereavement Department</strong></p>
+{% endif %}
+{% endblock %}
+
+{% block subject %}
+Request to Cancel Credit Account — Estate of {{ deceased.full_name }}
+{% endblock %}
+
+{% block salutation %}Dear Bereavement Services Department:{% endblock %}
+
+{% block body %}
+<p>
+  I am writing to notify you of the death of <strong>{{ deceased.full_name }}</strong>,
+  who passed away on <strong>{{ deceased.date_of_death }}</strong> in {{ deceased.place_of_death }}.
+  I am the {{ executor_relationship }} of the deceased.
+</p>
+
+<p>
+  Please cancel all credit card accounts held in the name of {{ deceased.full_name }} effective
+  immediately. I request that no new charges be authorized on these accounts from this date forward.
+</p>
+
+<p>
+  Please provide a final statement reflecting the outstanding balance as of the date of death.
+  The estate will make arrangements to settle any outstanding balance in accordance with
+  applicable probate laws and available estate assets.
+</p>
+
+<p>
+  If there is an authorized user on any account, please also cancel that user's card and
+  privileges. Please send all future correspondence regarding these accounts to my address above.
+</p>
+
+<p>
+  A certified copy of the death certificate is enclosed. Please advise me if any additional
+  documentation is required to process this request.
+</p>
+{% endblock %}
+
+{% block attachments %}
+<div class="attachments">
+  <p><strong>Enclosures:</strong></p>
+  <p>1. Certified copy of death certificate</p>
+  <p>2. Executor identification</p>
+</div>
+{% endblock %}

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>{% block title %}Legal Notification{% endblock %}</title>
+  <style>
+    @page {
+      size: letter;
+      margin: 1in 1in 1in 1in;
+    }
+
+    body {
+      font-family: "Times New Roman", Times, serif;
+      font-size: 12pt;
+      line-height: 1.5;
+      color: #000;
+    }
+
+    .sender-block {
+      margin-bottom: 24pt;
+    }
+
+    .sender-block p {
+      margin: 0;
+    }
+
+    .date-line {
+      margin-bottom: 24pt;
+    }
+
+    .recipient-block {
+      margin-bottom: 24pt;
+    }
+
+    .recipient-block p {
+      margin: 0;
+    }
+
+    .subject-line {
+      margin-bottom: 18pt;
+      font-weight: bold;
+    }
+
+    .salutation {
+      margin-bottom: 12pt;
+    }
+
+    .body p {
+      margin-bottom: 12pt;
+      text-align: justify;
+    }
+
+    .closing-block {
+      margin-top: 24pt;
+    }
+
+    .closing-block .closing-word {
+      margin-bottom: 48pt;
+    }
+
+    .closing-block .signature-name {
+      font-weight: bold;
+    }
+
+    .closing-block p {
+      margin: 0;
+    }
+
+    .attachments {
+      margin-top: 18pt;
+      font-size: 11pt;
+    }
+
+    .attachments p {
+      margin: 0;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid #000;
+      margin: 18pt 0;
+    }
+  </style>
+</head>
+<body>
+
+  {# ── Sender ── #}
+  <div class="sender-block">
+    <p><strong>{{ executor_name }}</strong></p>
+    {% for line in executor_address_lines %}
+    <p>{{ line }}</p>
+    {% endfor %}
+    {% if executor_phone %}<p>Phone: {{ executor_phone }}</p>{% endif %}
+    {% if executor_email %}<p>Email: {{ executor_email }}</p>{% endif %}
+  </div>
+
+  {# ── Date ── #}
+  <div class="date-line">
+    <p>{{ letter_date }}</p>
+  </div>
+
+  {# ── Recipient ── #}
+  <div class="recipient-block">
+    {% block recipient %}
+    <p><em>To Whom It May Concern</em></p>
+    {% endblock %}
+  </div>
+
+  {# ── Subject ── #}
+  <div class="subject-line">
+    <p>RE: {% block subject %}Notification of Death — {{ deceased.full_name }}{% endblock %}</p>
+  </div>
+
+  {# ── Salutation ── #}
+  <div class="salutation">
+    <p>{% block salutation %}Dear Sir or Madam:{% endblock %}</p>
+  </div>
+
+  {# ── Body ── #}
+  <div class="body">
+    {% block body %}{% endblock %}
+  </div>
+
+  {# ── Closing ── #}
+  <div class="closing-block">
+    <p class="closing-word">Sincerely,</p>
+    <p class="signature-name">{{ executor_name }}</p>
+    <p>{{ executor_relationship }} of {{ deceased.full_name }}</p>
+    {% if executor_phone %}<p>{{ executor_phone }}</p>{% endif %}
+    {% if executor_email %}<p>{{ executor_email }}</p>{% endif %}
+  </div>
+
+  {# ── Attachments ── #}
+  {% block attachments %}{% endblock %}
+
+</body>
+</html>

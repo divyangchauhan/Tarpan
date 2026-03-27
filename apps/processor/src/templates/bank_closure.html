@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Bank Account Closure — Estate of {{ deceased.full_name }}{% endblock %}
+
+{% block recipient %}
+{% if institution_name %}
+<p><strong>{{ institution_name }}</strong></p>
+{% if institution_address %}
+{% for line in institution_address.splitlines() %}
+<p>{{ line }}</p>
+{% endfor %}
+{% endif %}
+{% else %}
+<p><strong>Estate Services Department</strong></p>
+{% endif %}
+{% endblock %}
+
+{% block subject %}
+Request to Close Account(s) — Estate of {{ deceased.full_name }}
+{% endblock %}
+
+{% block salutation %}Dear Estate Services Department:{% endblock %}
+
+{% block body %}
+<p>
+  I am writing to notify you of the death of <strong>{{ deceased.full_name }}</strong>,
+  who passed away on <strong>{{ deceased.date_of_death }}</strong> in {{ deceased.place_of_death }}.
+  I am the {{ executor_relationship }} of the deceased and am authorized to act on behalf of the estate.
+</p>
+
+<p>
+  I respectfully request that all bank accounts, savings accounts, and financial products held
+  by {{ deceased.full_name }} at your institution be frozen immediately to protect the estate's assets
+  pending probate proceedings. Once the estate has been properly established, I will contact you
+  to arrange the orderly closure or transfer of these accounts in accordance with applicable law.
+</p>
+
+<p>
+  Please provide a written confirmation of all accounts held by the deceased, including current
+  balances, any outstanding loans or liabilities, and any accounts held jointly with another party.
+</p>
+
+<p>
+  A certified copy of the death certificate is enclosed. Please advise me of any additional
+  documentation required — such as letters testamentary or a small-estate affidavit — to
+  facilitate the closing or transfer of these accounts.
+</p>
+{% endblock %}
+
+{% block attachments %}
+<div class="attachments">
+  <p><strong>Enclosures:</strong></p>
+  <p>1. Certified copy of death certificate</p>
+  <p>2. Executor identification</p>
+  <p>3. Letters testamentary (if available)</p>
+</div>
+{% endblock %}

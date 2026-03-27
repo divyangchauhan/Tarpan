@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Passport Cancellation — Estate of {{ deceased.full_name }}{% endblock %}
+
+{% block recipient %}
+<p><strong>U.S. Department of State</strong></p>
+<p>Passport Services — Vital Records</p>
+<p>44132 Mercure Circle</p>
+<p>P.O. Box 1213</p>
+<p>Sterling, VA 20166-1213</p>
+{% endblock %}
+
+{% block subject %}
+Request to Cancel U.S. Passport — {{ deceased.full_name }}
+{% endblock %}
+
+{% block salutation %}Dear U.S. Passport Services:{% endblock %}
+
+{% block body %}
+<p>
+  I am writing to notify the U.S. Department of State of the death of
+  <strong>{{ deceased.full_name }}</strong>{% if deceased.date_of_birth %}, born {{ deceased.date_of_birth }},{% endif %}
+  who passed away on <strong>{{ deceased.date_of_death }}</strong> in {{ deceased.place_of_death }}.
+  I am the {{ executor_relationship }} of the deceased.
+</p>
+
+<p>
+  I am submitting the deceased's U.S. passport to be formally cancelled and returned to the
+  estate. This request is made in accordance with the Department of State's procedures for
+  cancelling the passports of deceased U.S. citizens to prevent fraudulent use.
+</p>
+
+<p>
+  A certified copy of the death certificate is enclosed, along with the original U.S. passport
+  (if located among the deceased's belongings). Please return the cancelled passport to the
+  executor address listed above.
+</p>
+{% endblock %}
+
+{% block attachments %}
+<div class="attachments">
+  <p><strong>Enclosures:</strong></p>
+  <p>1. Certified copy of death certificate</p>
+  <p>2. U.S. Passport (if available)</p>
+  <p>3. Executor identification</p>
+</div>
+{% endblock %}

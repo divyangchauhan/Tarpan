@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Voter Registration Cancellation — {{ deceased.full_name }}{% endblock %}
+
+{% block recipient %}
+{% if institution_name %}
+<p><strong>{{ institution_name }}</strong></p>
+{% if institution_address %}
+{% for line in institution_address.splitlines() %}
+<p>{{ line }}</p>
+{% endfor %}
+{% endif %}
+{% else %}
+<p><strong>{{ deceased.state or "County" }} Board of Elections</strong></p>
+<p>Voter Registration Division</p>
+{% endif %}
+{% endblock %}
+
+{% block subject %}
+Request to Cancel Voter Registration — {{ deceased.full_name }}
+{% endblock %}
+
+{% block salutation %}Dear Board of Elections:{% endblock %}
+
+{% block body %}
+<p>
+  I am writing to notify you of the death of <strong>{{ deceased.full_name }}</strong>
+  {% if deceased.date_of_birth %}, born {{ deceased.date_of_birth }},{% endif %}
+  who passed away on <strong>{{ deceased.date_of_death }}</strong> in {{ deceased.place_of_death }}.
+  I am the {{ executor_relationship }} of the deceased.
+</p>
+
+<p>
+  I respectfully request that the voter registration of {{ deceased.full_name }} be cancelled
+  and that the voter rolls be updated accordingly. This request is made to maintain the
+  integrity of the electoral record and to prevent any unauthorized use of the deceased's
+  registration status.
+</p>
+
+<p>
+  A certified copy of the death certificate is enclosed. Please confirm in writing that
+  this registration has been removed from the active voter rolls.
+</p>
+{% endblock %}
+
+{% block attachments %}
+<div class="attachments">
+  <p><strong>Enclosures:</strong></p>
+  <p>1. Certified copy of death certificate</p>
+</div>
+{% endblock %}
