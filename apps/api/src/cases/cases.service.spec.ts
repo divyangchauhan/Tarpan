@@ -64,6 +64,7 @@ describe('CasesService', () => {
       expect(mockCaseRepository.create).toHaveBeenCalledWith({
         userId: 'user-id',
         deceasedInfo: mockDeceasedInfo,
+        executorInfo: null,
       });
       expect(mockCaseRepository.save).toHaveBeenCalledWith(mockCase);
       expect(result).toEqual(mockCase);
