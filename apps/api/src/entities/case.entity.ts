@@ -8,7 +8,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { CaseStatus, DeceasedInfo } from '@afterlight/shared';
+import { CaseStatus, DeceasedInfo, ExecutorInfo } from '@afterlight/shared';
 import { UserEntity } from './user.entity';
 import { DocumentEntity } from './document.entity';
 
@@ -29,6 +29,9 @@ export class CaseEntity {
 
   @Column({ type: 'jsonb' })
   deceasedInfo!: DeceasedInfo;
+
+  @Column({ type: 'jsonb', nullable: true })
+  executorInfo!: ExecutorInfo | null;
 
   @CreateDateColumn()
   createdAt!: Date;

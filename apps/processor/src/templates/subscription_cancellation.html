@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Subscription Cancellation — Estate of {{ deceased.full_name }}{% endblock %}
+
+{% block recipient %}
+{% if institution_name %}
+<p><strong>{{ institution_name }}</strong></p>
+{% if institution_address %}
+{% for line in institution_address.splitlines() %}
+<p>{{ line }}</p>
+{% endfor %}
+{% endif %}
+{% else %}
+<p><strong>Customer Service / Cancellations Department</strong></p>
+{% endif %}
+{% endblock %}
+
+{% block subject %}
+Request to Cancel Subscription — Estate of {{ deceased.full_name }}
+{% endblock %}
+
+{% block salutation %}Dear Customer Service Department:{% endblock %}
+
+{% block body %}
+<p>
+  I am writing to notify you of the death of <strong>{{ deceased.full_name }}</strong>,
+  who passed away on <strong>{{ deceased.date_of_death }}</strong> in {{ deceased.place_of_death }}.
+  I am the {{ executor_relationship }} of the deceased and am contacting you to request
+  cancellation of all active subscriptions held by {{ deceased.full_name }}.
+</p>
+
+<p>
+  Please cancel all subscriptions, memberships, and recurring billing arrangements associated
+  with {{ deceased.full_name }}'s account effective immediately, or at the end of the current
+  paid billing period — whichever results in no additional charges to the estate.
+</p>
+
+<p>
+  If any subscription fees have been charged after <strong>{{ deceased.date_of_death }}</strong>,
+  I request a refund of those charges be issued to the payment method on file or mailed as
+  a check payable to the Estate of {{ deceased.full_name }}.
+</p>
+
+<p>
+  A certified copy of the death certificate is enclosed. Please provide written confirmation
+  of cancellation and any applicable refunds.
+</p>
+{% endblock %}
+
+{% block attachments %}
+<div class="attachments">
+  <p><strong>Enclosures:</strong></p>
+  <p>1. Certified copy of death certificate</p>
+</div>
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Pension / 401(k) Beneficiary Notification — {{ deceased.full_name }}{% endblock %}
+
+{% block recipient %}
+{% if institution_name %}
+<p><strong>{{ institution_name }}</strong></p>
+{% if institution_address %}
+{% for line in institution_address.splitlines() %}
+<p>{{ line }}</p>
+{% endfor %}
+{% endif %}
+{% else %}
+<p><strong>Retirement Plan Administrator</strong></p>
+<p>Beneficiary Services Department</p>
+{% endif %}
+{% endblock %}
+
+{% block subject %}
+Beneficiary Claim — Pension / Retirement Account of {{ deceased.full_name }}
+{% endblock %}
+
+{% block salutation %}Dear Plan Administrator:{% endblock %}
+
+{% block body %}
+<p>
+  I am writing to notify you of the death of <strong>{{ deceased.full_name }}</strong>
+  {% if deceased.date_of_birth %}, born {{ deceased.date_of_birth }},{% endif %}
+  who passed away on <strong>{{ deceased.date_of_death }}</strong> in {{ deceased.place_of_death }}.
+  I am the {{ executor_relationship }} of the deceased.
+</p>
+
+<p>
+  I am writing to request information regarding any pension, 401(k), 403(b), IRA, or other
+  retirement accounts held by {{ deceased.full_name }} with your organization. I am seeking
+  to identify all plan balances, named beneficiaries, and the process for distributing or
+  rolling over those assets in accordance with the plan documents and applicable law.
+</p>
+
+<p>
+  Please provide:
+</p>
+<p>
+  (1) A complete list of all retirement accounts and their current balances;<br />
+  (2) The name(s) of all designated beneficiaries on file;<br />
+  (3) The required forms and documentation to initiate a beneficiary distribution or rollover;<br />
+  (4) Information on any required minimum distributions that may be applicable.
+</p>
+
+<p>
+  A certified copy of the death certificate is enclosed. Please contact me at the address
+  above{% if executor_phone %} or by phone at {{ executor_phone }}{% endif %} to discuss
+  next steps.
+</p>
+{% endblock %}
+
+{% block attachments %}
+<div class="attachments">
+  <p><strong>Enclosures:</strong></p>
+  <p>1. Certified copy of death certificate</p>
+  <p>2. Executor identification</p>
+  <p>3. Letters testamentary (if available)</p>
+</div>
+{% endblock %}

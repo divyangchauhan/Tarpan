@@ -22,6 +22,7 @@ export class CasesService {
     const caseEntity = this.caseRepository.create({
       userId,
       deceasedInfo: dto.deceasedInfo,
+      executorInfo: dto.executorInfo ?? null,
     });
 
     const saved = await this.caseRepository.save(caseEntity);
@@ -64,6 +65,13 @@ export class CasesService {
         Object.entries(dto.deceasedInfo).filter(([, v]) => v !== undefined),
       );
       caseEntity.deceasedInfo = { ...caseEntity.deceasedInfo, ...patch };
+    }
+
+    if (dto.executorInfo !== undefined) {
+      const patch = Object.fromEntries(
+        Object.entries(dto.executorInfo).filter(([, v]) => v !== undefined),
+      );
+      caseEntity.executorInfo = { ...(caseEntity.executorInfo ?? {}), ...patch } as typeof caseEntity.executorInfo;
     }
 
     const updated = await this.caseRepository.save(caseEntity);

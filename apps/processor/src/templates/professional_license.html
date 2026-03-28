@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Professional License Cancellation — {{ deceased.full_name }}{% endblock %}
+
+{% block recipient %}
+{% if institution_name %}
+<p><strong>{{ institution_name }}</strong></p>
+{% if institution_address %}
+{% for line in institution_address.splitlines() %}
+<p>{{ line }}</p>
+{% endfor %}
+{% endif %}
+{% else %}
+<p><strong>{{ deceased.state or "State" }} Professional Licensing Board</strong></p>
+<p>Licensing Records Division</p>
+{% endif %}
+{% endblock %}
+
+{% block subject %}
+Notification of Death and Request to Cancel Professional License — {{ deceased.full_name }}
+{% endblock %}
+
+{% block salutation %}Dear Licensing Board:{% endblock %}
+
+{% block body %}
+<p>
+  I am writing to notify your office of the death of <strong>{{ deceased.full_name }}</strong>
+  {% if deceased.date_of_birth %}, born {{ deceased.date_of_birth }},{% endif %}
+  who passed away on <strong>{{ deceased.date_of_death }}</strong> in {{ deceased.place_of_death }}.
+  I am the {{ executor_relationship }} of the deceased.
+</p>
+
+<p>
+  I respectfully request that all professional licenses, certifications, and registrations
+  held by {{ deceased.full_name }} with your board be cancelled and the records updated to
+  reflect the deceased's passing. This notification is made to prevent any unauthorized use
+  of the deceased's credentials and to maintain the accuracy of your licensing records.
+</p>
+
+<p>
+  Please confirm in writing that all licenses have been cancelled and removed from the active
+  licensee database. If there are any outstanding license renewal fees, please advise whether
+  they should be paid by the estate or if they will be waived given the circumstances.
+</p>
+
+<p>
+  A certified copy of the death certificate is enclosed. Please contact me if additional
+  information or documentation is needed.
+</p>
+{% endblock %}
+
+{% block attachments %}
+<div class="attachments">
+  <p><strong>Enclosures:</strong></p>
+  <p>1. Certified copy of death certificate</p>
+  <p>2. Professional license(s) (if available)</p>
+</div>
+{% endblock %}

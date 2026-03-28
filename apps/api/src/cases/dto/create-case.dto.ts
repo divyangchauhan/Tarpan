@@ -1,6 +1,7 @@
 import { Type } from 'class-transformer';
 import {
   IsDateString,
+  IsEmail,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -35,8 +36,35 @@ export class DeceasedInfoDto {
   socialSecurityNumber?: string;
 }
 
+export class ExecutorInfoDto {
+  @IsString()
+  @IsNotEmpty()
+  name!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  address!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  relationship!: string;
+
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @IsOptional()
+  @IsEmail()
+  email?: string;
+}
+
 export class CreateCaseDto {
   @ValidateNested()
   @Type(() => DeceasedInfoDto)
   deceasedInfo!: DeceasedInfoDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => ExecutorInfoDto)
+  executorInfo?: ExecutorInfoDto;
 }

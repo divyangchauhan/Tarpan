@@ -19,6 +19,7 @@ const mockCase: CaseEntity = {
   userId: 'user-id',
   status: CaseStatus.ACTIVE,
   deceasedInfo: mockDeceasedInfo,
+  executorInfo: null,
   createdAt: new Date(),
   updatedAt: new Date(),
   user: null as unknown as import('../entities/user.entity').UserEntity,
@@ -63,6 +64,7 @@ describe('CasesService', () => {
       expect(mockCaseRepository.create).toHaveBeenCalledWith({
         userId: 'user-id',
         deceasedInfo: mockDeceasedInfo,
+        executorInfo: null,
       });
       expect(mockCaseRepository.save).toHaveBeenCalledWith(mockCase);
       expect(result).toEqual(mockCase);

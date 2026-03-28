@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}VA Notification of Death — {{ deceased.full_name }}{% endblock %}
+
+{% block recipient %}
+<p><strong>U.S. Department of Veterans Affairs</strong></p>
+<p>Veterans Benefits Administration</p>
+<p>810 Vermont Avenue, NW</p>
+<p>Washington, DC 20420</p>
+{% endblock %}
+
+{% block subject %}
+Notification of Veteran's Death — {{ deceased.full_name }}
+{% endblock %}
+
+{% block salutation %}Dear Department of Veterans Affairs:{% endblock %}
+
+{% block body %}
+<p>
+  I am writing to notify the Department of Veterans Affairs of the death of
+  <strong>{{ deceased.full_name }}</strong>{% if deceased.date_of_birth %}, born {{ deceased.date_of_birth }},{% endif %}
+  who passed away on <strong>{{ deceased.date_of_death }}</strong> in {{ deceased.place_of_death }}.
+  I am the {{ executor_relationship }} of the deceased.
+</p>
+
+<p>
+  Please update your records to reflect the passing of {{ deceased.full_name }} and discontinue
+  any VA compensation, pension, or other benefit payments effective the date of death.
+  Any payments issued after {{ deceased.date_of_death }} must be returned and should not be
+  negotiated per VA policy.
+</p>
+
+<p>
+  I am also requesting information regarding any survivor benefits, Dependency and Indemnity
+  Compensation (DIC), VA burial benefits, and other benefits that may be available to eligible
+  survivors or the estate. Please send all relevant forms and instructions to the address above.
+</p>
+
+<p>
+  A certified copy of the death certificate and any available military discharge documentation
+  (DD Form 214) are enclosed.
+</p>
+{% endblock %}
+
+{% block attachments %}
+<div class="attachments">
+  <p><strong>Enclosures:</strong></p>
+  <p>1. Certified copy of death certificate</p>
+  <p>2. DD Form 214 — Certificate of Release or Discharge from Active Duty (if available)</p>
+  <p>3. VA benefit documentation (if available)</p>
+</div>
+{% endblock %}

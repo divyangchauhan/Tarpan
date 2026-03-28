@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}USPS Mail Forwarding / Deceased Notification — {{ deceased.full_name }}{% endblock %}
+
+{% block recipient %}
+<p><strong>United States Postal Service</strong></p>
+<p>Postmaster — Local Post Office</p>
+<p>{{ deceased.place_of_death }}</p>
+{% endblock %}
+
+{% block subject %}
+Notification of Death and Mail Forwarding Request — {{ deceased.full_name }}
+{% endblock %}
+
+{% block salutation %}Dear Postmaster:{% endblock %}
+
+{% block body %}
+<p>
+  I am writing to notify the United States Postal Service of the death of
+  <strong>{{ deceased.full_name }}</strong>{% if deceased.date_of_birth %}, born {{ deceased.date_of_birth }},{% endif %}
+  who passed away on <strong>{{ deceased.date_of_death }}</strong> in {{ deceased.place_of_death }}.
+  I am the {{ executor_relationship }} of the deceased and the authorized representative of the estate.
+</p>
+
+<p>
+  I respectfully request that all first-class mail and packages addressed to
+  {{ deceased.full_name }} be forwarded to the executor's address listed above, effective
+  immediately. This forwarding is requested for a period of twelve (12) months to ensure
+  that estate-related correspondence and financial documents are received.
+</p>
+
+<p>
+  Please also mark your records to reflect that {{ deceased.full_name }} is deceased so that
+  bulk mail and solicitations addressed to the deceased may be appropriately handled.
+</p>
+
+<p>
+  A certified copy of the death certificate is enclosed. Please contact me if additional
+  documentation such as a completed PS Form 3575 (Change of Address) is required.
+</p>
+{% endblock %}
+
+{% block attachments %}
+<div class="attachments">
+  <p><strong>Enclosures:</strong></p>
+  <p>1. Certified copy of death certificate</p>
+  <p>2. Executor identification</p>
+</div>
+{% endblock %}

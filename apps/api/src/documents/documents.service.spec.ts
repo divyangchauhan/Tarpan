@@ -24,6 +24,7 @@ const mockCase: CaseEntity = {
     dateOfDeath: '2024-01-01',
     placeOfDeath: 'New York, NY',
   },
+  executorInfo: null,
   createdAt: new Date(),
   updatedAt: new Date(),
   user: null as unknown as import('../entities/user.entity').UserEntity,

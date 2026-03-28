@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}DMV Notification of Death — {{ deceased.full_name }}{% endblock %}
+
+{% block recipient %}
+{% if institution_name %}
+<p><strong>{{ institution_name }}</strong></p>
+{% if institution_address %}
+{% for line in institution_address.splitlines() %}
+<p>{{ line }}</p>
+{% endfor %}
+{% endif %}
+{% else %}
+<p><strong>{{ deceased.state or "State" }} Department of Motor Vehicles</strong></p>
+<p>Driver Records / Deceased Notification Unit</p>
+{% endif %}
+{% endblock %}
+
+{% block subject %}
+Notification of Death and Request to Cancel Driver's License — {{ deceased.full_name }}
+{% endblock %}
+
+{% block salutation %}Dear Driver Records Department:{% endblock %}
+
+{% block body %}
+<p>
+  I am writing to notify the Department of Motor Vehicles of the death of
+  <strong>{{ deceased.full_name }}</strong>{% if deceased.date_of_birth %}, born {{ deceased.date_of_birth }},{% endif %}
+  who passed away on <strong>{{ deceased.date_of_death }}</strong> in {{ deceased.place_of_death }}.
+  I am the {{ executor_relationship }} of the deceased.
+</p>
+
+<p>
+  I respectfully request that the driver's license and any state-issued identification cards
+  held by {{ deceased.full_name }} be cancelled and marked as deceased in your records to
+  prevent fraudulent use of the deceased's identity.
+</p>
+
+<p>
+  If required by your office, the original driver's license and/or ID card are enclosed
+  (if located among the deceased's belongings). Please confirm in writing that the records
+  have been updated accordingly.
+</p>
+
+<p>
+  A certified copy of the death certificate is enclosed for your records. Please contact me
+  if additional information or documentation is needed.
+</p>
+{% endblock %}
+
+{% block attachments %}
+<div class="attachments">
+  <p><strong>Enclosures:</strong></p>
+  <p>1. Certified copy of death certificate</p>
+  <p>2. Driver's license / State ID (if available)</p>
+</div>
+{% endblock %}

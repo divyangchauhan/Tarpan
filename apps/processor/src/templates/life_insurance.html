@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Life Insurance Claim Initiation — Estate of {{ deceased.full_name }}{% endblock %}
+
+{% block recipient %}
+{% if institution_name %}
+<p><strong>{{ institution_name }}</strong></p>
+{% if institution_address %}
+{% for line in institution_address.splitlines() %}
+<p>{{ line }}</p>
+{% endfor %}
+{% endif %}
+{% else %}
+<p><strong>Life Insurance Claims Department</strong></p>
+{% endif %}
+{% endblock %}
+
+{% block subject %}
+Life Insurance Claim — Policyholder: {{ deceased.full_name }}
+{% endblock %}
+
+{% block salutation %}Dear Claims Department:{% endblock %}
+
+{% block body %}
+<p>
+  I am writing to initiate a life insurance claim following the death of
+  <strong>{{ deceased.full_name }}</strong>{% if deceased.date_of_birth %}, born {{ deceased.date_of_birth }},{% endif %}
+  who passed away on <strong>{{ deceased.date_of_death }}</strong> in {{ deceased.place_of_death }}.
+  I am the {{ executor_relationship }} of the deceased.
+</p>
+
+<p>
+  I am requesting the appropriate claim forms and instructions to begin the claims process
+  for any life insurance policies held by {{ deceased.full_name }} at your company. Please
+  search your records for all policies — including any group life policies, term policies,
+  whole life policies, or accidental death riders — associated with the deceased.
+</p>
+
+<p>
+  Please send all required claim forms and a list of documentation needed to complete the
+  claim to the executor address listed above. I am prepared to provide any documentation
+  required to facilitate a timely resolution of this claim.
+</p>
+
+{% if deceased.certificate_number %}
+<p>
+  The death certificate registration number is <strong>{{ deceased.certificate_number }}</strong>.
+  A certified copy is enclosed.
+</p>
+{% endif %}
+{% endblock %}
+
+{% block attachments %}
+<div class="attachments">
+  <p><strong>Enclosures:</strong></p>
+  <p>1. Certified copy of death certificate</p>
+  <p>2. Executor identification</p>
+  <p>3. Letters testamentary (if available)</p>
+</div>
+{% endblock %}
