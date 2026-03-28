@@ -4,8 +4,10 @@ Two pipelines can be tested end-to-end locally:
 
 | Pipeline | Trigger | What it tests |
 |---|---|---|
-| **Processing** | SQS → Lambda | S3 download → Claude extraction → API callback |
-| **Generation** | Direct invoke | GenerationRequest → Jinja2/WeasyPrint → S3 upload |
+| **Processing** | SQS processing queue → Lambda | S3 download → Claude extraction → API callback |
+| **Generation** | SQS generation queue → Lambda | GenerationRequest → Jinja2/WeasyPrint → S3 upload → API callback |
+
+Both pipelines are handled by the same Lambda function (`src/handler.py`). The handler routes by message shape: messages containing `generatedDocumentId` go to the generation path; all others go to the processing path.
 
 ---
 
@@ -50,12 +52,14 @@ cp .env.example .env
 
 | Mode | Description | Requires API? |
 |---|---|---|
-| `typed` | Process typed/text-extractable fixture via SQS | Yes |
-| `scanned` | Process scanned/image-only fixture via SQS (Claude Vision) | Yes |
-| `minimal` | Process minimal-fields fixture via SQS | Yes |
+| `typed` | Process typed/text-extractable fixture via SQS processing queue | Yes |
+| `scanned` | Process scanned/image-only fixture via SQS processing queue (Claude Vision) | Yes |
+| `minimal` | Process minimal-fields fixture via SQS processing queue | Yes |
 | `both` | `typed` + `scanned` (default) | Yes |
-| `generate` | Direct-invoke handler with generation event, verify PDF in S3 | No |
+| `generate` | Send generation event to SQS generation queue, verify PDF in S3 | No |
 | `all` | `both` + `generate` | Yes |
+
+> **Queue hygiene**: the script automatically purges both SQS queues at startup to prevent stale messages from a prior run being counted as current-run completions.
 
 ---
 
@@ -92,6 +96,7 @@ This automatically creates:
 - S3 bucket: `afterlight-uploads`
 - S3 bucket: `afterlight-generated-docs`
 - SQS queue: `afterlight-document-processing`
+- SQS queue: `afterlight-document-generation`
 
 ---
 
@@ -149,13 +154,13 @@ Press `Ctrl+C` to stop.
 #### Expected log output
 
 ```
-INFO worker          Worker started, polling queue: http://localhost:4566/...
+INFO worker          Worker started, polling queues: ['http://localhost:4566/.../afterlight-document-processing', 'http://localhost:4566/.../afterlight-document-generation']
 INFO src.s3_client   Downloading object  bucket=afterlight-uploads  key=documents/test-doc-001.pdf
 INFO src.pdf_processor Using text extraction for PDF  text_length=2098
 INFO src.extractor   Calling Claude API for extraction  block_count=1
 INFO src.extractor   Extraction complete
 INFO src.api_client  Reporting processing result  document_id=test-doc-001  status=PROCESSED
-INFO worker          Message processed and deleted  message_id=...
+INFO worker          Message deleted from queue  message_id=...
 ```
 
 For the scanned fixture you will see instead:
@@ -163,6 +168,8 @@ For the scanned fixture you will see instead:
 ```
 INFO src.pdf_processor PDF has insufficient text; falling back to vision
 ```
+
+The worker polls both queues in sequence. When both are empty it sleeps 2 s before the next cycle.
 
 ---
 
@@ -184,20 +191,70 @@ The extracted fields map to `ExtractedCertificateData`:
 
 ## Manual Steps — Generation Pipeline
 
-The generation pipeline is triggered by a **direct Lambda invocation** (no SQS). The handler renders a Jinja2 template to PDF via WeasyPrint and uploads the result to S3.
+The generation pipeline now runs through the **SQS generation queue** — the same pattern as the processing pipeline. The worker picks up a `DocumentGenerationJob` message, renders the Jinja2 template via WeasyPrint, uploads the PDF to S3, and calls back the NestJS API.
 
-### Step 1 — Ensure LocalStack is running and buckets exist
+### Step 1 — Ensure LocalStack is running
 
 ```bash
 # From repo root
 docker compose up localstack -d
-
-# Create the generated-docs bucket if it doesn't already exist
-aws --endpoint-url=http://localhost:4566 --region us-east-1 \
-  s3 mb s3://afterlight-generated-docs 2>/dev/null || true
 ```
 
-### Step 2 — Direct-invoke the handler
+LocalStack initialises both S3 buckets and both SQS queues automatically via the init scripts.
+
+### Step 2 — Start the local worker (separate terminal)
+
+```bash
+cd apps/processor
+poetry run python run_worker.py
+```
+
+The worker polls both queues. Press `Ctrl+C` to stop.
+
+### Step 3 — Send a generation message to SQS
+
+```bash
+aws --endpoint-url=http://localhost:4566 --region us-east-1 \
+  sqs send-message \
+  --queue-url http://localhost:4566/000000000000/afterlight-document-generation \
+  --message-body '{
+    "generatedDocumentId": "test-gen-001",
+    "templateId": "ssa-721",
+    "caseId": "test-case-001",
+    "deceased": {
+      "full_name": "Jane A. Smith",
+      "first_name": "Jane",
+      "last_name": "Smith",
+      "date_of_birth": "1945-03-15",
+      "date_of_death": "2024-11-20",
+      "place_of_death": "Springfield, IL",
+      "state": "IL",
+      "certificate_number": "2024-IL-001234",
+      "certifier_name": "Dr. John Doe",
+      "certifier_title": "Attending Physician"
+    },
+    "executorName": "Robert Smith",
+    "executorAddress": "456 Elm Street\nSpringfield, IL 62701",
+    "executorRelationship": "Son",
+    "executorPhone": "(217) 555-0100",
+    "executorEmail": "robert.smith@example.com"
+  }'
+```
+
+#### Expected worker log output
+
+```
+INFO src.handler     Generating document  generated_document_id=test-gen-001  template_id=ssa-721
+INFO src.s3_client   Uploading object  bucket=afterlight-generated-docs  key=generated/test-case-001/ssa-721/test-gen-001.pdf
+INFO src.handler     Document generated successfully  generated_document_id=test-gen-001  s3_key=...
+INFO worker          Message deleted from queue  message_id=...
+```
+
+> **Note:** The API callback (`PATCH /api/v1/generated-documents/{id}/result`) requires NestJS to be running. If NestJS is not running, the handler logs a warning but the PDF is still uploaded to S3 — verify via Step 4.
+
+### (Alternative) Direct-invoke the handler without SQS
+
+For quick one-off testing without a running worker:
 
 ```bash
 cd apps/processor
@@ -208,25 +265,16 @@ from src.handler import handler
 
 event = {
     "generatedDocumentId": "test-gen-001",
-    "templateId": "ssa-721",          # any registered template ID
+    "templateId": "ssa-721",
     "caseId": "test-case-001",
     "deceased": {
         "full_name": "Jane A. Smith",
-        "first_name": "Jane",
-        "last_name": "Smith",
-        "date_of_birth": "1945-03-15",
         "date_of_death": "2024-11-20",
         "place_of_death": "Springfield, IL",
-        "state": "IL",
-        "certificate_number": "2024-IL-001234",
-        "certifier_name": "Dr. John Doe",
-        "certifier_title": "Attending Physician",
     },
     "executorName": "Robert Smith",
     "executorAddress": "456 Elm Street\nSpringfield, IL 62701",
     "executorRelationship": "Son",
-    "executorPhone": "(217) 555-0100",
-    "executorEmail": "robert.smith@example.com",
 }
 
 result = handler(event, object())
@@ -244,9 +292,7 @@ EOF
 }
 ```
 
-> **Note:** The `status` will be `COMPLETED` only if the API callback succeeds. If NestJS is not running or the `/api/v1/generated-documents/{id}/result` endpoint is not yet implemented (task P1-10), the handler returns `FAILED` after a successful S3 upload. Check S3 directly to confirm the PDF was generated.
-
-### Step 3 — Verify the PDF in S3
+### Step 4 — Verify the PDF in S3
 
 ```bash
 aws --endpoint-url=http://localhost:4566 --region us-east-1 \
@@ -311,14 +357,16 @@ poetry run python tests/fixtures/generate_fixtures.py
 
 ## API Callback Behaviour
 
-| Callback | Endpoint | Status |
-|---|---|---|
-| Processing result | `PATCH /api/v1/documents/{id}/processing-result` | Implemented (PR #3) |
-| Generation result | `PATCH /api/v1/generated-documents/{id}/result` | Pending (task P1-10) |
+| Callback | Endpoint | Auth | Status |
+|---|---|---|---|
+| Processing result | `PATCH /api/v1/documents/{id}/processing-result` | `X-Internal-Secret` | Implemented (PR #3) |
+| Generation result | `PATCH /api/v1/generated-documents/{id}/result` | `X-Internal-Secret` | Implemented (PR #5) |
+
+Both callbacks use the `X-Internal-Secret` header (value from `INTERNAL_API_SECRET` env var).
 
 - **NestJS running** → full round-trip completes for both pipelines.
 - **NestJS not running (processing)** → worker logs an error after extraction but extraction still succeeds.
-- **NestJS not running (generation)** → handler returns `FAILED` but the PDF is still uploaded to S3.
+- **NestJS not running (generation)** → handler logs a warning but PDF is still uploaded to S3; status stays `GENERATING` in DB until the callback eventually reaches the API.
 
 To silence callback errors without starting the API, set in `.env`:
 

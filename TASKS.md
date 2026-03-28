@@ -39,7 +39,7 @@
 | P1-07 | Documents module: PATCH endpoint for Lambda to report results | ✅ | PR #3 |
 | P1-08 | WebSocket gateway: push processing status updates to client | ✅ | PR #3 |
 | P1-09 | Templates module: list available institution templates | ⬜ | |
-| P1-10 | Generation module: trigger Lambda for PDF generation, return download URL | ⬜ | |
+| P1-10 | Generation module: trigger Lambda for PDF generation, return download URL | ✅ | PR #5 — SQS-based via afterlight-document-generation queue |
 | P1-11 | API unit tests (Jest) — target 80% coverage | ⬜ | |
 | P1-12 | API e2e tests (Supertest) | ⬜ | |
 
@@ -56,6 +56,7 @@
 | P2-05 | Structured output parsing & validation (Pydantic) | ✅ | PR #4 |
 | P2-06 | Result upload back to S3 + API PATCH callback | ✅ | PR #4 |
 | P2-07 | Institution template engine (Jinja2 → HTML → PDF via WeasyPrint) | ✅ | PR #5 |
+| P2-07b | SQS-based generation worker: dual-queue run_worker.py + handler routing | ✅ | PR #5 |
 | P2-08 | Template: Social Security Administration (SSA-721) | ✅ | PR #5 |
 | P2-09 | Template: Medicare notification | ✅ | PR #5 |
 | P2-10 | Template: Generic bank account closure letter | ✅ | PR #5 |
@@ -103,8 +104,8 @@
 |---|---|---|---|
 | P4-01 | CDK project scaffold | ⬜ | |
 | P4-02 | S3 bucket stack (uploads + generated docs) | ⬜ | |
-| P4-03 | SQS queue stack | ⬜ | |
-| P4-04 | Lambda stack (processor Lambda + SQS trigger) | ⬜ | |
+| P4-03 | SQS queue stack (two queues: processing + generation) | ⬜ | |
+| P4-04 | Lambda stack (processor Lambda + both SQS triggers) | ⬜ | |
 | P4-05 | RDS PostgreSQL stack | ⬜ | |
 | P4-06 | ECS / EC2 stack for NestJS API (or Elastic Beanstalk for POC speed) | ⬜ | |
 | P4-07 | CloudFront + S3 for React app hosting | ⬜ | |
