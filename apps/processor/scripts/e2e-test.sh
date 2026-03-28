@@ -234,11 +234,12 @@ ok "S3 bucket ready: $UPLOADS_BUCKET"
 $AWS_LOCAL s3 mb "s3://$GENERATED_DOCS_BUCKET" 2>/dev/null || true
 ok "S3 bucket ready: $GENERATED_DOCS_BUCKET"
 
-SQS_QUEUE_NAME="afterlight-document-processing"
-SQS_QUEUE_URL="http://localhost:4566/000000000000/$SQS_QUEUE_NAME"
-$AWS_LOCAL sqs create-queue --queue-name "$SQS_QUEUE_NAME" 2>/dev/null || true
-$AWS_LOCAL sqs purge-queue --queue-url "$SQS_QUEUE_URL" 2>/dev/null || true
-ok "SQS queue ready and flushed: $SQS_QUEUE_NAME"
+for SQS_QUEUE_NAME in "afterlight-document-processing" "afterlight-document-generation"; do
+  SQS_QUEUE_URL="http://localhost:4566/000000000000/$SQS_QUEUE_NAME"
+  $AWS_LOCAL sqs create-queue --queue-name "$SQS_QUEUE_NAME" 2>/dev/null || true
+  $AWS_LOCAL sqs purge-queue --queue-url "$SQS_QUEUE_URL" 2>/dev/null || true
+  ok "SQS queue ready and flushed: $SQS_QUEUE_NAME"
+done
 
 # ---------------------------------------------------------------------------
 # Check NestJS API
