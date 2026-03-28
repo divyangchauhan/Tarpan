@@ -16,19 +16,34 @@ export async function createDocument(
   data: CreateDocumentRequest,
 ): Promise<CreateDocumentResponse> {
   const response = await apiClient.post<CreateDocumentResponse>(
-    `/cases/${caseId}/documents`,
+    `/cases/${caseId}/documents/initiate-upload`,
     data,
   );
   return response.data;
 }
 
-export async function confirmUpload(documentId: string): Promise<Document> {
-  const response = await apiClient.patch<Document>(`/documents/${documentId}/confirm-upload`);
+export async function enqueueProcessing(
+  caseId: string,
+  documentId: string,
+): Promise<Document> {
+  const response = await apiClient.post<Document>(
+    `/cases/${caseId}/documents/${documentId}/process`,
+  );
   return response.data;
 }
 
-export async function getDocument(documentId: string): Promise<Document> {
-  const response = await apiClient.get<Document>(`/documents/${documentId}`);
+export async function getDocument(
+  caseId: string,
+  documentId: string,
+): Promise<Document> {
+  const response = await apiClient.get<Document>(
+    `/cases/${caseId}/documents/${documentId}`,
+  );
+  return response.data;
+}
+
+export async function getDocuments(caseId: string): Promise<Document[]> {
+  const response = await apiClient.get<Document[]>(`/cases/${caseId}/documents`);
   return response.data;
 }
 

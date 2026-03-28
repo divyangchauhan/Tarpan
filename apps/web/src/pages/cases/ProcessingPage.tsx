@@ -47,7 +47,7 @@ export function ProcessingPage(): JSX.Element {
 
     async function poll(): Promise<void> {
       try {
-        const doc = await getDocument(documentId);
+        const doc = await getDocument(caseId ?? '', documentId);
         setStatus(doc.status);
 
         if (doc.status === DocumentStatus.PROCESSING) {

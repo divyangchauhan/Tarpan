@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, CheckSquare, Square } from 'lucide-react';
-import { InstitutionType } from '@afterlight/shared';
-import { getCase } from '@/api/cases';
+import { DocumentStatus, InstitutionType } from '@afterlight/shared';
+import { getDocuments } from '@/api/documents';
 import { createGeneratedDocument } from '@/api/generated-documents';
 import { useToast } from '@/hooks/useToast';
 import { Button } from '@/components/ui/Button';
@@ -67,18 +67,16 @@ export function InstitutionsPage(): JSX.Element {
 
   useEffect(() => {
     if (!caseId) return;
-    // We need the documentId to create generated-documents
-    // Get it from the case's associated documents via the API
-    // For now we store it in session storage from the upload step
-    const stored = sessionStorage.getItem(`case_${caseId}_documentId`);
-    if (stored) {
-      setDocumentId(stored);
-      return;
-    }
-
-    // Fallback: get case to find documentId (not directly available from case entity,
-    // so we prompt user to re-upload if needed)
-    getCase(caseId).catch(() => toast('Failed to load case data', 'error'));
+    getDocuments(caseId)
+      .then((docs) => {
+        const processed = docs.find((d) => d.status === DocumentStatus.PROCESSED);
+        if (processed) {
+          setDocumentId(processed.id);
+        } else {
+          toast('No processed death certificate found for this case. Please upload one first.', 'error');
+        }
+      })
+      .catch(() => toast('Failed to load case documents', 'error'));
   }, [caseId, toast]);
 
   function toggle(type: InstitutionType): void {
@@ -106,10 +104,8 @@ export function InstitutionsPage(): JSX.Element {
     if (!caseId || selected.size === 0) return;
 
     if (!documentId) {
-      toast(
-        'Document ID not found. Please go back to the upload step and re-upload the death certificate.',
-        'error',
-      );
+      toast('No processed death certificate found. Please upload one first.', 'error');
+      void navigate(`/cases/${caseId}/upload`);
       return;
     }
 

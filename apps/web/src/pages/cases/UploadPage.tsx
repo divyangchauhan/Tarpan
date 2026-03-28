@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, UploadCloud, FileText, X } from 'lucide-react';
-import { createDocument, uploadToS3, confirmUpload } from '@/api/documents';
+import { createDocument, uploadToS3, enqueueProcessing } from '@/api/documents';
 import { useToast } from '@/hooks/useToast';
 import { Button } from '@/components/ui/Button';
 
@@ -72,7 +72,7 @@ export function UploadPage(): JSX.Element {
       });
 
       await uploadToS3(uploadUrl, file);
-      await confirmUpload(document.id);
+      await enqueueProcessing(caseId, document.id);
 
       toast('Death certificate uploaded. Processing will begin shortly.', 'success');
       void navigate(`/cases/${caseId}/processing?documentId=${document.id}`);

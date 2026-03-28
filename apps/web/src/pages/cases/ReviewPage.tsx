@@ -3,9 +3,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowRight } from 'lucide-react';
-import type { Case } from '@afterlight/shared';
+import { ArrowRight, UploadCloud } from 'lucide-react';
+import type { Case, Document } from '@afterlight/shared';
+import { DocumentStatus } from '@afterlight/shared';
 import { getCase, updateCase } from '@/api/cases';
+import { getDocuments } from '@/api/documents';
 import { useToast } from '@/hooks/useToast';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -42,6 +44,7 @@ export function ReviewPage(): JSX.Element {
   const { toast } = useToast();
 
   const [caseData, setCaseData] = useState<Case | null>(null);
+  const [processedDoc, setProcessedDoc] = useState<Document | null>(null);
   const [loading, setLoading] = useState(true);
   const [savingExecutor, setSavingExecutor] = useState(false);
 
@@ -54,9 +57,11 @@ export function ReviewPage(): JSX.Element {
 
   useEffect(() => {
     if (!caseId) return;
-    getCase(caseId)
-      .then((c) => {
+    Promise.all([getCase(caseId), getDocuments(caseId)])
+      .then(([c, docs]) => {
         setCaseData(c);
+        const processed = docs.find((d) => d.status === DocumentStatus.PROCESSED) ?? null;
+        setProcessedDoc(processed);
         if (c.executorInfo) {
           reset({
             name: c.executorInfo.name,
@@ -213,13 +218,24 @@ export function ReviewPage(): JSX.Element {
             <Button type="submit" variant="secondary" loading={savingExecutor}>
               Save executor info
             </Button>
-            <Button
-              type="button"
-              onClick={() => void navigate(`/cases/${caseId}/institutions`)}
-            >
-              Continue to institutions
-              <ArrowRight className="h-4 w-4" />
-            </Button>
+            {processedDoc ? (
+              <Button
+                type="button"
+                onClick={() => void navigate(`/cases/${caseId}/institutions`)}
+              >
+                Continue to institutions
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => void navigate(`/cases/${caseId}/upload`)}
+              >
+                <UploadCloud className="h-4 w-4" />
+                Upload death certificate
+              </Button>
+            )}
           </div>
         </form>
       </section>
