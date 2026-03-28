@@ -24,22 +24,25 @@ This separation drives every architectural decision below.
 │                       NestJS API                                 │
 │  • Auth (JWT)    • Case management    • Document orchestration   │
 │  • TypeORM       • S3 pre-signed URLs • SQS message publishing   │
-└──────┬──────────────────────────────────────┬────────────────────┘
-       │ PostgreSQL                            │ SQS
-┌──────▼──────────┐               ┌───────────▼────────────────────┐
-│   PostgreSQL    │               │         AWS Lambda              │
-│  (RDS / local)  │               │    Python 3.11 processor        │
-└─────────────────┘               │  • Claude API (OCR / parse)    │
-                                  │  • PDF generation (WeasyPrint)  │
-                                  │  • Result stored back to S3     │
-                                  │  • Status update via API        │
-                                  └────────────────────────────────┘
-                                             │ S3
-                                  ┌──────────▼─────────────┐
-                                  │       AWS S3            │
-                                  │  • Raw uploads          │
-                                  │  • Generated PDFs       │
-                                  └─────────────────────────┘
+└──────┬──────────────────┬──────────────────────────┬─────────────┘
+       │ PostgreSQL        │ SQS (processing queue)   │ SQS (generation queue)
+┌──────▼──────────┐        └──────────┬───────────────┘
+│   PostgreSQL    │                   │
+│  (RDS / local)  │        ┌──────────▼────────────────────────────┐
+└─────────────────┘        │         AWS Lambda                    │
+                           │    Python 3.11 processor              │
+                           │  • Routes by message shape            │
+                           │    ├─ processing: Claude API (OCR)    │
+                           │    └─ generation: Jinja2 + WeasyPrint │
+                           │  • Uploads result PDF to S3           │
+                           │  • PATCH callback → NestJS API        │
+                           └──────────┬────────────────────────────┘
+                                      │ S3
+                           ┌──────────▼─────────────┐
+                           │       AWS S3            │
+                           │  • Raw uploads          │
+                           │  • Generated PDFs       │
+                           └─────────────────────────┘
 ```
 
 ---
@@ -107,9 +110,28 @@ This separation drives every architectural decision below.
 
 ---
 
-### Queue: AWS SQS
+### Queue: AWS SQS (two queues)
 
-**Why async processing:**
+Two SQS queues are used — one per workload type — both consumed by the same Lambda function:
+
+| Queue | Purpose |
+|---|---|
+| `afterlight-document-processing` | Death certificate parse jobs (`{ documentId, s3Key }`) |
+| `afterlight-document-generation` | PDF generation jobs (`{ generatedDocumentId, templateId, ... }`) |
+
+The Lambda handler routes messages by inspecting the body: presence of `generatedDocumentId` identifies a generation job; otherwise it is a processing job.
+
+**Why async processing for generation:**
+- WeasyPrint PDF rendering can take several seconds, especially for complex templates.
+- A user triggering 15 simultaneous institution letters must not wait — the API returns `202 Accepted` immediately and the frontend polls.
+- Using SQS for generation is consistent with the processing path: same worker, same retry/DLQ semantics, same back-pressure behaviour under load.
+
+**Why not direct Lambda invocation for generation:**
+- Direct invocation couples the API's response latency to WeasyPrint render time.
+- Direct invocation bypasses SQS retry and dead-letter-queue semantics.
+- Generating all 15 templates in parallel would require 15 simultaneous direct invocations from the API; SQS naturally queues and throttles them.
+
+**Why async processing for certificate parsing:**
 - Claude API calls can take 5-30 seconds for a full death certificate parse.
 - A synchronous HTTP call holding a connection open for 30s is fragile (client timeout, Lambda timeout, load balancer timeout).
 - SQS decouples upload from processing: API returns immediately with a job ID, Lambda processes in background, frontend polls or receives WebSocket push when done.
@@ -169,27 +191,55 @@ This separation drives every architectural decision below.
 4. React notifies API: "file uploaded at s3://bucket/key"
         │
 5. NestJS creates a Document record (status: PENDING) and publishes
-   a message to SQS with { documentId, s3Key }
+   { documentId, s3Key } to SQS processing queue
         │
-6. Lambda is triggered by SQS message:
+6. Lambda picks up SQS message:
    a. Download file from S3
    b. Pre-process with PDFPlumber / Pillow (convert to high-res image)
    c. Send image to Claude API with structured extraction prompt
    d. Parse Claude response into typed fields (name, DOB, DOD, cause, etc.)
-   e. Store extracted JSON back to S3
-   f. PATCH /documents/:id with extracted fields and status: PROCESSED
+   e. PATCH /api/v1/documents/:id/processing-result with extracted fields
         │
-7. NestJS receives PATCH, updates DB, emits WebSocket event to client
+7. NestJS receives PATCH, updates DB (status: PROCESSED), emits WebSocket event
         │
 8. React receives WebSocket event, redirects user to review screen
         │
 9. User reviews and corrects extracted fields
+```
+
+---
+
+## Data Flow: Legal Document Generation
+
+```
+1. User selects one or more institutions to notify (React UI)
         │
-10. User selects institutions to notify → NestJS triggers document generation Lambda
+2. React POSTs to NestJS: POST /api/v1/cases/:id/generated-documents
+   body: { documentId, institutionType, institutionName? }
         │
-11. Lambda renders institution-specific templates → PDF → S3
+3. NestJS:
+   a. Validates the source Document has status PROCESSED (extractedData present)
+   b. Validates the Case has executorInfo (name, address, relationship)
+   c. Creates GeneratedDocument record (status: GENERATING)
+   d. Maps institutionType → templateId
+   e. Publishes DocumentGenerationJob to SQS generation queue:
+      { generatedDocumentId, templateId, caseId, deceased, executorName, ... }
+   f. Returns 202 Accepted
         │
-12. User downloads PDFs from React UI via pre-signed S3 URLs
+4. Lambda picks up SQS message (routes via generatedDocumentId key):
+   a. Loads Jinja2 template matching templateId
+   b. Renders HTML with deceased + executor context
+   c. Converts HTML → PDF via WeasyPrint
+   d. Uploads PDF to S3: generated/{caseId}/{templateId}/{generatedDocumentId}.pdf
+   e. PATCH /api/v1/generated-documents/:id/result
+      body: { status: READY, s3Key } or { status: FAILED, errorMessage }
+        │
+5. NestJS receives PATCH (guarded by X-Internal-Secret header):
+   a. Updates GeneratedDocument status + s3Key / errorMessage
+        │
+6. React polls GET /api/v1/cases/:id/generated-documents
+   a. When status = READY, API returns a 15-min pre-signed S3 URL
+   b. User clicks to download the PDF
 ```
 
 ---

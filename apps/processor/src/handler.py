@@ -39,7 +39,12 @@ def handler(event: dict[str, Any], context: object) -> dict[str, Any]:
     for record in records:
         try:
             body: dict[str, Any] = json.loads(record["body"])
-            result = _handle_processing(body)
+            # Route by message content: generation jobs carry generatedDocumentId,
+            # processing jobs carry documentId + s3Key.
+            if "generatedDocumentId" in body:
+                result = _handle_generation(body)
+            else:
+                result = _handle_processing(body)
             results.append({"messageId": record["messageId"], "status": "ok", **result})
         except Exception:
             logger.exception(

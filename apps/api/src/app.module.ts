@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { CasesModule } from './cases/cases.module';
 import { DocumentsModule } from './documents/documents.module';
 import { EventsModule } from './events/events.module';
+import { GeneratedDocumentsModule } from './generated-documents/generated-documents.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { EventsModule } from './events/events.module';
     AuthModule,
     CasesModule,
     DocumentsModule,
+    GeneratedDocumentsModule,
     EventsModule,
   ],
   controllers: [AppController],

@@ -41,6 +41,9 @@ export class GeneratedDocumentEntity {
   @Column({ type: 'varchar', nullable: true })
   s3Key!: string | null;
 
+  @Column({ type: 'varchar', nullable: true })
+  errorMessage!: string | null;
+
   @CreateDateColumn()
   createdAt!: Date;
 

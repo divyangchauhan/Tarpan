@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     sqs_document_processing_queue_url: str = (
         "http://localhost:4566/000000000000/afterlight-document-processing"
     )
+    sqs_document_generation_queue_url: str = (
+        "http://localhost:4566/000000000000/afterlight-document-generation"
+    )
 
     # API callback
     api_callback_url: str
