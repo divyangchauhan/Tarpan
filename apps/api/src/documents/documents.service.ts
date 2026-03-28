@@ -37,10 +37,11 @@ export class DocumentsService {
 
   async initiateUpload(
     userId: string,
+    caseId: string,
     dto: InitiateUploadDto,
   ): Promise<InitiateUploadResult> {
     // Verify case belongs to the requesting user
-    const caseEntity = await this.casesService.findOne(userId, dto.caseId);
+    const caseEntity = await this.casesService.findOne(userId, caseId);
 
     const documentId = uuidv4();
     const extension = dto.fileName.includes('.')

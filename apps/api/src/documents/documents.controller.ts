@@ -47,10 +47,7 @@ export class DocumentsController {
     @Param('caseId', ParseUUIDPipe) caseId: string,
     @Body() dto: InitiateUploadDto,
   ): Promise<InitiateUploadResult> {
-    return this.documentsService.initiateUpload(req.user.userId, {
-      ...dto,
-      caseId,
-    });
+    return this.documentsService.initiateUpload(req.user.userId, caseId, dto);
   }
 
   @Version('1')
