@@ -53,3 +53,41 @@ export interface GenerationRequest {
     institutionName?: string;
   }>;
 }
+
+/**
+ * Payload published to the document-generation SQS queue.
+ * One message per institution (one GeneratedDocument row per message).
+ * The `deceased` object uses snake_case to match the Python Pydantic model field names.
+ */
+export interface DocumentGenerationJob {
+  generatedDocumentId: string;
+  templateId: string;
+  caseId: string;
+  documentId: string;
+  deceased: {
+    full_name: string;
+    first_name?: string | null;
+    middle_name?: string | null;
+    last_name?: string | null;
+    date_of_birth?: string | null;
+    date_of_death: string;
+    place_of_death: string;
+    state?: string | null;
+    certificate_number?: string | null;
+  };
+  executorName: string;
+  executorAddress: string;
+  executorRelationship: string;
+  executorPhone?: string | null;
+  executorEmail?: string | null;
+  institutionName?: string | null;
+  institutionAddress?: string | null;
+}
+
+/** Callback payload sent by Lambda to the API when generation completes */
+export interface DocumentGenerationResult {
+  generatedDocumentId: string;
+  status: GeneratedDocumentStatus.READY | GeneratedDocumentStatus.FAILED;
+  s3Key?: string;
+  errorMessage?: string;
+}
