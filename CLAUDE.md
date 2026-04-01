@@ -72,29 +72,47 @@ Build orchestration: **Turborepo**.
 ### apps/api
 
 ```
-DATABASE_URL=postgresql://...
+PORT=3001
+NODE_ENV=development
+DATABASE_URL=postgresql://afterlight:afterlight@localhost:5432/afterlight
 JWT_SECRET=...
+JWT_EXPIRES_IN=15m
 JWT_REFRESH_SECRET=...
+JWT_REFRESH_EXPIRES_IN=7d
 AWS_REGION=us-east-1
-AWS_S3_BUCKET=afterlight-uploads
-AWS_SQS_QUEUE_URL=https://sqs...
-ANTHROPIC_API_KEY=...
+AWS_ACCESS_KEY_ID=test
+AWS_SECRET_ACCESS_KEY=test
+AWS_ENDPOINT_URL=http://localhost:4566   # LocalStack — omit in production
+S3_UPLOADS_BUCKET=afterlight-uploads
+S3_GENERATED_DOCS_BUCKET=afterlight-generated-docs
+SQS_DOCUMENT_PROCESSING_QUEUE_URL=http://localhost:4566/000000000000/afterlight-document-processing
+SQS_DOCUMENT_GENERATION_QUEUE_URL=http://localhost:4566/000000000000/afterlight-document-generation
+INTERNAL_API_SECRET=...
+ANTHROPIC_API_KEY=...                    # Not used by API directly — only by Lambda
+CORS_ORIGIN=http://localhost:5173
 ```
 
 ### apps/processor (Lambda env)
 
 ```
-AWS_S3_BUCKET=afterlight-uploads
+AWS_REGION=us-east-1
+AWS_ACCESS_KEY_ID=test
+AWS_SECRET_ACCESS_KEY=test
+AWS_ENDPOINT_URL=http://localhost:4566   # LocalStack — omit in production
+S3_UPLOADS_BUCKET=afterlight-uploads
+S3_GENERATED_DOCS_BUCKET=afterlight-generated-docs
+SQS_DOCUMENT_PROCESSING_QUEUE_URL=http://localhost:4566/000000000000/afterlight-document-processing
+SQS_DOCUMENT_GENERATION_QUEUE_URL=http://localhost:4566/000000000000/afterlight-document-generation
 ANTHROPIC_API_KEY=...
-API_CALLBACK_URL=https://api.afterlight.com
-API_INTERNAL_SECRET=...
+API_CALLBACK_URL=http://localhost:3001
+INTERNAL_API_SECRET=...
 ```
 
 ### apps/web
 
 ```
 VITE_API_URL=http://localhost:3001
-VITE_WS_URL=ws://localhost:3001
+VITE_WS_URL=http://localhost:3001        # http:// not ws:// — socket.io handles transport
 ```
 
 ---
@@ -146,6 +164,9 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md) for full rationale. Summary:
 ## Useful Commands
 
 ```bash
+# Start local infrastructure (PostgreSQL + LocalStack)
+docker compose up -d
+
 # Run all apps in dev mode
 pnpm dev
 
@@ -155,22 +176,29 @@ pnpm --filter api dev
 # Run only the web app
 pnpm --filter web dev
 
-# Run Python Lambda locally (via AWS SAM or direct invocation)
-cd apps/processor && poetry run python -m pytest
+# Run the Python SQS worker locally
+cd apps/processor && ./start_worker.sh
 
-# Type check all TypeScript packages
-pnpm typecheck
+# Run Python tests
+cd apps/processor && poetry run pytest
 
-# Lint all packages
-pnpm lint
+# Type check all TypeScript packages (excludes processor — Python only)
+pnpm turbo run typecheck --filter=!@afterlight/processor
 
-# Run all tests
-pnpm test
+# Lint all packages (excludes processor from TypeScript turbo run)
+pnpm turbo run lint --filter=!@afterlight/processor
+cd apps/processor && poetry run ruff check src tests   # Python lint separately
+
+# Run all tests (excludes processor — run Python tests separately above)
+pnpm turbo run test --filter=!@afterlight/processor
 
 # Database migrations (from apps/api)
 pnpm --filter api typeorm migration:generate -- -n MigrationName
 pnpm --filter api typeorm migration:run
 pnpm --filter api typeorm migration:revert
+
+# CDK — deploy infrastructure to AWS
+cd infra && npm install && cdk bootstrap && cdk deploy --all
 ```
 
 ---
