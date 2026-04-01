@@ -1,0 +1,13 @@
+/** Shared environment/naming config referenced by all stacks. */
+export const APP_NAME = 'afterlight';
+export const APP_PREFIX = 'Afterlight';
+
+/** Resource name helper — kebab-case for AWS resource names. */
+export function resourceName(suffix: string): string {
+  return `${APP_NAME}-${suffix}`;
+}
+
+/** Logical ID prefix — PascalCase for CDK construct IDs. */
+export function constructId(suffix: string): string {
+  return `${APP_PREFIX}${suffix}`;
+}
