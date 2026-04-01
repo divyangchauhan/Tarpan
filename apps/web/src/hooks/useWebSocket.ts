@@ -36,17 +36,15 @@ export function useWebSocket({ caseId, events, enabled = true }: UseWebSocketOpt
 
     // Join the case room once connected
     socket.on('connect', () => {
-      console.log('[WebSocket] Connected:', socket.id);
       socket.emit('join-case', caseId);
     });
 
-    // Handle connection errors
-    socket.on('connect_error', (error) => {
-      console.error('[WebSocket] Connection error:', error.message);
+    socket.on('connect_error', () => {
+      // connection errors are handled via reconnection logic
     });
 
-    socket.on('disconnect', (reason) => {
-      console.log('[WebSocket] Disconnected:', reason);
+    socket.on('disconnect', () => {
+      // reconnection is handled automatically
     });
 
     // Register event listeners

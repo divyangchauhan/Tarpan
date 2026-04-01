@@ -54,8 +54,8 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
 
       const secret = this.config.getOrThrow<string>('JWT_SECRET');
-      const payload = await this.jwtService.verifyAsync(token, { secret });
-      client.userId = payload.sub as string;
+      const payload = await this.jwtService.verifyAsync<{ sub: string }>(token, { secret });
+      client.userId = payload.sub;
 
       this.logger.log(`Client connected: ${client.id} (user: ${client.userId})`);
     } catch (error) {
