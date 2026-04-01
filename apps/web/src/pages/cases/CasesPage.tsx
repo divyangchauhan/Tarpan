@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, FolderOpen } from 'lucide-react';
+import { Plus, FolderOpen, Download } from 'lucide-react';
 import type { Case } from '@afterlight/shared';
 import { CaseStatus } from '@afterlight/shared';
 import { getCases } from '@/api/cases';
@@ -87,11 +87,21 @@ export function CasesPage(): JSX.Element {
                   })}
                 </p>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
                 <Badge variant={statusVariant[c.status]}>{c.status}</Badge>
                 <p className="text-xs text-gray-400">
                   {new Date(c.createdAt).toLocaleDateString()}
                 </p>
+                <button
+                  title="View downloads"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    void navigate(`/cases/${c.id}/downloads`);
+                  }}
+                  className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+                >
+                  <Download className="h-4 w-4" />
+                </button>
               </div>
             </div>
           ))}

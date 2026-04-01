@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowRight, UploadCloud } from 'lucide-react';
+import { ArrowRight, Download, UploadCloud } from 'lucide-react';
 import type { Case, Document } from '@afterlight/shared';
 import { DocumentStatus } from '@afterlight/shared';
 import { getCase, updateCase } from '@/api/cases';
@@ -164,6 +164,7 @@ export function ReviewPage(): JSX.Element {
               <Input
                 id="ex-name"
                 type="text"
+                autoComplete="name"
                 error={errors.name?.message}
                 {...register('name')}
               />
@@ -174,6 +175,7 @@ export function ReviewPage(): JSX.Element {
                 id="ex-relationship"
                 type="text"
                 placeholder="e.g. Spouse, Child, Executor"
+                autoComplete="off"
                 error={errors.relationship?.message}
                 {...register('relationship')}
               />
@@ -186,6 +188,7 @@ export function ReviewPage(): JSX.Element {
               id="ex-address"
               type="text"
               placeholder="123 Main St, City, State 12345"
+              autoComplete="street-address"
               error={errors.address?.message}
               {...register('address')}
             />
@@ -198,6 +201,7 @@ export function ReviewPage(): JSX.Element {
                 id="ex-phone"
                 type="tel"
                 placeholder="555-123-4567"
+                autoComplete="tel"
                 error={errors.phone?.message}
                 {...register('phone')}
               />
@@ -208,6 +212,7 @@ export function ReviewPage(): JSX.Element {
                 id="ex-email"
                 type="email"
                 placeholder="executor@example.com"
+                autoComplete="email"
                 error={errors.email?.message}
                 {...register('email')}
               />
@@ -219,13 +224,23 @@ export function ReviewPage(): JSX.Element {
               Save executor info
             </Button>
             {processedDoc ? (
-              <Button
-                type="button"
-                onClick={() => void navigate(`/cases/${caseId}/institutions`)}
-              >
-                Continue to institutions
-                <ArrowRight className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => void navigate(`/cases/${caseId}/downloads`)}
+                  className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors"
+                >
+                  <Download className="h-4 w-4" />
+                  View downloads
+                </button>
+                <Button
+                  type="button"
+                  onClick={() => void navigate(`/cases/${caseId}/institutions`)}
+                >
+                  Continue to institutions
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
             ) : (
               <Button
                 type="button"
