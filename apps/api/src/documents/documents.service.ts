@@ -144,10 +144,10 @@ export class DocumentsService {
 
     const updated = await this.documentRepository.save(document);
 
-    const extra: Parameters<typeof this.eventsGateway.emitDocumentStatus>[2] = {};
+    const extra: Parameters<typeof this.eventsGateway.emitDocumentStatus>[3] = {};
     if (dto.extractedData !== undefined) extra.extractedData = dto.extractedData;
     if (dto.errorMessage !== undefined) extra.errorMessage = dto.errorMessage;
-    this.eventsGateway.emitDocumentStatus(document.id, dto.status, extra);
+    this.eventsGateway.emitDocumentStatus(document.caseId, document.id, dto.status, extra);
 
     this.logger.log(
       `Processed result for document ${dto.documentId}: status=${dto.status}`,
