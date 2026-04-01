@@ -177,6 +177,7 @@ describe('DocumentsService', () => {
         expect.objectContaining({ status: DocumentStatus.PROCESSED }),
       );
       expect(mockEventsGateway.emitDocumentStatus).toHaveBeenCalledWith(
+        'case-id',
         'doc-id',
         DocumentStatus.PROCESSED,
         expect.objectContaining({ extractedData }),
@@ -209,6 +210,7 @@ describe('DocumentsService', () => {
         }),
       );
       expect(mockEventsGateway.emitDocumentStatus).toHaveBeenCalledWith(
+        'case-id',
         'doc-id',
         DocumentStatus.FAILED,
         expect.objectContaining({ errorMessage: 'Could not parse document' }),
