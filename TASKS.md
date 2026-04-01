@@ -102,15 +102,15 @@
 
 | ID | Task | Status | Notes |
 |---|---|---|---|
-| P4-01 | CDK project scaffold | ⬜ | |
-| P4-02 | S3 bucket stack (uploads + generated docs) | ⬜ | |
-| P4-03 | SQS queue stack (two queues: processing + generation) | ⬜ | |
-| P4-04 | Lambda stack (processor Lambda + both SQS triggers) | ⬜ | |
-| P4-05 | RDS PostgreSQL stack | ⬜ | |
-| P4-06 | ECS / EC2 stack for NestJS API (or Elastic Beanstalk for POC speed) | ⬜ | |
-| P4-07 | CloudFront + S3 for React app hosting | ⬜ | |
-| P4-08 | Secrets Manager for API keys | ⬜ | |
-| P4-09 | IAM roles and least-privilege policies | ⬜ | |
+| P4-01 | CDK project scaffold | ✅ | PR #8 |
+| P4-02 | S3 bucket stack (uploads + generated docs) | ✅ | PR #8 |
+| P4-03 | SQS queue stack (two queues: processing + generation) | ✅ | PR #8 |
+| P4-04 | Lambda stack (processor Lambda + both SQS triggers) | ✅ | PR #8 |
+| P4-05 | RDS PostgreSQL stack | ✅ | PR #8 |
+| P4-06 | ECS / EC2 stack for NestJS API (or Elastic Beanstalk for POC speed) | ✅ | PR #8 — ECS Fargate + ALB |
+| P4-07 | CloudFront + S3 for React app hosting | ✅ | PR #8 |
+| P4-08 | Secrets Manager for API keys | ✅ | PR #8 |
+| P4-09 | IAM roles and least-privilege policies | ✅ | PR #8 |
 
 ---
 
