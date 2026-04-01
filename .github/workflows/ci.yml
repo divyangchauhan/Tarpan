@@ -33,13 +33,13 @@ jobs:
         run: pnpm --filter @afterlight/shared build
 
       - name: Lint
-        run: pnpm lint
+        run: pnpm turbo run lint --filter=!@afterlight/processor
 
       - name: Type check
-        run: pnpm typecheck
+        run: pnpm turbo run typecheck --filter=!@afterlight/processor
 
       - name: Test
-        run: pnpm test
+        run: pnpm turbo run test --filter=!@afterlight/processor
 
   # ─── Python: lint, typecheck, test ───────────────────────────────────────────
   python:

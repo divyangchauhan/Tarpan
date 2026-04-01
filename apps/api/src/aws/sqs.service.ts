@@ -8,8 +8,10 @@ export class SqsService {
   private readonly client: SQSClient;
 
   constructor(private readonly config: ConfigService) {
+    const endpoint = config.get<string>('AWS_ENDPOINT_URL');
     this.client = new SQSClient({
       region: config.getOrThrow<string>('AWS_REGION'),
+      ...(endpoint ? { endpoint } : {}),
     });
   }
 

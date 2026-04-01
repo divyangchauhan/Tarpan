@@ -112,7 +112,6 @@ describe('DocumentsService', () => {
 
   describe('initiateUpload', () => {
     const dto: InitiateUploadDto = {
-      caseId: 'case-id',
       fileName: 'death-cert.pdf',
       contentType: 'application/pdf',
     };
@@ -124,7 +123,7 @@ describe('DocumentsService', () => {
       mockDocumentRepository.save.mockResolvedValue(mockDocument);
       mockConfigService.getOrThrow.mockReturnValue('test-bucket');
 
-      const result = await service.initiateUpload('user-id', dto);
+      const result = await service.initiateUpload('user-id', 'case-id', dto);
 
       expect(mockCasesService.findOne).toHaveBeenCalledWith('user-id', 'case-id');
       expect(mockS3Service.generateUploadUrl).toHaveBeenCalledWith(
@@ -142,7 +141,7 @@ describe('DocumentsService', () => {
         new NotFoundException('Case not found'),
       );
 
-      await expect(service.initiateUpload('user-id', dto)).rejects.toThrow(NotFoundException);
+      await expect(service.initiateUpload('user-id', 'case-id', dto)).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -178,6 +177,7 @@ describe('DocumentsService', () => {
         expect.objectContaining({ status: DocumentStatus.PROCESSED }),
       );
       expect(mockEventsGateway.emitDocumentStatus).toHaveBeenCalledWith(
+        'case-id',
         'doc-id',
         DocumentStatus.PROCESSED,
         expect.objectContaining({ extractedData }),
@@ -210,6 +210,7 @@ describe('DocumentsService', () => {
         }),
       );
       expect(mockEventsGateway.emitDocumentStatus).toHaveBeenCalledWith(
+        'case-id',
         'doc-id',
         DocumentStatus.FAILED,
         expect.objectContaining({ errorMessage: 'Could not parse document' }),

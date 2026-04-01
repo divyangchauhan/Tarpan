@@ -1,0 +1,11 @@
+{
+  "name": "@afterlight/processor",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "./start_worker.sh",
+    "test": "poetry run pytest",
+    "lint": "poetry run ruff check src tests",
+    "typecheck": "poetry run mypy src"
+  }
+}

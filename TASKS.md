@@ -81,19 +81,19 @@
 
 | ID | Task | Status | Notes |
 |---|---|---|---|
-| P3-01 | React app scaffold (Vite, React Router, Tailwind) | ⬜ | |
-| P3-02 | Auth pages: Login, Register | ⬜ | |
-| P3-03 | Layout: sidebar nav, header, responsive shell | ⬜ | |
-| P3-04 | Dashboard: list of cases with status | ⬜ | |
-| P3-05 | New case wizard: step 1 — deceased's information form | ⬜ | |
-| P3-06 | New case wizard: step 2 — death certificate upload with drag-and-drop | ⬜ | |
-| P3-07 | Processing screen: animated status with real-time WebSocket updates | ⬜ | |
-| P3-08 | Review screen: display extracted fields, inline editing | ⬜ | |
-| P3-09 | Institution selector: checklist of notifications to send | ⬜ | |
-| P3-10 | Document generation: trigger and loading state | ⬜ | |
-| P3-11 | Downloads screen: list generated PDFs with download links | ⬜ | |
-| P3-12 | Toast notifications system | ⬜ | |
-| P3-13 | Error boundary and empty states | ⬜ | |
+| P3-01 | React app scaffold (Vite, React Router, Tailwind) | ✅ | PR #7 |
+| P3-02 | Auth pages: Login, Register | ✅ | PR #7 |
+| P3-03 | Layout: sidebar nav, header, responsive shell | ✅ | PR #7 |
+| P3-04 | Dashboard: list of cases with status | ✅ | PR #7 |
+| P3-05 | New case wizard: step 1 — deceased's information form | ✅ | PR #7 |
+| P3-06 | New case wizard: step 2 — death certificate upload with drag-and-drop | ✅ | PR #7 |
+| P3-07 | Processing screen: animated status with real-time WebSocket updates | ✅ | PR #7 |
+| P3-08 | Review screen: display extracted fields, inline editing | ✅ | PR #7 |
+| P3-09 | Institution selector: checklist of notifications to send | ✅ | PR #7 |
+| P3-10 | Document generation: trigger and loading state | ✅ | PR #7 |
+| P3-11 | Downloads screen: list generated PDFs with download links | ✅ | PR #7 |
+| P3-12 | Toast notifications system | ✅ | PR #7 |
+| P3-13 | Error boundary and empty states | ✅ | PR #7 |
 | P3-14 | Frontend unit tests (Vitest + Testing Library) | ⬜ | |
 
 ---
