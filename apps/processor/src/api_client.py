@@ -34,7 +34,7 @@ def report_generation_success(generated_document_id: str, s3_key: str) -> None:
     """Report a successful PDF generation result to the API."""
     _patch_generation_result(
         generated_document_id=generated_document_id,
-        status="COMPLETED",
+        status="READY",
         s3_key=s3_key,
     )
 
