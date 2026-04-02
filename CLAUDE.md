@@ -198,7 +198,7 @@ pnpm --filter api typeorm migration:run
 pnpm --filter api typeorm migration:revert
 
 # CDK — deploy infrastructure to AWS
-cd infra && npm install && cdk bootstrap && cdk deploy --all
+cd infra && pnpm install && cdk bootstrap && cdk deploy --all
 ```
 
 ---
