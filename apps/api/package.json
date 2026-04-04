@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "ts-node -r tsconfig-paths/register src/main.ts",
     "build": "nest build",
-    "start": "node dist/main",
+    "start": "node dist/apps/api/src/main",
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
     "test": "jest",

@@ -19,6 +19,7 @@ import { GeneratedDocumentEntity } from '../entities/generated-document.entity';
         migrationsRun: true,
         synchronize: false,
         logging: config.get('NODE_ENV') === 'development',
+        ssl: config.get('NODE_ENV') === 'production' ? { rejectUnauthorized: false } : false,
       }),
     }),
   ],

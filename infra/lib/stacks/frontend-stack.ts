@@ -1,4 +1,5 @@
 import * as cdk from 'aws-cdk-lib';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as cloudfront_origins from 'aws-cdk-lib/aws-cloudfront-origins';
@@ -75,6 +76,23 @@ export class FrontendStack extends cdk.Stack {
       priceClass: cloudfront.PriceClass.PRICE_CLASS_100, // US + EU only for POC
       httpVersion: cloudfront.HttpVersion.HTTP2,
     });
+
+    // ── Bucket policy: explicitly grant CloudFront OAC access ────────────
+    // S3BucketOrigin.withOriginAccessControl() does not reliably auto-add
+    // this policy in all CDK versions; adding it explicitly is required.
+    this.websiteBucket.addToResourcePolicy(
+      new iam.PolicyStatement({
+        sid: 'AllowCloudFrontServicePrincipal',
+        actions: ['s3:GetObject'],
+        principals: [new iam.ServicePrincipal('cloudfront.amazonaws.com')],
+        resources: [this.websiteBucket.arnForObjects('*')],
+        conditions: {
+          StringEquals: {
+            'AWS:SourceArn': `arn:aws:cloudfront::${this.account}:distribution/${this.distribution.distributionId}`,
+          },
+        },
+      }),
+    );
 
     // ── Outputs ───────────────────────────────────────────────────────────
 

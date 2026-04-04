@@ -50,7 +50,7 @@ export class SecretsStack extends cdk.Stack {
 
     this.internalApiSecret = new secretsmanager.Secret(this, 'InternalApiSecret', {
       secretName: 'afterlight/internal-api-secret',
-      description: 'Shared secret for Lambda → API callback authentication',
+      description: 'Shared secret for Lambda to API callback authentication',
       generateSecretString: {
         passwordLength: 48,
         excludePunctuation: true,

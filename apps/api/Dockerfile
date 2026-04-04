@@ -7,7 +7,7 @@ WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@9.12.0 --activate
 
 # Copy workspace manifests first for layer caching
-COPY pnpm-workspace.yaml ./
+COPY pnpm-workspace.yaml tsconfig.base.json ./
 COPY package.json pnpm-lock.yaml ./
 COPY packages/shared/package.json ./packages/shared/
 COPY apps/api/package.json ./apps/api/
@@ -33,7 +33,7 @@ WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@9.12.0 --activate
 
 # Copy workspace manifests
-COPY pnpm-workspace.yaml ./
+COPY pnpm-workspace.yaml tsconfig.base.json ./
 COPY package.json pnpm-lock.yaml ./
 COPY packages/shared/package.json ./packages/shared/
 COPY apps/api/package.json ./apps/api/
@@ -45,6 +45,10 @@ RUN pnpm install --frozen-lockfile --prod
 COPY --from=builder /app/packages/shared/dist/ ./packages/shared/dist/
 COPY --from=builder /app/apps/api/dist/ ./apps/api/dist/
 
+# Entrypoint script — assembles DATABASE_URL from RDS secret fields
+COPY apps/api/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 # Non-root user for security
 RUN addgroup -S afterlight && adduser -S afterlight -G afterlight
 USER afterlight
@@ -53,4 +57,5 @@ WORKDIR /app/apps/api
 
 EXPOSE 3001
 
-CMD ["node", "dist/main.js"]
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["node", "dist/apps/api/src/main.js"]

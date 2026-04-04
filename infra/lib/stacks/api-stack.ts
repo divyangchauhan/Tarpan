@@ -41,7 +41,8 @@ export class ApiStack extends cdk.Stack {
     // ── Container image ────────────────────────────────────────────────────
 
     const apiImage = new ecr_assets.DockerImageAsset(this, 'ApiImage', {
-      directory: path.join(__dirname, '../../../apps/api'),
+      directory: path.join(__dirname, '../../..'),
+      file: 'apps/api/Dockerfile',
       platform: ecr_assets.Platform.LINUX_AMD64,
     });
 

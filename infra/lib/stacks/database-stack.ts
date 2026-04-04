@@ -35,7 +35,7 @@ export class DatabaseStack extends cdk.Stack {
     });
 
     const subnetGroup = new rds.SubnetGroup(this, 'DbSubnetGroup', {
-      description: 'Afterlight RDS subnet group — private subnets',
+      description: 'Afterlight RDS subnet group - private subnets',
       vpc,
       vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
       subnetGroupName: resourceName('db-subnet-group'),

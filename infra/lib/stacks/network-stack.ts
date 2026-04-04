@@ -49,7 +49,7 @@ export class NetworkStack extends cdk.Stack {
     this.lambdaSg = new ec2.SecurityGroup(this, 'LambdaSg', {
       vpc: this.vpc,
       securityGroupName: resourceName('lambda-sg'),
-      description: 'Lambda processor — outbound to internet via NAT',
+      description: 'Lambda processor - outbound to internet via NAT',
       allowAllOutbound: true,
     });
 
@@ -60,7 +60,7 @@ export class NetworkStack extends cdk.Stack {
     this.rdsSg = new ec2.SecurityGroup(this, 'RdsSg', {
       vpc: this.vpc,
       securityGroupName: resourceName('rds-sg'),
-      description: 'RDS PostgreSQL — inbound from VPC CIDR only',
+      description: 'RDS PostgreSQL - inbound from VPC CIDR only',
       allowAllOutbound: false,
     });
     this.rdsSg.addIngressRule(
