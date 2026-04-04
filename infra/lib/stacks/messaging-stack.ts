@@ -33,8 +33,8 @@ export class MessagingStack extends cdk.Stack {
 
     this.processingQueue = new sqs.Queue(this, 'ProcessingQueue', {
       queueName: resourceName('document-processing'),
-      // Claude API calls can take up to 30s; give Lambda plenty of headroom
-      visibilityTimeout: cdk.Duration.seconds(120),
+      // Must be >= Lambda timeout (300s); 6x recommended by AWS → 360s
+      visibilityTimeout: cdk.Duration.seconds(360),
       retentionPeriod: cdk.Duration.days(4),
       encryption: sqs.QueueEncryption.SQS_MANAGED,
       deadLetterQueue: {
@@ -55,8 +55,8 @@ export class MessagingStack extends cdk.Stack {
 
     this.generationQueue = new sqs.Queue(this, 'GenerationQueue', {
       queueName: resourceName('document-generation'),
-      // WeasyPrint PDF rendering can take 10-30s per document
-      visibilityTimeout: cdk.Duration.seconds(120),
+      // Must be >= Lambda timeout (300s); 6x recommended by AWS → 360s
+      visibilityTimeout: cdk.Duration.seconds(360),
       retentionPeriod: cdk.Duration.days(4),
       encryption: sqs.QueueEncryption.SQS_MANAGED,
       deadLetterQueue: {
