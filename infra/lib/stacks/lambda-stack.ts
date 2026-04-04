@@ -63,7 +63,8 @@ export class LambdaStack extends cdk.Stack {
       }),
       memorySize: 1024, // WeasyPrint + Pillow need headroom
       timeout: cdk.Duration.seconds(300), // 5 min — generous for Claude API + PDF render
-      reservedConcurrentExecutions: 10, // Limit blast radius during POC
+      // reservedConcurrentExecutions omitted — SQS maxConcurrency:5 limits blast radius
+      // and avoids requiring extra account-level unreserved concurrency headroom
       vpc: network.vpc,
       vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
       securityGroups: [network.lambdaSg], // lambdaSg is in NetworkStack — no cycle (Lambda doesn't own SGs from ApiStack)
