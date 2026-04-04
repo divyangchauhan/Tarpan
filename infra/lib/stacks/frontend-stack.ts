@@ -10,17 +10,21 @@ import * as path from 'path';
 import { Construct } from 'constructs';
 import { resourceName } from '../config';
 
+interface FrontendStackProps extends cdk.StackProps {
+  /** ALB DNS name (with http:// prefix) from ApiStack — used as CloudFront origin for /api/* */
+  albDnsName: string;
+}
+
 /**
- * FrontendStack — S3 bucket + CloudFront distribution for the React app.
+ * FrontendStack — S3 + CloudFront for the React SPA, with API proxy.
  *
- * - React build artifacts are uploaded to S3 (private, no website hosting)
- * - CloudFront uses Origin Access Control (OAC) to serve from S3 privately
- * - SPA routing: 403/404 → /index.html with 200 response (React Router)
- * - HTTPS enforced; HTTP redirects to HTTPS
+ * - Default behavior: S3 (OAC) → serves static React assets
+ * - /api/* behavior: ALB → proxies API calls (avoids mixed-content; no CORS needed)
+ * - SPA routing: 403/404 → /index.html (React Router)
+ * - HTTPS enforced everywhere; frontend uses relative /api/v1 URLs
  *
- * Deployment: `cdk deploy AfterLightFrontend` — BucketDeployment automatically
- *   builds the React app (reads VITE_API_URL from SSM), uploads to S3, and
- *   invalidates the CloudFront distribution. No manual steps required.
+ * BucketDeployment builds the React app at deploy time and uploads to S3.
+ * No VITE_API_URL needed — the frontend calls /api/v1/... relative to origin.
  *
  * P4-07
  */
@@ -28,8 +32,10 @@ export class FrontendStack extends cdk.Stack {
   public readonly distribution: cloudfront.Distribution;
   public readonly websiteBucket: s3.Bucket;
 
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props: FrontendStackProps) {
     super(scope, id, props);
+
+    const albHostname = props.albDnsName.replace(/^https?:\/\//, '');
 
     // ── S3 bucket (private — CloudFront OAC only) ─────────────────────────
 
@@ -38,13 +44,19 @@ export class FrontendStack extends cdk.Stack {
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       encryption: s3.BucketEncryption.S3_MANAGED,
       enforceSSL: true,
-      removalPolicy: cdk.RemovalPolicy.DESTROY, // Website assets are reproducible
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
+    });
+
+    // ── ALB origin (HTTP — ALB has no TLS cert for the POC) ───────────────
+
+    const albOrigin = new cloudfront_origins.HttpOrigin(albHostname, {
+      protocolPolicy: cloudfront.OriginProtocolPolicy.HTTP_ONLY,
+      httpPort: 80,
     });
 
     // ── CloudFront distribution ────────────────────────────────────────────
 
-    // OAC — recommended over legacy OAI; works with SSE-S3
     const oac = new cloudfront.S3OriginAccessControl(this, 'OAC', {
       description: 'Afterlight web OAC',
     });
@@ -61,8 +73,18 @@ export class FrontendStack extends cdk.Stack {
         allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
         compress: true,
       },
+      additionalBehaviors: {
+        // All API traffic goes through CloudFront → ALB over HTTP internally.
+        // The browser sees HTTPS throughout — no mixed-content block.
+        '/api/*': {
+          origin: albOrigin,
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.HTTPS_ONLY,
+          allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+          cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+          originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
+        },
+      },
       defaultRootObject: 'index.html',
-      // SPA routing: unknown paths → index.html (React Router handles the rest)
       errorResponses: [
         {
           httpStatus: 403,
@@ -77,13 +99,12 @@ export class FrontendStack extends cdk.Stack {
           ttl: cdk.Duration.seconds(0),
         },
       ],
-      priceClass: cloudfront.PriceClass.PRICE_CLASS_100, // US + EU only for POC
+      priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
       httpVersion: cloudfront.HttpVersion.HTTP2,
     });
 
     // ── Bucket policy: explicitly grant CloudFront OAC access ────────────
-    // S3BucketOrigin.withOriginAccessControl() does not reliably auto-add
-    // this policy in all CDK versions; adding it explicitly is required.
+
     this.websiteBucket.addToResourcePolicy(
       new iam.PolicyStatement({
         sid: 'AllowCloudFrontServicePrincipal',
@@ -99,9 +120,8 @@ export class FrontendStack extends cdk.Stack {
     );
 
     // ── Deploy React build to S3 + invalidate CloudFront ─────────────────
-    // BucketDeployment bundles the app at deploy time via a local bundler
-    // (fast, uses existing node_modules) with a Docker fallback.
-    // VITE_API_URL is fetched from SSM — written there by ApiStack.
+    // No VITE_API_URL needed — the app uses relative /api/v1 URLs which
+    // CloudFront proxies to the ALB via the /api/* behavior above.
 
     const repoRoot = path.join(__dirname, '../../..');
 
@@ -109,43 +129,24 @@ export class FrontendStack extends cdk.Stack {
       sources: [
         s3deploy.Source.asset(repoRoot, {
           bundling: {
-            // Local bundler — runs on the host; no Docker required
             local: {
               tryBundle(outputDir: string): boolean {
                 try {
-                  // Resolve API URL: env var override → SSM → empty fallback
-                  let apiUrl = process.env['VITE_API_URL'] ?? '';
-                  if (!apiUrl) {
-                    try {
-                      apiUrl = execSync(
-                        'aws ssm get-parameter --name /afterlight/api-url --query Parameter.Value --output text',
-                        { encoding: 'utf-8' },
-                      ).trim();
-                    } catch {
-                      // SSM not reachable — proceed without URL (dev/offline mode)
-                    }
-                  }
                   execSync('pnpm --filter web build', {
                     cwd: repoRoot,
                     stdio: 'inherit',
-                    env: { ...process.env, VITE_API_URL: apiUrl, VITE_WS_URL: apiUrl },
+                    env: { ...process.env },
                   });
                   fs.cpSync(path.join(repoRoot, 'apps/web/dist'), outputDir, {
                     recursive: true,
                   });
                   return true;
                 } catch {
-                  return false; // Fall through to Docker bundler
+                  return false;
                 }
               },
             },
-            // Docker fallback — used in CI or when local bundler fails.
-            // Set VITE_API_URL in your environment before deploying.
             image: cdk.DockerImage.fromRegistry('node:20-alpine'),
-            environment: {
-              VITE_API_URL: process.env['VITE_API_URL'] ?? '',
-              VITE_WS_URL: process.env['VITE_API_URL'] ?? '',
-            },
             command: [
               'sh',
               '-c',
@@ -161,7 +162,6 @@ export class FrontendStack extends cdk.Stack {
         }),
       ],
       destinationBucket: this.websiteBucket,
-      // Invalidate all CloudFront paths after each deploy
       distribution: this.distribution,
       distributionPaths: ['/*'],
       prune: true,
@@ -178,13 +178,11 @@ export class FrontendStack extends cdk.Stack {
 
     new cdk.CfnOutput(this, 'DistributionId', {
       value: this.distribution.distributionId,
-      description: 'Use to invalidate cache after deploying new frontend build',
       exportName: `${this.stackName}-DistributionId`,
     });
 
     new cdk.CfnOutput(this, 'WebsiteBucketName', {
       value: this.websiteBucket.bucketName,
-      description: 'Upload React build output here: aws s3 sync dist/ s3://<bucket> --delete',
       exportName: `${this.stackName}-WebsiteBucket`,
     });
   }

@@ -69,6 +69,9 @@ new LambdaStack(app, 'AfterLightLambda', {
 
 // ── Frontend ──────────────────────────────────────────────────────────────
 
-new FrontendStack(app, 'AfterLightFrontend', stackProps);
+new FrontendStack(app, 'AfterLightFrontend', {
+  ...stackProps,
+  albDnsName: api.loadBalancerDnsName,
+});
 
 app.synth();
