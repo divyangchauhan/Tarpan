@@ -63,6 +63,9 @@ export class FrontendStack extends cdk.Stack {
 
     this.distribution = new cloudfront.Distribution(this, 'Distribution', {
       comment: 'AfterLight React SPA',
+      // WAF auto-created by CloudFront for this account's security subscription.
+      // Must be preserved on every update or CloudFront rejects the change.
+      webAclId: 'arn:aws:wafv2:us-east-1:815374406596:global/webacl/CreatedByCloudFront-b3f36e7e/0cf16c2e-7274-407b-924f-8a7c3414a903',
       defaultBehavior: {
         origin: cloudfront_origins.S3BucketOrigin.withOriginAccessControl(
           this.websiteBucket,
@@ -77,6 +80,14 @@ export class FrontendStack extends cdk.Stack {
         // All API traffic goes through CloudFront → ALB over HTTP internally.
         // The browser sees HTTPS throughout — no mixed-content block.
         '/api/*': {
+          origin: albOrigin,
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.HTTPS_ONLY,
+          allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+          cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+          originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
+        },
+        // socket.io long-polling and WebSocket upgrade traffic
+        '/socket.io/*': {
           origin: albOrigin,
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.HTTPS_ONLY,
           allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
@@ -99,7 +110,7 @@ export class FrontendStack extends cdk.Stack {
           ttl: cdk.Duration.seconds(0),
         },
       ],
-      priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
+      priceClass: cloudfront.PriceClass.PRICE_CLASS_ALL,
       httpVersion: cloudfront.HttpVersion.HTTP2,
     });
 
