@@ -3,6 +3,7 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as ecs_patterns from 'aws-cdk-lib/aws-ecs-patterns';
 import * as ecr_assets from 'aws-cdk-lib/aws-ecr-assets';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as path from 'path';
 import { Construct } from 'constructs';
 import { NetworkStack } from './network-stack';
@@ -144,6 +145,16 @@ export class ApiStack extends cdk.Stack {
     // ── Expose DNS name ───────────────────────────────────────────────────
 
     this.loadBalancerDnsName = `http://${service.loadBalancer.loadBalancerDnsName}`;
+
+    // ── SSM — publish URL for FrontendStack bundler ───────────────────────
+    // BucketDeployment builds the React app at deploy time and needs VITE_API_URL.
+    // Cross-stack CFn tokens can't be resolved at bundle time, so we write the
+    // real URL to SSM here so the FrontendStack local bundler can read it.
+    new ssm.StringParameter(this, 'ApiUrlParam', {
+      parameterName: '/afterlight/api-url',
+      stringValue: this.loadBalancerDnsName,
+      description: 'AfterLight API base URL (ALB DNS) — read by FrontendStack bundler',
+    });
 
     // ── Outputs ───────────────────────────────────────────────────────────
 
