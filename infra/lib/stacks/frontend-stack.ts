@@ -143,10 +143,13 @@ export class FrontendStack extends cdk.Stack {
             local: {
               tryBundle(outputDir: string): boolean {
                 try {
+                  // Explicitly empty VITE_API_URL / VITE_WS_URL so .env.local
+                  // (which has localhost values for dev) doesn't pollute the build.
+                  // The app uses relative /api and /socket.io URLs via CloudFront proxy.
                   execSync('pnpm --filter web build', {
                     cwd: repoRoot,
                     stdio: 'inherit',
-                    env: { ...process.env },
+                    env: { ...process.env, VITE_API_URL: '', VITE_WS_URL: '' },
                   });
                   fs.cpSync(path.join(repoRoot, 'apps/web/dist'), outputDir, {
                     recursive: true,
@@ -158,6 +161,8 @@ export class FrontendStack extends cdk.Stack {
               },
             },
             image: cdk.DockerImage.fromRegistry('node:20-alpine'),
+            // Empty VITE_* vars so Docker build also ignores any .env.local
+            environment: { VITE_API_URL: '', VITE_WS_URL: '' },
             command: [
               'sh',
               '-c',
