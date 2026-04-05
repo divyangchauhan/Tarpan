@@ -16,19 +16,18 @@ import { ToastProvider } from '@/context/ToastContext';
 const mockCreateCase = vi.fn();
 
 vi.mock('@/api/cases', () => ({
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  createCase: (...args: unknown[]) => mockCreateCase(...args),
+  createCase: (...args: unknown[]): unknown => mockCreateCase(...args),
 }));
 
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react-router-dom')>();
-  return { ...actual, useNavigate: () => mockNavigate };
+  return { ...actual, useNavigate: (): typeof mockNavigate => mockNavigate };
 });
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function renderPage() {
+function renderPage(): void {
   render(
     <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <ToastProvider>
@@ -53,7 +52,7 @@ const MOCK_CASE: Case = {
   updatedAt: new Date().toISOString() as unknown as Date,
 };
 
-async function fillRequiredFields(user: ReturnType<typeof userEvent.setup>) {
+async function fillRequiredFields(user: ReturnType<typeof userEvent.setup>): Promise<void> {
   await user.type(screen.getByLabelText(/first name/i), 'Robert');
   await user.type(screen.getByLabelText(/last name/i), 'Mitchell');
   await user.type(screen.getByLabelText(/date of birth/i), '1942-07-14');
@@ -87,7 +86,6 @@ describe('NewCasePage (integration)', () => {
     await user.click(screen.getByRole('button', { name: /continue to upload/i }));
 
     await waitFor(() => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       expect(mockCreateCase).toHaveBeenCalledWith(
         expect.objectContaining({
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -161,7 +159,6 @@ describe('NewCasePage (integration)', () => {
     await user.click(screen.getByRole('button', { name: /continue to upload/i }));
 
     await waitFor(() => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       expect(mockCreateCase).toHaveBeenCalledWith(
         expect.objectContaining({
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment

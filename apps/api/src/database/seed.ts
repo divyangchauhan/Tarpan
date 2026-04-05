@@ -163,7 +163,6 @@ async function seed(): Promise<void> {
     await generatedDocRepo.save(
       generatedDocRepo.create({
         caseId: demoCase.id,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         documentId: certDoc.id,
         institutionType: inst.institutionType,
         institutionName: inst.institutionName ?? null,

@@ -15,7 +15,7 @@ vi.mock('@/api/generated-documents', () => ({
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react-router-dom')>();
-  return { ...actual, useNavigate: () => mockNavigate };
+  return { ...actual, useNavigate: (): typeof mockNavigate => mockNavigate };
 });
 
 const mockGetGeneratedDocuments = vi.mocked(getGeneratedDocuments);
@@ -36,7 +36,7 @@ function makeDoc(
   };
 }
 
-function renderDownloadsPage() {
+function renderDownloadsPage(): ReturnType<typeof render> {
   return render(
     <MemoryRouter initialEntries={['/cases/case-id/downloads']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <ToastContext.Provider value={{ toast: mockToast }}>

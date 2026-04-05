@@ -18,21 +18,18 @@ const mockUpdateCase = vi.fn();
 const mockGetDocuments = vi.fn();
 
 vi.mock('@/api/cases', () => ({
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  getCase: (...args: unknown[]) => mockGetCase(...args),
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  updateCase: (...args: unknown[]) => mockUpdateCase(...args),
+  getCase: (...args: unknown[]): unknown => mockGetCase(...args),
+  updateCase: (...args: unknown[]): unknown => mockUpdateCase(...args),
 }));
 
 vi.mock('@/api/documents', () => ({
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  getDocuments: (...args: unknown[]) => mockGetDocuments(...args),
+  getDocuments: (...args: unknown[]): unknown => mockGetDocuments(...args),
 }));
 
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react-router-dom')>();
-  return { ...actual, useNavigate: () => mockNavigate };
+  return { ...actual, useNavigate: (): typeof mockNavigate => mockNavigate };
 });
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -67,7 +64,7 @@ const PROCESSED_DOC: Document = {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function renderPage() {
+function renderPage(): void {
   render(
     <MemoryRouter initialEntries={[`/cases/${CASE_ID}/review`]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <ToastProvider>
@@ -163,7 +160,6 @@ describe('ReviewPage (integration)', () => {
     await user.click(screen.getByRole('button', { name: /save executor/i }));
 
     await waitFor(() => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       expect(mockUpdateCase).toHaveBeenCalledWith(
         CASE_ID,
         expect.objectContaining({

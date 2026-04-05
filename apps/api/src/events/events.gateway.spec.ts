@@ -129,7 +129,6 @@ describe('EventsGateway', () => {
       expect(mockServer.to).toHaveBeenCalledWith('case-id');
       expect(roomEmit).toHaveBeenCalledWith(
         WsEvent.DOCUMENT_PROCESSING_STARTED,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         expect.objectContaining({ documentId: 'doc-id', status: DocumentStatus.PROCESSING }),
       );
     });
@@ -145,7 +144,6 @@ describe('EventsGateway', () => {
 
       expect(roomEmit).toHaveBeenCalledWith(
         WsEvent.DOCUMENT_PROCESSING_COMPLETE,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         expect.objectContaining({ documentId: 'doc-id', extractedData }),
       );
     });
@@ -157,7 +155,6 @@ describe('EventsGateway', () => {
 
       expect(roomEmit).toHaveBeenCalledWith(
         WsEvent.DOCUMENT_PROCESSING_FAILED,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         expect.objectContaining({
           documentId: 'doc-id',
           errorMessage: 'Processing failed: ValueError',

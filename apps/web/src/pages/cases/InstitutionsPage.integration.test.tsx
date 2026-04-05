@@ -17,19 +17,17 @@ const mockGetDocuments = vi.fn();
 const mockCreateGeneratedDocument = vi.fn();
 
 vi.mock('@/api/documents', () => ({
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  getDocuments: (...args: unknown[]) => mockGetDocuments(...args),
+  getDocuments: (...args: unknown[]): unknown => mockGetDocuments(...args),
 }));
 
 vi.mock('@/api/generated-documents', () => ({
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  createGeneratedDocument: (...args: unknown[]) => mockCreateGeneratedDocument(...args),
+  createGeneratedDocument: (...args: unknown[]): unknown => mockCreateGeneratedDocument(...args),
 }));
 
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react-router-dom')>();
-  return { ...actual, useNavigate: () => mockNavigate };
+  return { ...actual, useNavigate: (): typeof mockNavigate => mockNavigate };
 });
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -61,7 +59,7 @@ function makeGeneratedDoc(institutionType: InstitutionType): GeneratedDocument {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function renderPage() {
+function renderPage(): void {
   render(
     <MemoryRouter initialEntries={[`/cases/${CASE_ID}/institutions`]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <ToastProvider>

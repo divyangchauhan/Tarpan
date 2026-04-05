@@ -145,7 +145,6 @@ describe('CasesService', () => {
 
       const result = await service.update('user-id', 'case-id', dto);
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       expect(mockCaseRepository.save).toHaveBeenCalledWith(
         expect.objectContaining({
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment

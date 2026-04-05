@@ -17,23 +17,20 @@ const mockApiLogout = vi.fn();
 const mockApiRegister = vi.fn();
 
 vi.mock('@/api/auth', () => ({
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  login: (...args: unknown[]) => mockApiLogin(...args),
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  logout: (...args: unknown[]) => mockApiLogout(...args),
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  register: (...args: unknown[]) => mockApiRegister(...args),
+  login: (...args: unknown[]): unknown => mockApiLogin(...args),
+  logout: (...args: unknown[]): unknown => mockApiLogout(...args),
+  register: (...args: unknown[]): unknown => mockApiRegister(...args),
 }));
 
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react-router-dom')>();
-  return { ...actual, useNavigate: () => mockNavigate };
+  return { ...actual, useNavigate: (): typeof mockNavigate => mockNavigate };
 });
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function renderPage() {
+function renderPage(): void {
   render(
     <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <ToastProvider>

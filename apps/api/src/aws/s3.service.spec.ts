@@ -5,9 +5,7 @@ import { S3Service } from './s3.service';
 // Mock the AWS SDK modules so tests don't need real credentials
 jest.mock('@aws-sdk/client-s3', () => ({
   S3Client: jest.fn().mockImplementation(() => ({})),
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   GetObjectCommand: jest.fn().mockImplementation((input: unknown) => ({ input })),
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   PutObjectCommand: jest.fn().mockImplementation((input: unknown) => ({ input })),
 }));
 
