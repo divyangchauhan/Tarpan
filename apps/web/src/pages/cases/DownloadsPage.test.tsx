@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { vi } from 'vitest';
 import { GeneratedDocumentStatus, InstitutionType } from '@afterlight/shared';
 import type { GeneratedDocument } from '@afterlight/shared';
+import { getGeneratedDocuments } from '@/api/generated-documents';
 import { DownloadsPage } from './DownloadsPage';
 import { ToastContext } from '@/context/ToastContext';
 
@@ -17,8 +18,7 @@ vi.mock('react-router-dom', async (importOriginal) => {
   return { ...actual, useNavigate: () => mockNavigate };
 });
 
-import { getGeneratedDocuments } from '@/api/generated-documents';
-const mockGetGeneratedDocuments = getGeneratedDocuments as ReturnType<typeof vi.fn>;
+const mockGetGeneratedDocuments = vi.mocked(getGeneratedDocuments);
 
 const mockToast = vi.fn();
 
@@ -38,7 +38,7 @@ function makeDoc(
 
 function renderDownloadsPage() {
   return render(
-    <MemoryRouter initialEntries={['/cases/case-id/downloads']}>
+    <MemoryRouter initialEntries={['/cases/case-id/downloads']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <ToastContext.Provider value={{ toast: mockToast }}>
         <Routes>
           <Route path="/cases/:caseId/downloads" element={<DownloadsPage />} />

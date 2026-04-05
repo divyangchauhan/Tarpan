@@ -154,16 +154,19 @@ describe('AuthService', () => {
   });
 
   describe('refresh', () => {
-    it('should return new tokens for a valid user', async () => {
+    it('should return two distinct new tokens for a valid user', async () => {
       mockUserRepository.findOne.mockResolvedValue(mockUser);
-      mockJwtService.sign.mockReturnValue('new-token');
+      mockJwtService.sign
+        .mockReturnValueOnce('new-access-token')
+        .mockReturnValueOnce('new-refresh-token');
 
       const result = await service.refresh('test-user-id', 'old-refresh-token');
 
       expect(mockUserRepository.findOne).toHaveBeenCalledWith({
         where: { id: 'test-user-id' },
       });
-      expect(result).toEqual({ accessToken: 'new-token', refreshToken: 'new-token' });
+      expect(mockJwtService.sign).toHaveBeenCalledTimes(2);
+      expect(result).toEqual({ accessToken: 'new-access-token', refreshToken: 'new-refresh-token' });
     });
 
     it('should throw UnauthorizedException when user is not found', async () => {

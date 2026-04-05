@@ -43,10 +43,12 @@ async function seed(): Promise<void> {
   if (user) {
     // Clean up existing demo data before re-seeding
     const existingCases = await caseRepo.find({ where: { userId: user.id } });
-    for (const c of existingCases) {
-      await generatedDocRepo.delete({ caseId: c.id });
-      await documentRepo.delete({ caseId: c.id });
-    }
+    await Promise.all(
+      existingCases.flatMap((c) => [
+        generatedDocRepo.delete({ caseId: c.id }),
+        documentRepo.delete({ caseId: c.id }),
+      ]),
+    );
     await caseRepo.delete({ userId: user.id });
     console.log('  ↻  Cleared existing demo data');
   } else {
@@ -92,7 +94,10 @@ async function seed(): Promise<void> {
     type: DocumentType.DEATH_CERTIFICATE,
     status: DocumentStatus.PROCESSED,
     s3Key: `cases/${demoCase.id}/documents/death-certificate.pdf`,
-    // extractedData is stored as snake_case from the Python processor
+    // The Python processor writes snake_case fields directly into the JSONB column.
+    // ExtractedCertificateData uses camelCase for TypeScript consumers, but the raw
+    // DB value (and what the seed must produce) mirrors the Python output exactly.
+    // TODO: add a transformation layer so the stored shape matches the TS type.
     extractedData: {
       full_name: 'Robert James Mitchell',
       first_name: 'Robert',

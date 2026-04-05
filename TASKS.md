@@ -94,7 +94,7 @@
 | P3-11 | Downloads screen: list generated PDFs with download links | ✅ | PR #7 |
 | P3-12 | Toast notifications system | ✅ | PR #7 |
 | P3-13 | Error boundary and empty states | ✅ | PR #7 |
-| P3-14 | Frontend unit tests (Vitest + Testing Library) | ✅ | PR #9 — LoginPage + DownloadsPage, 14 tests |
+| P3-14 | Frontend unit tests (Vitest + Testing Library) | ✅ | PR #9 — unit + integration tests (LoginPage, DownloadsPage, NewCasePage, ReviewPage, InstitutionsPage), 45 tests |
 
 ---
 

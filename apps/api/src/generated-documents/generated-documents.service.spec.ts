@@ -175,14 +175,28 @@ describe('GeneratedDocumentsService', () => {
       expect(result).toEqual(mockGeneratedDoc);
     });
 
-    it('should use the correct template ID for each institution type', async () => {
+    it('should use the correct template ID for every institution type', async () => {
       const cases: Array<[InstitutionType, string]> = [
+        // Government
         [InstitutionType.SOCIAL_SECURITY_ADMINISTRATION, 'ssa-721'],
         [InstitutionType.MEDICARE, 'medicare'],
         [InstitutionType.IRS, 'irs-notification'],
+        [InstitutionType.VETERANS_AFFAIRS, 'veterans-affairs'],
+        [InstitutionType.STATE_DMV, 'dmv-notification'],
+        [InstitutionType.VOTER_REGISTRATION, 'voter-registration'],
+        [InstitutionType.PASSPORT, 'passport-cancellation'],
+        // Financial
         [InstitutionType.BANK, 'bank-closure'],
         [InstitutionType.CREDIT_CARD, 'credit-card-cancellation'],
+        [InstitutionType.PENSION_401K, 'pension-401k'],
         [InstitutionType.LIFE_INSURANCE, 'life-insurance'],
+        // Utilities & Services
+        [InstitutionType.USPS, 'usps-notification'],
+        [InstitutionType.SUBSCRIPTION_STREAMING, 'subscription-cancellation'],
+        [InstitutionType.SUBSCRIPTION_UTILITY, 'subscription-cancellation'],
+        // Professional
+        [InstitutionType.EMPLOYER_HR, 'employer-notification'],
+        [InstitutionType.PROFESSIONAL_LICENSE_BOARD, 'professional-license'],
       ];
 
       for (const [institutionType, expectedTemplate] of cases) {
