@@ -16,6 +16,7 @@ import { DocumentStatus, GeneratedDocumentStatus, InstitutionType } from '@after
 import { cleanupUser, createTestApp, mockS3, mockSqs } from './helpers/create-test-app';
 
 const EMAIL = `docs-e2e-${Date.now()}@test.local`;
+const EMAIL_B = `docs-e2e-b-${Date.now()}@test.local`;
 const PASSWORD = 'Password123!';
 
 const DECEASED_INFO = {
@@ -37,16 +38,23 @@ const INTERNAL_SECRET = 'test-internal-secret';
 describe('Documents + GeneratedDocuments (e2e)', () => {
   let app: INestApplication;
   let token: string;
+  let tokenB: string;
   let caseId: string;
 
   beforeAll(async () => {
     app = await createTestApp();
 
-    // Register user and get token
-    const regRes = await request(app.getHttpServer())
-      .post('/api/v1/auth/register')
-      .send({ email: EMAIL, password: PASSWORD, firstName: 'Doc', lastName: 'Tester' });
+    // Register two users — tokenB is used for cross-user isolation tests
+    const [regRes, regResB] = await Promise.all([
+      request(app.getHttpServer())
+        .post('/api/v1/auth/register')
+        .send({ email: EMAIL, password: PASSWORD, firstName: 'Doc', lastName: 'Tester' }),
+      request(app.getHttpServer())
+        .post('/api/v1/auth/register')
+        .send({ email: EMAIL_B, password: PASSWORD, firstName: 'Other', lastName: 'User' }),
+    ]);
     token = regRes.body.accessToken as string;
+    tokenB = regResB.body.accessToken as string;
 
     // Create a case with executor info (needed for generated documents)
     const caseRes = await request(app.getHttpServer())
@@ -62,7 +70,7 @@ describe('Documents + GeneratedDocuments (e2e)', () => {
   });
 
   afterAll(async () => {
-    await cleanupUser(app, EMAIL);
+    await Promise.all([cleanupUser(app, EMAIL), cleanupUser(app, EMAIL_B)]);
     await app.close();
   });
 
@@ -553,6 +561,135 @@ describe('Documents + GeneratedDocuments (e2e)', () => {
           status: GeneratedDocumentStatus.READY,
         })
         .expect(401);
+    });
+
+    it('404 — non-existent generated document', async () => {
+      await request(app.getHttpServer())
+        .patch('/api/v1/generated-documents/00000000-0000-0000-0000-000000000000/result')
+        .set('x-internal-secret', INTERNAL_SECRET)
+        .send({
+          generatedDocumentId: '00000000-0000-0000-0000-000000000000',
+          status: GeneratedDocumentStatus.READY,
+        })
+        .expect(404);
+    });
+  });
+
+  // ── Cross-user isolation ──────────────────────────────────────────────────
+
+  describe('Cross-user ownership isolation', () => {
+    let docId: string;
+
+    beforeAll(async () => {
+      const res = await request(app.getHttpServer())
+        .post(`/api/v1/cases/${caseId}/documents/initiate-upload`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ fileName: 'isolation-test.pdf', contentType: 'application/pdf' });
+      docId = res.body.document.id as string;
+    });
+
+    it('404 — user B cannot list documents belonging to user A\'s case', async () => {
+      await request(app.getHttpServer())
+        .get(`/api/v1/cases/${caseId}/documents`)
+        .set('Authorization', `Bearer ${tokenB}`)
+        .expect(404);
+    });
+
+    it('404 — user B cannot get a specific document in user A\'s case', async () => {
+      await request(app.getHttpServer())
+        .get(`/api/v1/cases/${caseId}/documents/${docId}`)
+        .set('Authorization', `Bearer ${tokenB}`)
+        .expect(404);
+    });
+
+    it('404 — user B cannot enqueue processing for user A\'s document', async () => {
+      await request(app.getHttpServer())
+        .post(`/api/v1/cases/${caseId}/documents/${docId}/process`)
+        .set('Authorization', `Bearer ${tokenB}`)
+        .expect(404);
+    });
+
+    it('404 — user B cannot list generated documents in user A\'s case', async () => {
+      await request(app.getHttpServer())
+        .get(`/api/v1/cases/${caseId}/generated-documents`)
+        .set('Authorization', `Bearer ${tokenB}`)
+        .expect(404);
+    });
+  });
+
+  // ── Processing-result 404 ─────────────────────────────────────────────────
+
+  describe('PATCH /documents/:id/processing-result — 404', () => {
+    it('404 — non-existent document', async () => {
+      await request(app.getHttpServer())
+        .patch('/api/v1/documents/00000000-0000-0000-0000-000000000000/processing-result')
+        .set('x-internal-secret', INTERNAL_SECRET)
+        .send({
+          documentId: '00000000-0000-0000-0000-000000000000',
+          status: DocumentStatus.PROCESSED,
+        })
+        .expect(404);
+    });
+  });
+
+  // ── Process endpoint 404 ──────────────────────────────────────────────────
+
+  describe('POST /cases/:caseId/documents/:id/process — 404', () => {
+    it('404 — non-existent document', async () => {
+      await request(app.getHttpServer())
+        .post(`/api/v1/cases/${caseId}/documents/00000000-0000-0000-0000-000000000000/process`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(404);
+    });
+  });
+
+  // ── Generated documents list includes downloadUrl for READY docs ──────────
+
+  describe('GET /cases/:caseId/generated-documents — downloadUrl', () => {
+    it('READY document has downloadUrl attached via S3 mock', async () => {
+      // Set up: upload → process → generate → mark READY
+      const uploadRes = await request(app.getHttpServer())
+        .post(`/api/v1/cases/${caseId}/documents/initiate-upload`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ fileName: 'download-url-test.pdf', contentType: 'application/pdf' });
+      const docId = uploadRes.body.document.id as string;
+
+      await request(app.getHttpServer())
+        .patch(`/api/v1/documents/${docId}/processing-result`)
+        .set('x-internal-secret', INTERNAL_SECRET)
+        .send({
+          documentId: docId,
+          status: DocumentStatus.PROCESSED,
+          extractedData: { first_name: 'Helen', last_name: 'Carter' },
+        });
+
+      const genRes = await request(app.getHttpServer())
+        .post(`/api/v1/cases/${caseId}/generated-documents`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ documentId: docId, institutionType: InstitutionType.BANK });
+      const genDocId = genRes.body.id as string;
+      const s3Key = `generated/${caseId}/${genDocId}.pdf`;
+
+      await request(app.getHttpServer())
+        .patch(`/api/v1/generated-documents/${genDocId}/result`)
+        .set('x-internal-secret', INTERNAL_SECRET)
+        .send({ generatedDocumentId: genDocId, status: GeneratedDocumentStatus.READY, s3Key });
+
+      jest.clearAllMocks();
+
+      const listRes = await request(app.getHttpServer())
+        .get(`/api/v1/cases/${caseId}/generated-documents`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
+
+      const readyDoc = (listRes.body as Array<{ id: string; downloadUrl?: string }>)
+        .find((d) => d.id === genDocId);
+      expect(readyDoc?.downloadUrl).toBeTruthy();
+      expect(mockS3.generateDownloadUrl).toHaveBeenCalledWith(
+        expect.any(String),
+        s3Key,
+        900,
+      );
     });
   });
 });
