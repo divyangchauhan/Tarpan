@@ -5,6 +5,7 @@ import { CaseStatus } from '@afterlight/shared';
 import { CaseEntity } from '../entities/case.entity';
 import { CasesService } from './cases.service';
 import { CreateCaseDto } from './dto/create-case.dto';
+import { UpdateCaseDto } from './dto/update-case.dto';
 
 const mockDeceasedInfo = {
   firstName: 'John',
@@ -111,6 +112,97 @@ describe('CasesService', () => {
       await expect(service.findOne('user-id', 'non-existent-id')).rejects.toThrow(
         NotFoundException,
       );
+    });
+  });
+
+  describe('update', () => {
+    it('should update status when provided', async () => {
+      const dto: UpdateCaseDto = { status: CaseStatus.COMPLETED };
+      const updated = { ...mockCase, status: CaseStatus.COMPLETED };
+
+      mockCaseRepository.findOne.mockResolvedValue({ ...mockCase });
+      mockCaseRepository.save.mockResolvedValue(updated);
+
+      const result = await service.update('user-id', 'case-id', dto);
+
+      expect(mockCaseRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({ status: CaseStatus.COMPLETED }),
+      );
+      expect(result.status).toBe(CaseStatus.COMPLETED);
+    });
+
+    it('should merge deceasedInfo patch without overwriting unchanged fields', async () => {
+      const dto: UpdateCaseDto = {
+        deceasedInfo: { firstName: 'Updated' } as NonNullable<UpdateCaseDto['deceasedInfo']>,
+      };
+      const updated = {
+        ...mockCase,
+        deceasedInfo: { ...mockDeceasedInfo, firstName: 'Updated' },
+      };
+
+      mockCaseRepository.findOne.mockResolvedValue({ ...mockCase });
+      mockCaseRepository.save.mockResolvedValue(updated);
+
+      const result = await service.update('user-id', 'case-id', dto);
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      expect(mockCaseRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          deceasedInfo: expect.objectContaining({
+            firstName: 'Updated',
+            lastName: mockDeceasedInfo.lastName,
+          }),
+        }),
+      );
+      expect(result.deceasedInfo.firstName).toBe('Updated');
+    });
+
+    it('should set executorInfo when provided', async () => {
+      const executorInfo = {
+        name: 'Jane Doe',
+        address: '123 Main St',
+        relationship: 'Daughter',
+      };
+      const dto: UpdateCaseDto = { executorInfo };
+
+      mockCaseRepository.findOne.mockResolvedValue({ ...mockCase, executorInfo: null });
+      mockCaseRepository.save.mockResolvedValue({ ...mockCase, executorInfo });
+
+      const result = await service.update('user-id', 'case-id', dto);
+
+      expect(mockCaseRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          executorInfo: expect.objectContaining({ name: 'Jane Doe' }),
+        }),
+      );
+      expect(result.executorInfo?.name).toBe('Jane Doe');
+    });
+
+    it('should throw NotFoundException when case does not exist', async () => {
+      mockCaseRepository.findOne.mockResolvedValue(null);
+
+      await expect(service.update('user-id', 'non-existent-id', {})).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+
+  describe('remove', () => {
+    it('should remove the case', async () => {
+      mockCaseRepository.findOne.mockResolvedValue(mockCase);
+      mockCaseRepository.remove.mockResolvedValue(undefined);
+
+      await service.remove('user-id', 'case-id');
+
+      expect(mockCaseRepository.remove).toHaveBeenCalledWith(mockCase);
+    });
+
+    it('should throw NotFoundException when case does not exist', async () => {
+      mockCaseRepository.findOne.mockResolvedValue(null);
+
+      await expect(service.remove('user-id', 'non-existent-id')).rejects.toThrow(NotFoundException);
     });
   });
 });

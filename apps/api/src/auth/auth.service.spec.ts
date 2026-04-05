@@ -152,4 +152,32 @@ describe('AuthService', () => {
       expect(mockJwtService.sign).toHaveBeenCalledTimes(2);
     });
   });
+
+  describe('refresh', () => {
+    it('should return new tokens for a valid user', async () => {
+      mockUserRepository.findOne.mockResolvedValue(mockUser);
+      mockJwtService.sign.mockReturnValue('new-token');
+
+      const result = await service.refresh('test-user-id', 'old-refresh-token');
+
+      expect(mockUserRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 'test-user-id' },
+      });
+      expect(result).toEqual({ accessToken: 'new-token', refreshToken: 'new-token' });
+    });
+
+    it('should throw UnauthorizedException when user is not found', async () => {
+      mockUserRepository.findOne.mockResolvedValue(null);
+
+      await expect(service.refresh('unknown-id', 'some-token')).rejects.toThrow(
+        UnauthorizedException,
+      );
+    });
+  });
+
+  describe('logout', () => {
+    it('should not throw (stateless JWT)', () => {
+      expect(() => service.logout('user-id')).not.toThrow();
+    });
+  });
 });

@@ -145,6 +145,67 @@ describe('DocumentsService', () => {
     });
   });
 
+  describe('findAll', () => {
+    it('should return all documents for the case', async () => {
+      mockCasesService.findOne.mockResolvedValue(mockCase);
+      mockDocumentRepository.find.mockResolvedValue([mockDocument]);
+
+      const result = await service.findAll('user-id', 'case-id');
+
+      expect(mockDocumentRepository.find).toHaveBeenCalledWith({
+        where: { caseId: 'case-id' },
+        order: { createdAt: 'DESC' },
+      });
+      expect(result).toEqual([mockDocument]);
+    });
+  });
+
+  describe('findOne', () => {
+    it('should return a document when found', async () => {
+      mockCasesService.findOne.mockResolvedValue(mockCase);
+      mockDocumentRepository.findOne.mockResolvedValue(mockDocument);
+
+      const result = await service.findOne('user-id', 'case-id', 'doc-id');
+
+      expect(mockDocumentRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 'doc-id', caseId: 'case-id' },
+      });
+      expect(result).toEqual(mockDocument);
+    });
+
+    it('should throw NotFoundException when document does not exist', async () => {
+      mockCasesService.findOne.mockResolvedValue(mockCase);
+      mockDocumentRepository.findOne.mockResolvedValue(null);
+
+      await expect(service.findOne('user-id', 'case-id', 'missing-id')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+
+  describe('enqueueProcessing', () => {
+    it('should update document status to PROCESSING and enqueue an SQS message', async () => {
+      const processingDoc = { ...mockDocument, status: DocumentStatus.PROCESSING };
+
+      mockCasesService.findOne.mockResolvedValue(mockCase);
+      mockDocumentRepository.findOne.mockResolvedValue({ ...mockDocument });
+      mockDocumentRepository.save.mockResolvedValue(processingDoc);
+      mockConfigService.getOrThrow.mockReturnValue('https://sqs.url/processing-queue');
+      mockSqsService.sendMessage.mockResolvedValue(undefined);
+
+      const result = await service.enqueueProcessing('user-id', 'case-id', 'doc-id');
+
+      expect(mockDocumentRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({ status: DocumentStatus.PROCESSING }),
+      );
+      expect(mockSqsService.sendMessage).toHaveBeenCalledWith(
+        'https://sqs.url/processing-queue',
+        expect.objectContaining({ documentId: 'doc-id', s3Key: mockDocument.s3Key }),
+      );
+      expect(result.status).toBe(DocumentStatus.PROCESSING);
+    });
+  });
+
   describe('handleProcessingResult', () => {
     it('should update document status and emit WebSocket event on PROCESSED', async () => {
       const extractedData = {

@@ -66,7 +66,15 @@
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
-    "collectCoverageFrom": ["**/*.(t|j)s", "!**/main.ts"],
+    "collectCoverageFrom": [
+      "**/*.(t|j)s",
+      "!**/main.ts",
+      "!**/*.module.ts",
+      "!**/*.dto.ts",
+      "!**/*.entity.ts",
+      "!**/migrations/**",
+      "!**/data-source.ts"
+    ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
     "moduleNameMapper": {
