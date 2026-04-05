@@ -7,6 +7,11 @@
     "^.+\\.(t|j)s$": "ts-jest"
   },
   "moduleNameMapper": {
-    "^@afterlight/shared(.*)$": "<rootDir>/../../../packages/shared/src$1"
-  }
+    "^@afterlight/shared(.*)$": "<rootDir>/../../../packages/shared/src$1",
+    "^@api/(.*)$": "<rootDir>/../src/$1"
+  },
+  "globalSetup": "<rootDir>/global-setup.ts",
+  "setupFiles": ["<rootDir>/setup.ts"],
+  "testTimeout": 30000,
+  "maxWorkers": 1
 }

@@ -40,8 +40,8 @@
 | P1-08 | WebSocket gateway: push processing status updates to client | ✅ | PR #3 |
 | P1-09 | Templates module: list available institution templates | ⬜ | |
 | P1-10 | Generation module: trigger Lambda for PDF generation, return download URL | ✅ | PR #5 — SQS-based via afterlight-document-generation queue |
-| P1-11 | API unit tests (Jest) — target 80% coverage | ⬜ | |
-| P1-12 | API e2e tests (Supertest) | ⬜ | |
+| P1-11 | API unit tests (Jest) — target 80% coverage | ✅ | PR #9 — 88% statement coverage, 72 tests |
+| P1-12 | API e2e tests (Supertest) | ✅ | PR #9 — auth (13 tests), cases (13 tests), documents + generated-documents (23 tests) |
 
 ---
 
@@ -72,7 +72,7 @@
 | P2-20 | Template: Passport cancellation | ✅ | PR #5 |
 | P2-21 | Template: Professional license board notification | ✅ | PR #5 |
 | P2-22 | Template: Employer / HR notification | ✅ | PR #5 |
-| P2-23 | Lambda unit tests (pytest) — target 90% on parser logic | ⬜ | |
+| P2-23 | Lambda unit tests (pytest) — target 90% on parser logic | ✅ | PR #9 — 94% coverage, 63 tests |
 | P2-24 | Lambda integration test with LocalStack S3 + SQS | ⬜ | |
 
 ---
@@ -94,7 +94,7 @@
 | P3-11 | Downloads screen: list generated PDFs with download links | ✅ | PR #7 |
 | P3-12 | Toast notifications system | ✅ | PR #7 |
 | P3-13 | Error boundary and empty states | ✅ | PR #7 |
-| P3-14 | Frontend unit tests (Vitest + Testing Library) | ⬜ | |
+| P3-14 | Frontend unit tests (Vitest + Testing Library) | ✅ | PR #9 — unit + integration tests (LoginPage, DownloadsPage, NewCasePage, ReviewPage, InstitutionsPage), 45 tests |
 
 ---
 
@@ -118,7 +118,7 @@
 
 | ID | Task | Status | Notes |
 |---|---|---|---|
-| P5-01 | Seed script: demo case with real-looking data | ⬜ | |
+| P5-01 | Seed script: demo case with real-looking data | ✅ | PR #9 — apps/api/src/database/seed.ts |
 | P5-02 | Accuracy report: test parser against 20 sample certificates | ⬜ | |
 | P5-03 | Loading performance: ensure upload → extraction < 45s end-to-end | ⬜ | |
 | P5-04 | Mobile responsiveness audit | ⬜ | |
