@@ -41,26 +41,14 @@ export class LambdaStack extends cdk.Stack {
 
     // ── Lambda function ────────────────────────────────────────────────────
 
-    this.processorFn = new lambda.Function(this, 'ProcessorFn', {
-      functionName: 'afterlight-processor',
+    // Container image Lambda: WeasyPrint requires native gobject/pango/cairo libs
+    // that cannot be installed in the standard Lambda ZIP runtime. The Dockerfile
+    // in apps/processor/ installs them via dnf on the Amazon Linux 2023 base image.
+    this.processorFn = new lambda.DockerImageFunction(this, 'ProcessorFn', {
       description: 'Parses death certificates and generates legal document PDFs',
-      runtime: lambda.Runtime.PYTHON_3_11,
-      handler: 'src.handler.handler',
-      // Bundle the Poetry project: export requirements, pip-install, copy source
-      code: lambda.Code.fromAsset(path.join(__dirname, '../../../apps/processor'), {
-        bundling: {
-          image: lambda.Runtime.PYTHON_3_11.bundlingImage,
-          command: [
-            'bash',
-            '-c',
-            [
-              // requirements.txt is pre-generated via: poetry export -f requirements.txt --without-hashes --without dev -o requirements.txt
-              'pip install -r requirements.txt -t /asset-output --quiet',
-              'cp -r src /asset-output/',
-            ].join(' && '),
-          ],
-        },
-      }),
+      code: lambda.DockerImageCode.fromImageAsset(
+        path.join(__dirname, '../../../apps/processor'),
+      ),
       memorySize: 1024, // WeasyPrint + Pillow need headroom
       timeout: cdk.Duration.seconds(300), // 5 min — generous for Claude API + PDF render
       // reservedConcurrentExecutions omitted — SQS maxConcurrency:5 limits blast radius
