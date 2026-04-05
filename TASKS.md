@@ -41,7 +41,7 @@
 | P1-09 | Templates module: list available institution templates | ⬜ | |
 | P1-10 | Generation module: trigger Lambda for PDF generation, return download URL | ✅ | PR #5 — SQS-based via afterlight-document-generation queue |
 | P1-11 | API unit tests (Jest) — target 80% coverage | ✅ | PR #9 — 88% statement coverage, 72 tests |
-| P1-12 | API e2e tests (Supertest) | ⬜ | |
+| P1-12 | API e2e tests (Supertest) | ✅ | PR #9 — auth (13 tests), cases (13 tests), documents + generated-documents (23 tests) |
 
 ---
 
