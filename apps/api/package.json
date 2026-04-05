@@ -11,7 +11,8 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "db:create-test": "psql postgresql://afterlight:afterlight@localhost:5432/postgres -c \"SELECT 'CREATE DATABASE afterlight_test' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'afterlight_test')\\gexec\"",
+    "test:e2e": "pnpm db:create-test && jest --config ./test/jest-e2e.json",
     "typeorm": "typeorm-ts-node-commonjs"
   },
   "dependencies": {
