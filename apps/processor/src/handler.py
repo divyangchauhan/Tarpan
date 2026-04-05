@@ -8,6 +8,7 @@ Two event types are handled:
 
 import json
 import logging
+import time
 from typing import Any
 
 from src import api_client, extractor, pdf_processor, s3_client, template_engine
@@ -25,6 +26,9 @@ _CONTENT_TYPE_MAP: dict[str, str] = {
     "tiff": "image/tiff",
     "tif": "image/tiff",
 }
+
+# SLA target: upload → extraction complete in under 45 seconds (P5-03)
+PROCESSING_SLA_SECONDS = 45
 
 
 def handler(event: dict[str, Any], context: object) -> dict[str, Any]:
@@ -61,19 +65,35 @@ def _handle_processing(body: dict[str, Any]) -> dict[str, Any]:
     """Download, extract, and report results for a single document."""
     document_id: str = body["documentId"]
     s3_key: str = body["s3Key"]
+    t_start = time.monotonic()
 
     logger.info("Processing document", extra={"document_id": document_id, "s3_key": s3_key})
 
     try:
         # P2-02: Download from S3
+        t0 = time.monotonic()
         file_bytes = s3_client.download_object(settings.s3_uploads_bucket, s3_key)
         content_type = _content_type_from_key(s3_key)
+        logger.info(
+            "S3 download complete",
+            extra={"document_id": document_id, "duration_ms": int((time.monotonic() - t0) * 1000)},
+        )
 
         # P2-03: Convert to content blocks for Claude
+        t0 = time.monotonic()
         content = pdf_processor.prepare_content_for_claude(file_bytes, content_type)
+        logger.info(
+            "PDF preprocessing complete",
+            extra={"document_id": document_id, "duration_ms": int((time.monotonic() - t0) * 1000)},
+        )
 
         # P2-04 / P2-05: Extract with Claude + validate with Pydantic
+        t0 = time.monotonic()
         extracted = extractor.extract_certificate_data(content)
+        logger.info(
+            "Claude extraction complete",
+            extra={"document_id": document_id, "duration_ms": int((time.monotonic() - t0) * 1000)},
+        )
 
         # P2-06: Report success to API
         api_client.report_success(
@@ -81,7 +101,22 @@ def _handle_processing(body: dict[str, Any]) -> dict[str, Any]:
             extracted.model_dump(exclude_none=True),
         )
 
-        logger.info("Document processed successfully", extra={"document_id": document_id})
+        total_ms = int((time.monotonic() - t_start) * 1000)
+        sla_ok = total_ms <= PROCESSING_SLA_SECONDS * 1000
+        logger.info(
+            "Document processed successfully",
+            extra={
+                "document_id": document_id,
+                "total_duration_ms": total_ms,
+                "sla_met": sla_ok,
+            },
+        )
+        if not sla_ok:
+            logger.warning(
+                "Processing exceeded %ds SLA",
+                PROCESSING_SLA_SECONDS,
+                extra={"document_id": document_id, "total_duration_ms": total_ms},
+            )
         return {"documentId": document_id, "status": "PROCESSED"}
 
     except Exception as exc:
@@ -110,6 +145,7 @@ def _handle_generation(event: dict[str, Any]) -> dict[str, Any]:
         institution_address=event.get("institutionAddress"),
     )
 
+    t_start = time.monotonic()
     logger.info(
         "Generating document",
         extra={
@@ -119,18 +155,34 @@ def _handle_generation(event: dict[str, Any]) -> dict[str, Any]:
     )
 
     try:
+        t0 = time.monotonic()
         pdf_bytes = template_engine.render(request)
+        logger.info(
+            "Template rendering complete",
+            extra={
+                "generated_document_id": request.generated_document_id,
+                "duration_ms": int((time.monotonic() - t0) * 1000),
+            },
+        )
 
         s3_key = (
             f"generated/{request.case_id}"
             f"/{request.template_id}"
             f"/{request.generated_document_id}.pdf"
         )
+        t0 = time.monotonic()
         s3_client.upload_object(
             settings.s3_generated_docs_bucket,
             s3_key,
             pdf_bytes,
             "application/pdf",
+        )
+        logger.info(
+            "S3 upload complete",
+            extra={
+                "generated_document_id": request.generated_document_id,
+                "duration_ms": int((time.monotonic() - t0) * 1000),
+            },
         )
 
     except Exception as exc:
@@ -163,11 +215,13 @@ def _handle_generation(event: dict[str, Any]) -> dict[str, Any]:
             },
         )
 
+    total_ms = int((time.monotonic() - t_start) * 1000)
     logger.info(
         "Document generated successfully",
         extra={
             "generated_document_id": request.generated_document_id,
             "s3_key": s3_key,
+            "total_duration_ms": total_ms,
         },
     )
     return {
