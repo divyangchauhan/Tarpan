@@ -1,0 +1,15 @@
+node_modules
+.git
+.github
+dist
+cdk.out
+infra/node_modules
+infra/cdk.out
+apps/processor
+apps/web
+docs
+*.md
+.env*
+.coverage
+__pycache__
+*.pyc

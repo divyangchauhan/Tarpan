@@ -2,7 +2,9 @@ import { useEffect, useRef } from 'react';
 import { io, type Socket } from 'socket.io-client';
 import type { WsEvent } from '@afterlight/shared';
 
-const WS_URL = import.meta.env.VITE_WS_URL ?? 'http://localhost:3001';
+// In production, CloudFront proxies /socket.io/* to the ALB — connect to current origin.
+// In local dev, set VITE_WS_URL=http://localhost:3001 in .env.
+const WS_URL = import.meta.env.VITE_WS_URL || window.location.origin;
 
 type EventHandler = (data: unknown) => void;
 

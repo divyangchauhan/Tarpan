@@ -102,15 +102,15 @@
 
 | ID | Task | Status | Notes |
 |---|---|---|---|
-| P4-01 | CDK project scaffold | ⬜ | |
-| P4-02 | S3 bucket stack (uploads + generated docs) | ⬜ | |
-| P4-03 | SQS queue stack (two queues: processing + generation) | ⬜ | |
-| P4-04 | Lambda stack (processor Lambda + both SQS triggers) | ⬜ | |
-| P4-05 | RDS PostgreSQL stack | ⬜ | |
-| P4-06 | ECS / EC2 stack for NestJS API (or Elastic Beanstalk for POC speed) | ⬜ | |
-| P4-07 | CloudFront + S3 for React app hosting | ⬜ | |
-| P4-08 | Secrets Manager for API keys | ⬜ | |
-| P4-09 | IAM roles and least-privilege policies | ⬜ | |
+| P4-01 | CDK project scaffold | ✅ | PR #8 |
+| P4-02 | S3 bucket stack (uploads + generated docs) | ✅ | PR #8 |
+| P4-03 | SQS queue stack (two queues: processing + generation) | ✅ | PR #8 |
+| P4-04 | Lambda stack (processor Lambda + both SQS triggers) | ✅ | PR #8 |
+| P4-05 | RDS PostgreSQL stack | ✅ | PR #8 |
+| P4-06 | ECS / EC2 stack for NestJS API (or Elastic Beanstalk for POC speed) | ✅ | PR #8 — ECS Fargate + ALB |
+| P4-07 | CloudFront + S3 for React app hosting | ✅ | PR #8 |
+| P4-08 | Secrets Manager for API keys | ✅ | PR #8 |
+| P4-09 | IAM roles and least-privilege policies | ✅ | PR #8 |
 
 ---
 
@@ -126,15 +126,16 @@
 
 ---
 
-## PR Schedule (Suggested)
+## PR Schedule (Actual)
 
 | PR | Scope | Phase Tasks |
 |---|---|---|
 | #1 | Project docs (README, ARCHITECTURE, TASKS, CLAUDE.md) | P0-01 |
 | #2 | Monorepo scaffold + CI + shared types | P0-02 to P0-06 |
-| #3 | NestJS API core (auth, cases, documents) | P1-01 to P1-08 |
+| #3 | NestJS API core (auth, cases, documents, WebSocket) | P1-01 to P1-08 |
 | #4 | Python Lambda: parser + S3 + SQS | P2-01 to P2-06 |
-| #5 | Document templates (15+ institutions) | P2-07 to P2-22 |
-| #6 | React frontend: auth + upload + review flow | P3-01 to P3-11 |
-| #7 | Infrastructure CDK | P4-01 to P4-09 |
-| #8 | Tests, polish, demo prep | P2-23, P2-24, P3-14, P5-01 to P5-05 |
+| #5 | Document templates (15+ institutions) + generation worker | P2-07 to P2-22 |
+| #6 | Bug fixes: upload flow, CORS, SQS queues | — |
+| #7 | React frontend + WebSocket improvements | P3-01 to P3-13 |
+| #8 | AWS CDK infrastructure | P4-01 to P4-09 |
+| #9 | Tests, polish, demo prep | P1-11, P1-12, P2-23, P2-24, P3-14, P5-01 to P5-05 |
