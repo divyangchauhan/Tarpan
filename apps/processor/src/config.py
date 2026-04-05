@@ -18,7 +18,9 @@ def _resolve_secret(env_var: str, arn_env_var: str) -> None:
     if not arn:
         return
     try:
-        client = boto3.client("secretsmanager", region_name=os.environ.get("AWS_REGION", "us-east-1"))
+        client = boto3.client(
+            "secretsmanager", region_name=os.environ.get("AWS_REGION", "us-east-1")
+        )
         response = client.get_secret_value(SecretId=arn)
         secret = response.get("SecretString", "")
         # Support both plain strings and {"value": "..."} JSON objects
