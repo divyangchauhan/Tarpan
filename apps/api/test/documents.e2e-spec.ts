@@ -10,7 +10,7 @@
  *   4. Create generated-document → SQS message sent, status → GENERATING
  *   5. Internal generation-result callback → status → READY
  */
-import * as request from 'supertest';
+import request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import { DocumentStatus, GeneratedDocumentStatus, InstitutionType } from '@afterlight/shared';
 import { cleanupUser, createTestApp, mockS3, mockSqs } from './helpers/create-test-app';

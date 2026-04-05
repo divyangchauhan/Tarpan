@@ -3,7 +3,7 @@
  *
  * Requires: docker compose up -d
  */
-import * as request from 'supertest';
+import request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import { cleanupUser, createTestApp } from './helpers/create-test-app';
 

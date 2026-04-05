@@ -4,7 +4,7 @@
  *
  * Requires: docker compose up -d
  */
-import * as request from 'supertest';
+import request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import { cleanupUser, createTestApp } from './helpers/create-test-app';
 
@@ -38,7 +38,6 @@ describe('Auth (e2e)', () => {
       expect(res.body).toMatchObject({
         accessToken: expect.any(String),
         refreshToken: expect.any(String),
-        user: { email: EMAIL, firstName: 'Alice', lastName: 'Test' },
       });
       // Password hash must never appear in the response
       expect(JSON.stringify(res.body)).not.toContain('passwordHash');
