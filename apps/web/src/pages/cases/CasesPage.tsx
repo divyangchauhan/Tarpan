@@ -68,30 +68,27 @@ export function CasesPage(): JSX.Element {
           {cases.map((c) => (
             <div
               key={c.id}
-              className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+              className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer gap-3"
               onClick={() => void navigate(`/cases/${c.id}/review`)}
               role="button"
               tabIndex={0}
               onKeyDown={(e) => e.key === 'Enter' && void navigate(`/cases/${c.id}/review`)}
             >
-              <div>
-                <p className="font-semibold text-gray-900">
+              <div className="min-w-0">
+                <p className="font-semibold text-gray-900 truncate">
                   {c.deceasedInfo.firstName} {c.deceasedInfo.lastName}
                 </p>
                 <p className="text-sm text-gray-500">
-                  Date of death:{' '}
+                  Died{' '}
                   {new Date(c.deceasedInfo.dateOfDeath).toLocaleDateString('en-US', {
                     year: 'numeric',
-                    month: 'long',
+                    month: 'short',
                     day: 'numeric',
                   })}
                 </p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-shrink-0 items-center gap-2">
                 <Badge variant={statusVariant[c.status]}>{c.status}</Badge>
-                <p className="text-xs text-gray-400">
-                  {new Date(c.createdAt).toLocaleDateString()}
-                </p>
                 <button
                   title="View downloads"
                   onClick={(e) => {

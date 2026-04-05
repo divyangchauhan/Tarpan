@@ -31,8 +31,8 @@ interface FieldRowProps {
 
 function FieldRow({ label, value }: FieldRowProps): JSX.Element {
   return (
-    <div className="flex py-3 border-b border-gray-100 last:border-0">
-      <dt className="w-48 flex-shrink-0 text-sm font-medium text-gray-500">{label}</dt>
+    <div className="flex flex-col py-3 border-b border-gray-100 last:border-0 sm:flex-row">
+      <dt className="mb-0.5 w-full flex-shrink-0 text-sm font-medium text-gray-500 sm:mb-0 sm:w-40">{label}</dt>
       <dd className="text-sm text-gray-900">{value ?? <span className="text-gray-400 italic">Not extracted</span>}</dd>
     </div>
   );
@@ -158,8 +158,8 @@ export function ReviewPage(): JSX.Element {
         </p>
 
         <form onSubmit={(e) => void handleSubmit(onExecutorSubmit)(e)} className="space-y-5" noValidate>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2 sm:col-span-1">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
               <Label htmlFor="ex-name" required>Full name</Label>
               <Input
                 id="ex-name"
@@ -169,7 +169,7 @@ export function ReviewPage(): JSX.Element {
                 {...register('name')}
               />
             </div>
-            <div className="col-span-2 sm:col-span-1">
+            <div>
               <Label htmlFor="ex-relationship" required>Relationship to deceased</Label>
               <Input
                 id="ex-relationship"
@@ -194,7 +194,7 @@ export function ReviewPage(): JSX.Element {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor="ex-phone">Phone number</Label>
               <Input
