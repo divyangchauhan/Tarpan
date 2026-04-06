@@ -1,16 +1,18 @@
 /**
- * Demo seed script — populates the database with a realistic AfterLight demo case.
+ * Demo seed script — populates the database with a realistic AfterLight demo case
+ * and triggers real PDF generation via the SQS pipeline.
  *
  * Usage:
  *   cd apps/api && pnpm ts-node -r tsconfig-paths/register src/database/seed.ts
  *
- * Requires a running PostgreSQL instance (docker compose up -d).
+ * Requires the full stack to be running (docker compose up -d + pnpm dev + processor worker).
  * Safe to run multiple times: existing demo data is deleted and re-created.
  */
 
 /* eslint-disable no-console */
 import 'reflect-metadata';
 import * as bcrypt from 'bcrypt';
+import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
 import { AppDataSource } from './data-source';
 import { UserEntity } from '../entities/user.entity';
 import { CaseEntity } from '../entities/case.entity';
@@ -28,6 +30,44 @@ import {
 const DEMO_EMAIL = 'demo@afterlight.app';
 const DEMO_PASSWORD = 'AfterLight2024!';
 
+const GENERATION_TIMEOUT_MS = 120_000; // 2 minutes
+const POLL_INTERVAL_MS = 3_000;
+
+// Must match INSTITUTION_TYPE_TO_TEMPLATE_ID in generated-documents.service.ts
+const TEMPLATE_ID: Partial<Record<InstitutionType, string>> = {
+  [InstitutionType.SOCIAL_SECURITY_ADMINISTRATION]: 'ssa-721',
+  [InstitutionType.MEDICARE]: 'medicare',
+  [InstitutionType.IRS]: 'irs-notification',
+  [InstitutionType.BANK]: 'bank-closure',
+  [InstitutionType.LIFE_INSURANCE]: 'life-insurance',
+  [InstitutionType.STATE_DMV]: 'dmv-notification',
+  [InstitutionType.VOTER_REGISTRATION]: 'voter-registration',
+};
+
+const DEMO_INSTITUTIONS: Array<{ institutionType: InstitutionType; institutionName?: string }> = [
+  { institutionType: InstitutionType.SOCIAL_SECURITY_ADMINISTRATION },
+  { institutionType: InstitutionType.MEDICARE },
+  { institutionType: InstitutionType.IRS },
+  { institutionType: InstitutionType.BANK, institutionName: 'First National Bank of Springfield' },
+  { institutionType: InstitutionType.LIFE_INSURANCE, institutionName: 'Midwestern Life Insurance Co.' },
+  { institutionType: InstitutionType.STATE_DMV },
+  { institutionType: InstitutionType.VOTER_REGISTRATION },
+];
+
+const EXTRACTED_DATA = {
+  full_name: 'Robert James Mitchell',
+  first_name: 'Robert',
+  middle_name: 'James',
+  last_name: 'Mitchell',
+  date_of_birth: '1942-07-14',
+  date_of_death: '2024-11-03',
+  place_of_death: 'Springfield, Sangamon County, Illinois',
+  state: 'IL',
+  certificate_number: '2024-IL-SG-048271',
+  certifier_name: 'Dr. Patricia Chen',
+  certifier_title: 'Attending Physician',
+};
+
 async function seed(): Promise<void> {
   await AppDataSource.initialize();
 
@@ -41,7 +81,6 @@ async function seed(): Promise<void> {
   // ── 1. Demo user ──────────────────────────────────────────────────────────
   let user = await userRepo.findOne({ where: { email: DEMO_EMAIL } });
   if (user) {
-    // Clean up existing demo data before re-seeding
     const existingCases = await caseRepo.find({ where: { userId: user.id } });
     await Promise.all(
       existingCases.flatMap((c) => [
@@ -89,89 +128,102 @@ async function seed(): Promise<void> {
   console.log(`  ✓  Created demo case: ${demoCase.id}`);
 
   // ── 3. Processed death certificate ────────────────────────────────────────
-  const certDocEntity: DocumentEntity = documentRepo.create({
-    caseId: demoCase.id,
-    type: DocumentType.DEATH_CERTIFICATE,
-    status: DocumentStatus.PROCESSED,
-    s3Key: `cases/${demoCase.id}/documents/death-certificate.pdf`,
-    // The Python processor writes snake_case fields directly into the JSONB column.
-    // ExtractedCertificateData uses camelCase for TypeScript consumers, but the raw
-    // DB value (and what the seed must produce) mirrors the Python output exactly.
-    // TODO: add a transformation layer so the stored shape matches the TS type.
-    extractedData: {
-      full_name: 'Robert James Mitchell',
-      first_name: 'Robert',
-      middle_name: 'James',
-      last_name: 'Mitchell',
-      date_of_birth: '1942-07-14',
-      date_of_death: '2024-11-03',
-      place_of_death: 'Springfield, Sangamon County, Illinois',
-      state: 'IL',
-      certificate_number: '2024-IL-SG-048271',
-      certifier_name: 'Dr. Patricia Chen',
-      certifier_title: 'Attending Physician',
-    } as unknown as import('../entities/document.entity').DocumentEntity['extractedData'],
-  });
-  const certDoc = await documentRepo.save(certDocEntity);
+  const certDoc = await documentRepo.save(
+    documentRepo.create({
+      caseId: demoCase.id,
+      type: DocumentType.DEATH_CERTIFICATE,
+      status: DocumentStatus.PROCESSED,
+      s3Key: `cases/${demoCase.id}/documents/death-certificate.pdf`,
+      extractedData: EXTRACTED_DATA as unknown as DocumentEntity['extractedData'],
+    }),
+  );
   console.log(`  ✓  Created processed document: ${certDoc.id}`);
 
-  // ── 4. Generated documents (mix of READY and GENERATING) ──────────────────
-  const demoInstitutions: Array<{
-    institutionType: InstitutionType;
-    institutionName?: string;
-    status: GeneratedDocumentStatus;
-    s3Key?: string;
-  }> = [
-    {
-      institutionType: InstitutionType.SOCIAL_SECURITY_ADMINISTRATION,
-      status: GeneratedDocumentStatus.READY,
-      s3Key: `generated/${demoCase.id}/ssa-721/${demoCase.id}-ssa.pdf`,
-    },
-    {
-      institutionType: InstitutionType.MEDICARE,
-      status: GeneratedDocumentStatus.READY,
-      s3Key: `generated/${demoCase.id}/medicare/${demoCase.id}-medicare.pdf`,
-    },
-    {
-      institutionType: InstitutionType.IRS,
-      status: GeneratedDocumentStatus.READY,
-      s3Key: `generated/${demoCase.id}/irs-notification/${demoCase.id}-irs.pdf`,
-    },
-    {
-      institutionType: InstitutionType.BANK,
-      institutionName: 'First National Bank of Springfield',
-      status: GeneratedDocumentStatus.READY,
-      s3Key: `generated/${demoCase.id}/bank-closure/${demoCase.id}-bank.pdf`,
-    },
-    {
-      institutionType: InstitutionType.LIFE_INSURANCE,
-      institutionName: 'Midwestern Life Insurance Co.',
-      status: GeneratedDocumentStatus.READY,
-      s3Key: `generated/${demoCase.id}/life-insurance/${demoCase.id}-life.pdf`,
-    },
-    {
-      institutionType: InstitutionType.STATE_DMV,
-      status: GeneratedDocumentStatus.GENERATING,
-    },
-    {
-      institutionType: InstitutionType.VOTER_REGISTRATION,
-      status: GeneratedDocumentStatus.GENERATING,
-    },
-  ];
+  // ── 4. Generated documents — create records then trigger real generation ──
+  const sqsClient = new SQSClient({
+    region: process.env['AWS_REGION'] ?? 'us-east-1',
+    ...(process.env['AWS_ENDPOINT_URL'] ? { endpoint: process.env['AWS_ENDPOINT_URL'] } : {}),
+  });
+  const queueUrl = process.env['SQS_DOCUMENT_GENERATION_QUEUE_URL'];
+  if (!queueUrl) {
+    throw new Error('SQS_DOCUMENT_GENERATION_QUEUE_URL is not set');
+  }
 
-  for (const inst of demoInstitutions) {
-    await generatedDocRepo.save(
-      generatedDocRepo.create({
+  const generatedDocs = await Promise.all(
+    DEMO_INSTITUTIONS.map((inst) =>
+      generatedDocRepo.save(
+        generatedDocRepo.create({
+          caseId: demoCase.id,
+          documentId: certDoc.id,
+          institutionType: inst.institutionType,
+          institutionName: inst.institutionName ?? null,
+          status: GeneratedDocumentStatus.GENERATING,
+          s3Key: null,
+        }),
+      ),
+    ),
+  );
+  console.log(`  ✓  Created ${generatedDocs.length} generated document records`);
+
+  // Send a real SQS generation job for each so the processor builds the actual PDFs
+  await Promise.all(
+    generatedDocs.map(async (doc, i) => {
+      const inst = DEMO_INSTITUTIONS[i]!;
+      const templateId = TEMPLATE_ID[inst.institutionType];
+      if (!templateId) throw new Error(`No template ID for ${inst.institutionType}`);
+
+      const job = {
+        generatedDocumentId: doc.id,
+        templateId,
         caseId: demoCase.id,
         documentId: certDoc.id,
-        institutionType: inst.institutionType,
+        deceased: EXTRACTED_DATA,
+        executorName: demoCase.executorInfo!.name,
+        executorAddress: demoCase.executorInfo!.address,
+        executorRelationship: demoCase.executorInfo!.relationship,
+        executorPhone: demoCase.executorInfo!.phone ?? null,
+        executorEmail: demoCase.executorInfo!.email ?? null,
         institutionName: inst.institutionName ?? null,
-        status: inst.status,
-        s3Key: inst.s3Key ?? null,
-      }),
-    );
+        institutionAddress: null,
+      };
+
+      await sqsClient.send(
+        new SendMessageCommand({ QueueUrl: queueUrl, MessageBody: JSON.stringify(job) }),
+      );
+    }),
+  );
+  console.log(`  ✓  Enqueued ${generatedDocs.length} generation jobs — waiting for PDFs…`);
+
+  // ── 5. Poll until all generated docs are READY (or FAILED) ────────────────
+  const ids = new Set(generatedDocs.map((d) => d.id));
+  const deadline = Date.now() + GENERATION_TIMEOUT_MS;
+
+  while (Date.now() < deadline) {
+    await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+
+    const rows = await generatedDocRepo.findBy([...ids].map((id) => ({ id })));
+    const pending = rows.filter((r) => r.status === GeneratedDocumentStatus.GENERATING);
+    const failed = rows.filter((r) => r.status === GeneratedDocumentStatus.FAILED);
+    const ready = rows.filter((r) => r.status === GeneratedDocumentStatus.READY);
+
+    console.log(`  …  ${ready.length}/${ids.size} ready, ${pending.length} pending, ${failed.length} failed`);
+
+    if (failed.length > 0) {
+      for (const f of failed) {
+        console.error(`  ✗  ${f.institutionType}: ${f.errorMessage ?? 'unknown error'}`);
+      }
+    }
+
+    if (pending.length === 0) break;
   }
-  console.log(`  ✓  Created ${demoInstitutions.length} generated documents`);
+
+  const finalRows = await generatedDocRepo.findBy([...ids].map((id) => ({ id })));
+  const allReady = finalRows.every((r) => r.status === GeneratedDocumentStatus.READY);
+
+  if (!allReady) {
+    const stillPending = finalRows.filter((r) => r.status === GeneratedDocumentStatus.GENERATING);
+    console.warn(`  ⚠  ${stillPending.length} document(s) still generating after timeout — run the processor worker and re-seed`);
+  }
 
   // ── Done ──────────────────────────────────────────────────────────────────
   console.log('\n✅  Seed complete!');

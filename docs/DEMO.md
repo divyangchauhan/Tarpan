@@ -14,7 +14,8 @@
 ## Pre-Demo Checklist
 
 - [ ] App is live and reachable (CloudFront URL or localhost)
-- [ ] Demo account seeded: `pnpm --filter api seed` (creates Robert Mitchell case with SSA, Medicare, IRS letters ready)
+- [ ] Full stack running: `docker compose up -d && pnpm dev` + processor worker (`cd apps/processor && ./start_worker.sh`)
+- [ ] Demo account seeded: `pnpm --filter api seed` — waits for real PDFs to be generated (~30s); requires the stack above to be up first
 - [ ] Demo account credentials ready: `demo@afterlight.app` / ask for password in `.env`
 - [ ] Backup PDF prepared and saved to `docs/sample-death-certificate.pdf` (not committed — use any synthetic death certificate scan; needed only if live upload fails)
 - [ ] Second browser tab open on the downloads page for instant "wow" moment
