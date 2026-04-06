@@ -12,7 +12,6 @@ import {
   DocumentGenerationJob,
   DocumentStatus,
   GeneratedDocumentStatus,
-  InstitutionType,
 } from '@afterlight/shared';
 import { GeneratedDocumentEntity } from '../entities/generated-document.entity';
 import { CasesService } from '../cases/cases.service';
