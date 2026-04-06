@@ -1,3 +1,10 @@
+export interface Template {
+  templateId: string;
+  institutionType: InstitutionType;
+  label: string;
+  category: 'Government' | 'Financial' | 'Utilities & Services' | 'Professional';
+}
+
 export enum InstitutionType {
   // Government
   SOCIAL_SECURITY_ADMINISTRATION = 'SOCIAL_SECURITY_ADMINISTRATION',
