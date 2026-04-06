@@ -19,6 +19,7 @@ import { CasesService } from '../cases/cases.service';
 import { DocumentsService } from '../documents/documents.service';
 import { SqsService } from '../aws/sqs.service';
 import { S3Service } from '../aws/s3.service';
+import { TemplatesService } from '../templates/templates.service';
 import { GeneratedDocumentsService } from './generated-documents.service';
 import { CreateGeneratedDocumentDto } from './dto/create-generated-document.dto';
 import { GenerationResultDto } from './dto/generation-result.dto';
@@ -122,6 +123,7 @@ describe('GeneratedDocumentsService', () => {
         { provide: SqsService, useValue: mockSqsService },
         { provide: S3Service, useValue: mockS3Service },
         { provide: ConfigService, useValue: mockConfigService },
+        TemplatesService,
       ],
     }).compile();
 

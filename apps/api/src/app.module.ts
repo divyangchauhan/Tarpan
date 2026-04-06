@@ -9,6 +9,7 @@ import { CasesModule } from './cases/cases.module';
 import { DocumentsModule } from './documents/documents.module';
 import { EventsModule } from './events/events.module';
 import { GeneratedDocumentsModule } from './generated-documents/generated-documents.module';
+import { TemplatesModule } from './templates/templates.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { GeneratedDocumentsModule } from './generated-documents/generated-docume
     CasesModule,
     DocumentsModule,
     GeneratedDocumentsModule,
+    TemplatesModule,
     EventsModule,
   ],
   controllers: [AppController],

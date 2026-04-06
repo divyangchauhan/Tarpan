@@ -19,27 +19,9 @@ import { CasesService } from '../cases/cases.service';
 import { DocumentsService } from '../documents/documents.service';
 import { SqsService } from '../aws/sqs.service';
 import { S3Service } from '../aws/s3.service';
+import { TemplatesService } from '../templates/templates.service';
 import { CreateGeneratedDocumentDto } from './dto/create-generated-document.dto';
 import { GenerationResultDto } from './dto/generation-result.dto';
-
-const INSTITUTION_TYPE_TO_TEMPLATE_ID: Record<InstitutionType, string> = {
-  [InstitutionType.SOCIAL_SECURITY_ADMINISTRATION]: 'ssa-721',
-  [InstitutionType.MEDICARE]: 'medicare',
-  [InstitutionType.IRS]: 'irs-notification',
-  [InstitutionType.VETERANS_AFFAIRS]: 'veterans-affairs',
-  [InstitutionType.STATE_DMV]: 'dmv-notification',
-  [InstitutionType.VOTER_REGISTRATION]: 'voter-registration',
-  [InstitutionType.PASSPORT]: 'passport-cancellation',
-  [InstitutionType.BANK]: 'bank-closure',
-  [InstitutionType.CREDIT_CARD]: 'credit-card-cancellation',
-  [InstitutionType.PENSION_401K]: 'pension-401k',
-  [InstitutionType.LIFE_INSURANCE]: 'life-insurance',
-  [InstitutionType.USPS]: 'usps-notification',
-  [InstitutionType.SUBSCRIPTION_STREAMING]: 'subscription-cancellation',
-  [InstitutionType.SUBSCRIPTION_UTILITY]: 'subscription-cancellation',
-  [InstitutionType.EMPLOYER_HR]: 'employer-notification',
-  [InstitutionType.PROFESSIONAL_LICENSE_BOARD]: 'professional-license',
-};
 
 @Injectable()
 export class GeneratedDocumentsService {
@@ -53,6 +35,7 @@ export class GeneratedDocumentsService {
     private readonly sqsService: SqsService,
     private readonly s3Service: S3Service,
     private readonly config: ConfigService,
+    private readonly templatesService: TemplatesService,
   ) {}
 
   async create(
@@ -76,7 +59,7 @@ export class GeneratedDocumentsService {
       );
     }
 
-    const templateId = INSTITUTION_TYPE_TO_TEMPLATE_ID[dto.institutionType];
+    const templateId = this.templatesService.getTemplateId(dto.institutionType);
     const { executorInfo } = caseEntity;
 
     const generatedDoc = this.generatedDocumentRepository.create({
