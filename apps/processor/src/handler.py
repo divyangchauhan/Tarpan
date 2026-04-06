@@ -27,9 +27,6 @@ _CONTENT_TYPE_MAP: dict[str, str] = {
     "tif": "image/tiff",
 }
 
-# SLA target: upload → extraction complete in under 45 seconds (P5-03)
-PROCESSING_SLA_SECONDS = 45
-
 
 def handler(event: dict[str, Any], context: object) -> dict[str, Any]:
     """Main Lambda handler — routes SQS records to the appropriate processor."""
@@ -102,21 +99,13 @@ def _handle_processing(body: dict[str, Any]) -> dict[str, Any]:
         )
 
         total_ms = int((time.monotonic() - t_start) * 1000)
-        sla_ok = total_ms <= PROCESSING_SLA_SECONDS * 1000
         logger.info(
             "Document processed successfully",
             extra={
                 "document_id": document_id,
                 "total_duration_ms": total_ms,
-                "sla_met": sla_ok,
             },
         )
-        if not sla_ok:
-            logger.warning(
-                "Processing exceeded %ds SLA",
-                PROCESSING_SLA_SECONDS,
-                extra={"document_id": document_id, "total_duration_ms": total_ms},
-            )
         return {"documentId": document_id, "status": "PROCESSED"}
 
     except Exception as exc:

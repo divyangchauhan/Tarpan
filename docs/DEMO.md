@@ -72,7 +72,7 @@ The processing screen shows live status updates.
 
 Point to the animated steps as they complete.
 
-> "Claude returns structured JSON validated against a Pydantic schema. The whole extraction takes 8–15 seconds depending on document quality. We log every stage — we have an SLA of 45 seconds end-to-end."
+> "Claude returns structured JSON validated against a Pydantic schema. The whole extraction takes 8–15 seconds depending on document quality. We log every stage — download, preprocessing, extraction — so we have full visibility into where time is spent."
 
 The screen auto-redirects to Review when done (typically 10–20 seconds).
 
@@ -132,7 +132,6 @@ Close the app and switch to the architecture slide (optional).
 Key metrics to mention:
 - **500+ hours** of admin work automated to **< 10 minutes**
 - **16 institution types** supported at launch, extensible to any institution
-- **45-second SLA** for extraction — measured and logged per-invocation
 - **HIPAA-conscious design** — death certificates never logged, SSNs encrypted at rest, pre-signed URLs with 15-minute TTL
 
 ---
