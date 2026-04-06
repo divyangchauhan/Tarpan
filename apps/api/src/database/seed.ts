@@ -10,6 +10,8 @@
  */
 
 /* eslint-disable no-console */
+import * as dotenv from 'dotenv';
+dotenv.config(); // load .env before anything reads process.env
 import 'reflect-metadata';
 import * as bcrypt from 'bcrypt';
 import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
