@@ -50,8 +50,8 @@ const DEMO_INSTITUTIONS: Array<{ institutionType: InstitutionType; institutionNa
   { institutionType: InstitutionType.SOCIAL_SECURITY_ADMINISTRATION },
   { institutionType: InstitutionType.MEDICARE },
   { institutionType: InstitutionType.IRS },
-  { institutionType: InstitutionType.BANK, institutionName: 'First National Bank of Springfield' },
-  { institutionType: InstitutionType.LIFE_INSURANCE, institutionName: 'Midwestern Life Insurance Co.' },
+  { institutionType: InstitutionType.BANK },
+  { institutionType: InstitutionType.LIFE_INSURANCE },
   { institutionType: InstitutionType.STATE_DMV },
   { institutionType: InstitutionType.VOTER_REGISTRATION },
 ];
