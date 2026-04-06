@@ -77,9 +77,9 @@ export function NewCasePage(): JSX.Element {
         </p>
       </div>
 
-      <div className="rounded-xl bg-white p-8 shadow-sm border border-gray-200">
+      <div className="rounded-xl bg-white p-6 shadow-sm border border-gray-200 sm:p-8">
         <form onSubmit={(e) => void handleSubmit(onSubmit)(e)} className="space-y-5" noValidate>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor="firstName" required>
                 First name
@@ -114,7 +114,7 @@ export function NewCasePage(): JSX.Element {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor="dateOfBirth" required>
                 Date of birth

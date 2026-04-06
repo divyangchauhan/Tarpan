@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, FolderOpen, LogOut, Moon } from 'lucide-react';
+import { LayoutDashboard, FolderOpen, LogOut, Moon, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
 
@@ -14,7 +14,11 @@ const navItems: NavItem[] = [
   { to: '/cases/new', icon: <FolderOpen className="h-5 w-5" />, label: 'New Case' },
 ];
 
-export function Sidebar(): JSX.Element {
+interface SidebarProps {
+  onClose?: () => void;
+}
+
+export function Sidebar({ onClose }: SidebarProps): JSX.Element {
   const { logout, user } = useAuth();
   const { toast } = useToast();
 
@@ -29,9 +33,21 @@ export function Sidebar(): JSX.Element {
   return (
     <aside className="flex h-full w-64 flex-col bg-brand-950 text-white">
       {/* Logo */}
-      <div className="flex items-center gap-2 px-6 py-5 border-b border-brand-800">
-        <Moon className="h-6 w-6 text-brand-300" />
-        <span className="text-lg font-bold tracking-tight">AfterLight</span>
+      <div className="flex items-center justify-between px-6 py-5 border-b border-brand-800">
+        <div className="flex items-center gap-2">
+          <Moon className="h-6 w-6 text-brand-300" />
+          <span className="text-lg font-bold tracking-tight">AfterLight</span>
+        </div>
+        {/* Close button — mobile only */}
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="rounded-lg p-1 text-brand-400 hover:text-white sm:hidden"
+            aria-label="Close menu"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
       </div>
 
       {/* Nav */}
@@ -41,6 +57,7 @@ export function Sidebar(): JSX.Element {
             key={item.to}
             to={item.to}
             end={item.to === '/cases'}
+            onClick={onClose ?? undefined}
             className={({ isActive }) =>
               [
                 'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',

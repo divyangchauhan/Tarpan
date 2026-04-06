@@ -69,3 +69,6 @@ samconfig.toml
 
 # E2E test artifacts
 apps/processor/scripts/downloaded-pdfs/
+
+# Demo assets — never commit real death certificates
+docs/sample-death-certificate.pdf

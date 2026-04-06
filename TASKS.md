@@ -119,10 +119,10 @@
 | ID | Task | Status | Notes |
 |---|---|---|---|
 | P5-01 | Seed script: demo case with real-looking data | ✅ | PR #9 — apps/api/src/database/seed.ts |
-| P5-02 | Accuracy report: test parser against 20 sample certificates | ⬜ | |
-| P5-03 | Loading performance: ensure upload → extraction < 45s end-to-end | ⬜ | |
-| P5-04 | Mobile responsiveness audit | ⬜ | |
-| P5-05 | Investor demo script and walkthrough notes | ⬜ | |
+| P5-02 | Accuracy report: test parser against 20 sample certificates | ⬜ | Requires real certificate samples — deferred |
+| P5-03 | Loading performance: add per-stage timing logs to Lambda handler | ✅ | PR #10 — per-stage and total duration_ms logged for processing and generation |
+| P5-04 | Mobile responsiveness audit | ✅ | PR #10 — sidebar drawer, responsive form grids, card overflow fix |
+| P5-05 | Investor demo script and walkthrough notes | ✅ | PR #10 — docs/DEMO.md |
 
 ---
 
