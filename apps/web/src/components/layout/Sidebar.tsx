@@ -57,7 +57,7 @@ export function Sidebar({ onClose }: SidebarProps): JSX.Element {
             key={item.to}
             to={item.to}
             end={item.to === '/cases'}
-            onClick={onClose}
+            onClick={onClose ?? undefined}
             className={({ isActive }) =>
               [
                 'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
