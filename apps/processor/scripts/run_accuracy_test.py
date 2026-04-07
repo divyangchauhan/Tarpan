@@ -167,19 +167,28 @@ def _norm_date_extracted(v: str | None) -> str:
 
 def _norm_state_gt(v: str | None) -> str:
     """
-    Normalise ground-truth state (full name like 'Illinois') to 2-letter abbrev.
-    Returns the original value lowercased if not found.
+    Normalise ground-truth state (full name like 'Illinois') to lowercase 2-letter abbrev.
+    Returns the original value lowercased if the state name is not found in the map.
     """
     if not v:
         return ""
-    return _STATE_ABBREV.get(v.lower(), v.strip().lower())
+    abbrev = _STATE_ABBREV.get(v.lower())
+    return abbrev.lower() if abbrev else v.strip().lower()
 
 
 def _norm_state_extracted(v: str | None) -> str:
-    """Normalise extracted state (expected 2-letter abbrev)."""
+    """
+    Normalise extracted state to lowercase 2-letter abbrev.
+    Handles both abbreviations ('TN') and full names ('Tennessee') since
+    Claude sometimes returns the full name despite the prompt asking for
+    the abbreviation.
+    """
     if not v:
         return ""
-    return v.strip().lower()
+    s = v.strip()
+    # If Claude returned a full state name, convert it to the abbreviation.
+    abbrev = _STATE_ABBREV.get(s.lower())
+    return abbrev.lower() if abbrev else s.lower()
 
 
 def _norm_certifier_name(v: str | None) -> str:
