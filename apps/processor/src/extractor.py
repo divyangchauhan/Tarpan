@@ -35,7 +35,13 @@ _EXTRACTION_TOOL: dict[str, Any] = {
             "last_name": {"type": "string", "description": "Last/family name"},
             "date_of_birth": {
                 "type": "string",
-                "description": "Date of birth in YYYY-MM-DD format, if present",
+                "description": (
+                    "Date of birth in YYYY-MM-DD format, if present. "
+                    "Cross-check: the birth year must be earlier than the death year, "
+                    "and the resulting age must match the age field on the certificate "
+                    "(within 1 year). If the digits are ambiguous, use the age and "
+                    "date of death to resolve them."
+                ),
             },
             "date_of_death": {
                 "type": "string",
@@ -51,7 +57,13 @@ _EXTRACTION_TOOL: dict[str, Any] = {
             },
             "certificate_number": {
                 "type": "string",
-                "description": "Certificate registration or file number",
+                "description": (
+                    "The state-level certificate or file number. "
+                    "Look for fields labelled 'STATE FILE NO.', 'STATE CERTIFICATE NO.', "
+                    "'CERTIFICATE OF DEATH NO.', or 'REGISTRATION NO.'. "
+                    "If both a state file number and a local file number are present, "
+                    "prefer the state file number."
+                ),
             },
             "certifier_name": {
                 "type": "string",
