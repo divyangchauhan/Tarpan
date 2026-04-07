@@ -1,18 +1,13 @@
 """
 Parser accuracy test runner for P5-02.
 
-Sends certificate images through the real extractor (Claude API) and scores
-the results against ground truth where available.
+Sends synthetic certificate images through the real extractor (Claude API) and
+scores the results against ground truth.
 
 Usage:
-    # Synthetic certificates (with scoring against ground_truth.json):
     poetry run python scripts/run_accuracy_test.py \\
         --image-dir scripts/test_certificates \\
         --ground-truth scripts/test_certificates/ground_truth.json
-
-    # Historical certificates (extraction only — no scoring):
-    poetry run python scripts/run_accuracy_test.py \\
-        --image-dir scripts/historical_certificates
 
 Requirements:
     ANTHROPIC_API_KEY must be set in the environment (or in apps/processor/.env).
@@ -21,7 +16,7 @@ Output:
     Prints a per-field accuracy table and per-quality-tier breakdown to stdout.
     Writes accuracy_report.json into --image-dir (or --report-out if specified).
 
-How scoring works (synthetic certs only):
+How scoring works:
     Each ExtractedCertificateData field is compared to the matching
     CertificateData field in ground_truth.json using a field-specific
     normaliser (date parsing, whitespace/case folding, prefix stripping, etc.).
@@ -38,7 +33,7 @@ import logging
 import os
 import sys
 import time
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -257,7 +252,7 @@ class FieldResult:
 @dataclass
 class CertResult:
     filename: str
-    quality_tier: str    # high | medium | blurry | low_res | unknown | historical
+    quality_tier: str    # high | medium | blurry | low_res | unknown
     extracted: dict[str, Any]
     field_results: dict[str, FieldResult] = field(default_factory=dict)
     error: str | None = None
@@ -274,8 +269,6 @@ def _detect_tier(filename: str) -> str:
     for tier in ("high", "medium", "blurry", "low_res"):
         if name.endswith(f"_{tier}"):
             return tier
-    if name.startswith("hist_"):
-        return "historical"
     return "unknown"
 
 
@@ -311,7 +304,7 @@ def _score(result: CertResult, gt: dict[str, Any]) -> None:
 # ---------------------------------------------------------------------------
 
 
-def _print_report(results: list[CertResult], has_ground_truth: bool) -> None:
+def _print_report(results: list[CertResult]) -> None:
     total = len(results)
     errors = [r for r in results if r.error]
 
@@ -325,15 +318,6 @@ def _print_report(results: list[CertResult], has_ground_truth: bool) -> None:
             print(f"    {r.filename}: {r.error}")
 
     ok_results = [r for r in results if not r.error]
-
-    if not has_ground_truth:
-        print("\n  Extraction-only mode (no ground_truth.json — results not scored).\n")
-        for r in ok_results:
-            print(f"\n  {r.filename}  [{r.quality_tier}]")
-            for k, v in r.extracted.items():
-                if v is not None:
-                    print(f"    {k:<22} {v}")
-        return
 
     # ---- Per-field accuracy table ----
     field_names = [f for f, _ in _SCORED_FIELDS]
@@ -368,7 +352,7 @@ def _print_report(results: list[CertResult], has_ground_truth: bool) -> None:
     # ---- Per-quality-tier breakdown ----
     tiers = sorted({r.quality_tier for r in ok_results})
     if len(tiers) > 1:
-        print(f"  Accuracy by quality tier:\n")
+        print("  Accuracy by quality tier:\n")
         print(f"  {'Tier':<12} {'Certs':>6} {'Correct':>9} {'Scored':>9} {'Acc %':>8}")
         print(f"  {'-' * 48}")
         for tier in tiers:
@@ -398,7 +382,7 @@ def _print_report(results: list[CertResult], has_ground_truth: bool) -> None:
         if any(fr.status in ("wrong", "missing") for fr in r.field_results.values())
     ]
     if misses:
-        print(f"  Wrong / missing extractions:\n")
+        print("  Wrong / missing extractions:\n")
         for r in misses:
             print(f"    {r.filename}  [{r.quality_tier}]")
             for fname, fr in r.field_results.items():
@@ -428,10 +412,7 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument(
         "--ground-truth",
         default=None,
-        help=(
-            "Path to ground_truth.json (default: <image-dir>/ground_truth.json). "
-            "If the file does not exist, runs extraction-only mode."
-        ),
+        help="Path to ground_truth.json (default: <image-dir>/ground_truth.json).",
     )
     parser.add_argument(
         "--report-out",
@@ -471,12 +452,11 @@ def main(argv: list[str] | None = None) -> int:
 
     # Locate ground truth.
     gt_path = Path(args.ground_truth) if args.ground_truth else image_dir / "ground_truth.json"
-    ground_truth: dict[str, dict] = {}
-    if gt_path.exists():
-        ground_truth = json.loads(gt_path.read_text())
-        print(f"Ground truth loaded from {gt_path}  ({len(ground_truth)} entries)")
-    else:
-        print(f"No ground_truth.json found at {gt_path} — running in extraction-only mode.")
+    if not gt_path.exists():
+        print(f"ERROR: ground_truth.json not found at {gt_path}.", file=sys.stderr)
+        return 1
+    ground_truth: dict[str, dict] = json.loads(gt_path.read_text())
+    print(f"Ground truth loaded from {gt_path}  ({len(ground_truth)} entries)")
 
     # Collect image files, sorted for deterministic ordering.
     image_files = sorted(
@@ -516,15 +496,14 @@ def main(argv: list[str] | None = None) -> int:
                 quality_tier=tier,
                 extracted=outcome.model_dump(),
             )
-            if img_path.name in ground_truth:
-                _score(r, ground_truth[img_path.name])
+            _score(r, ground_truth.get(img_path.name, {}))
             results.append(r)
 
         if i < len(image_files):
             time.sleep(args.delay)
 
     # Print report.
-    _print_report(results, has_ground_truth=bool(ground_truth))
+    _print_report(results)
 
     # Write JSON report.
     report_out = Path(args.report_out) if args.report_out else image_dir / "accuracy_report.json"

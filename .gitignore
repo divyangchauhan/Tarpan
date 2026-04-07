@@ -76,8 +76,6 @@ docs/sample-death-certificate.pdf
 # Synthetic test certificate images (generated artifacts — run generate_test_certificates.py)
 apps/processor/scripts/test_certificates/
 
-# Historical certificate downloads (public-domain scans — run download_historical_certificates.py)
-apps/processor/scripts/historical_certificates/
 
 # Accuracy test reports (generated output — run run_accuracy_test.py)
 apps/processor/scripts/**/accuracy_report.json
