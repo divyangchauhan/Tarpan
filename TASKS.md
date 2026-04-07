@@ -73,7 +73,7 @@
 | P2-21 | Template: Professional license board notification | ✅ | PR #5 |
 | P2-22 | Template: Employer / HR notification | ✅ | PR #5 |
 | P2-23 | Lambda unit tests (pytest) — target 90% on parser logic | ✅ | PR #9 — 94% coverage, 63 tests |
-| P2-24 | Lambda integration test with LocalStack S3 + SQS | ⬜ | |
+| P2-24 | Lambda integration test with LocalStack S3 + SQS | ✅ | tests/test_integration.py — 11 tests using moto; real S3/SQS calls, 94% total coverage |
 
 ---
 
