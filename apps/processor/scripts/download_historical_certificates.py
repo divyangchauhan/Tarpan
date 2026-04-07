@@ -317,10 +317,7 @@ def main(argv: list[str] | None = None) -> int:
     downloaded = 0
 
     headers = {
-        "User-Agent": (
-            "AfterLight-P5-02-accuracy-test/1.0 "
-            "(genealogy research; contact: github.com/AfterLight)"
-        )
+        "User-Agent": "AfterLight-P5-02-accuracy-test/1.0"
     }
 
     with httpx.Client(headers=headers) as client:
