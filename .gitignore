@@ -72,3 +72,10 @@ apps/processor/scripts/downloaded-pdfs/
 
 # Demo assets — never commit real death certificates
 docs/sample-death-certificate.pdf
+
+# Synthetic test certificate images (generated artifacts — run generate_test_certificates.py)
+apps/processor/scripts/test_certificates/
+
+
+# Accuracy test reports (generated output — run run_accuracy_test.py)
+apps/processor/scripts/**/accuracy_report.json
