@@ -265,3 +265,28 @@ The POC architecture scales to production with minimal changes:
 | Processing | Lambda (SQS trigger) | Lambda remains; increase concurrency |
 | Frontend | Vite dev server / S3+CloudFront | S3 + CloudFront |
 | Queue | SQS Standard | SQS FIFO for ordering guarantees |
+
+---
+
+## Post-POC Roadmap
+
+### Phase 6 — Production Readiness
+CloudWatch dashboards and SNS alarms for Lambda error rate and SQS queue depth. Sentry integration for both NestJS and Lambda. Secrets Manager rotation lambdas, automated RDS snapshots, NestJS throttler guards on auth and upload endpoints, and a staging → production CDK promotion pipeline.
+
+### Phase 7 — Auth Hardening
+Email verification via SES on registration, forgot-password flow, account lockout after repeated failures, TOTP-based MFA, active session management with remote logout, and Google OAuth2 social login.
+
+### Phase 8 — Billing & Payments
+Stripe customer and subscription creation at registration, free tier (1 case) vs. paid (unlimited) plan, Stripe webhook handler for lifecycle events, entitlement guard that blocks case creation over the plan limit, Stripe customer portal link in account settings, and per-case/per-document usage metrics.
+
+### Phase 9 — Additional Institution Templates + Escalation
+New institution templates: brokerage accounts, mortgage lenders, auto loan lenders, health insurance, homeowners/renters insurance, county recorder/property deed, state probate court filing cover letters, loyalty/rewards programme cancellations, and professional membership cancellations.
+
+**Escalation workflow** for when an authority fails to act:
+- `GeneratedDocument` gains a status lifecycle: `sent → acknowledged → resolved / escalated`, with timestamps stored in the DB.
+- Escalation letter templates (second-wave letters that reference the original, cite the applicable regulator, and use a firmer tone).
+- Escalation wizard UI: institution-specific step-by-step guide with regulator contact details and direct links to complaint portals (CFPB, SSA OIG, IRS Taxpayer Advocate Service, VA OIG, FTC, state insurance commissioner, state PUC, etc.).
+- SES-triggered 30-day reminder email if a notification is not marked resolved.
+
+### Phase 10 — Mobile App *(not yet decided)*
+React Native or Flutter apps for Android (FCM push notifications, Play Store pipeline) and iOS (APNs push notifications, App Store + Fastlane pipeline). Full feature parity with the web app: camera capture, real-time WebSocket status, inline field editing, in-app PDF viewer.

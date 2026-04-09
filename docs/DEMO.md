@@ -133,6 +133,7 @@ Close the app and switch to the architecture slide (optional).
 Key metrics to mention:
 - **500+ hours** of admin work automated to **< 10 minutes**
 - **16 institution types** supported at launch, extensible to any institution
+- **Escalation built in** — if an authority fails to act, the app guides the family through the next step: follow-up letters, regulatory complaint portals, 30-day reminders
 - **HIPAA-conscious design** — death certificates never logged, SSNs encrypted at rest, pre-signed URLs with 15-minute TTL
 
 ---
@@ -143,7 +144,10 @@ Key metrics to mention:
 > "We've tested against a range of certificate formats — typed, handwritten, and photocopied. Claude handles all of them. Structured extraction with Pydantic validation catches any fields it can't confidently extract, and the Review screen lets families correct anything."
 
 **"What's stopping someone from just doing this in ChatGPT?"**  
-> "Workflow integration, security, and templates. ChatGPT can't generate a correctly formatted SSA-721 form, doesn't know the right mailing address for each agency, and has no audit trail. We own the full stack — upload, extraction, template library, and delivery."
+> "Workflow integration, security, and templates. ChatGPT can't generate a correctly formatted SSA-721 form, doesn't know the right mailing address for each agency, and has no audit trail. We own the full stack — upload, extraction, template library, delivery, and now escalation: if an institution ignores a letter, we guide the family through the regulatory complaint process automatically."
+
+**"What happens if the institution ignores the letter?"**  
+> "That's a real problem — banks sometimes keep charging fees for months after notification. We're building an escalation layer directly into the app: status tracking per notification, institution-specific guides (CFPB for banks, state insurance commissioner for insurers, IRS Taxpayer Advocate for the IRS), escalation letter generation that CCs the regulator, and a 30-day reminder email if nothing has been marked resolved. We turn a dead end into a clear next step."
 
 **"What does the go-to-market look like?"**  
 > "Direct-to-family for quick adoption, but the real opportunity is B2B: funeral homes, estate attorneys, and banks. They're the first call a family makes — we become their value-add service."

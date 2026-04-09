@@ -126,6 +126,104 @@
 
 ---
 
+## Phase 6 — Production Readiness
+
+| ID | Task | Status | Notes |
+|---|---|---|---|
+| P6-01 | CloudWatch dashboards: Lambda duration, error rate, SQS queue depth | ⬜ | |
+| P6-02 | Structured alerting: SNS alarms for Lambda errors and API 5xx rate | ⬜ | |
+| P6-03 | Sentry integration: API (NestJS) + Lambda error tracking | ⬜ | |
+| P6-04 | Secrets rotation: AWS Secrets Manager rotation lambdas for DB + API keys | ⬜ | |
+| P6-05 | Database backups: automated RDS snapshots + restore runbook | ⬜ | |
+| P6-06 | Rate limiting: NestJS throttler guard on auth + upload endpoints | ⬜ | |
+| P6-07 | Health check endpoints + ALB health check hardening | ⬜ | |
+| P6-08 | CDK environment promotion: staging → production pipeline | ⬜ | |
+
+---
+
+## Phase 7 — Auth Hardening
+
+| ID | Task | Status | Notes |
+|---|---|---|---|
+| P7-01 | Email verification on registration (SES + token flow) | ⬜ | |
+| P7-02 | Password reset flow (forgot password → SES email → reset token) | ⬜ | |
+| P7-03 | Account lockout after N failed login attempts | ⬜ | |
+| P7-04 | MFA support (TOTP via authenticator app) | ⬜ | |
+| P7-05 | Session management: active device list + remote logout | ⬜ | |
+| P7-06 | OAuth2 social login (Google) | ⬜ | |
+
+---
+
+## Phase 8 — Billing & Payments
+
+| ID | Task | Status | Notes |
+|---|---|---|---|
+| P8-01 | Stripe integration: customer + subscription creation on register | ⬜ | |
+| P8-02 | Pricing plans: free tier (1 case) vs paid (unlimited) | ⬜ | |
+| P8-03 | Stripe webhook handler: subscription created / cancelled / past due | ⬜ | |
+| P8-04 | Entitlement guard: block case creation when over plan limit | ⬜ | |
+| P8-05 | Billing portal: Stripe customer portal link in account settings | ⬜ | |
+| P8-06 | Usage tracking: per-case and per-document metrics for billing analytics | ⬜ | |
+
+---
+
+## Phase 9 — Additional Institution Templates
+
+| ID | Task | Status | Notes |
+|---|---|---|---|
+| P9-01 | Template: brokerage account closure (Fidelity / Schwab / Vanguard generic) | ⬜ | |
+| P9-02 | Template: mortgage lender / servicer notification | ⬜ | |
+| P9-03 | Template: auto loan lender notification | ⬜ | |
+| P9-04 | Template: health insurance cancellation | ⬜ | |
+| P9-05 | Template: homeowners / renters insurance notification | ⬜ | |
+| P9-06 | Template: property deed / county recorder notification | ⬜ | |
+| P9-07 | Template: state-specific probate court filing cover letter | ⬜ | |
+| P9-08 | Template: loyalty / rewards programme cancellation (airlines, hotels) | ⬜ | |
+| P9-09 | Template: alumni association / professional membership cancellation | ⬜ | |
+| P9-10 | Escalation letter templates: one per institution group (federal, financial, insurance, utility, subscription) | ⬜ | Second-wave letters referencing original, citing regulator, firmer tone |
+| P9-11 | `GeneratedDocument` status lifecycle: `sent → acknowledged → resolved / escalated` + API PATCH endpoint | ⬜ | DB migration: add status, sent_at, resolved_at, escalated_at fields |
+| P9-12 | Downloads page: status badges + "Mark as sent / resolved / escalate" action buttons | ⬜ | |
+| P9-13 | Escalation wizard UI: institution-specific guide, regulator contact details, and links to complaint portals | ⬜ | Covers SSA/OIG, CFPB, state banking regulators, state insurance commissioner, IRS TAS, VA OIG, FTC, state PUC |
+| P9-14 | Email reminder: SES alert after 30 days if a notification is not marked resolved | ⬜ | Scheduled Lambda or SQS delayed message |
+
+---
+
+## Phase 10 — Mobile App (Optional — Not Yet Decided)
+
+> These tasks are provisional. The decision to build native mobile apps has not been made. Add to PR schedule only once confirmed.
+
+### Android
+
+| ID | Task | Status | Notes |
+|---|---|---|---|
+| M-A-01 | React Native (or Flutter) project scaffold for Android | ⬜ | |
+| M-A-02 | Auth screens: login, register, forgot password | ⬜ | |
+| M-A-03 | Dashboard: case list with status badges | ⬜ | |
+| M-A-04 | Camera capture + file picker for death certificate upload | ⬜ | |
+| M-A-05 | Real-time processing status via WebSocket | ⬜ | |
+| M-A-06 | Review screen: extracted fields with inline edit | ⬜ | |
+| M-A-07 | Institution selector + document generation trigger | ⬜ | |
+| M-A-08 | Downloads screen: in-app PDF viewer + share sheet | ⬜ | |
+| M-A-09 | Push notifications (FCM) for processing complete | ⬜ | |
+| M-A-10 | Play Store build pipeline (GitHub Actions) | ⬜ | |
+
+### iOS
+
+| ID | Task | Status | Notes |
+|---|---|---|---|
+| M-I-01 | React Native (or Flutter) project scaffold for iOS | ⬜ | |
+| M-I-02 | Auth screens: login, register, forgot password | ⬜ | |
+| M-I-03 | Dashboard: case list with status badges | ⬜ | |
+| M-I-04 | Camera capture + photo library picker for death certificate upload | ⬜ | |
+| M-I-05 | Real-time processing status via WebSocket | ⬜ | |
+| M-I-06 | Review screen: extracted fields with inline edit | ⬜ | |
+| M-I-07 | Institution selector + document generation trigger | ⬜ | |
+| M-I-08 | Downloads screen: in-app PDF viewer + share sheet | ⬜ | |
+| M-I-09 | Push notifications (APNs) for processing complete | ⬜ | |
+| M-I-10 | App Store build pipeline (GitHub Actions + Fastlane) | ⬜ | |
+
+---
+
 ## PR Schedule (Actual)
 
 | PR | Scope | Phase Tasks |
