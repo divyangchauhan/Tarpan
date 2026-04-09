@@ -192,16 +192,25 @@ cd infra && cdk destroy --all
 
 ---
 
-## Key Features (POC Scope)
+## Key Features (POC — Complete)
 
 - [x] Death certificate upload and parsing (AI-powered OCR)
 - [x] Extracted data review and correction UI
 - [x] Legal document generation (15+ templates)
 - [x] PDF export of generated documents
 - [x] Notification checklist dashboard
-- [ ] Multi-institution submission (post-POC)
-- [ ] Family member collaboration (post-POC)
-- [ ] Payment / subscription (post-POC)
+
+## Roadmap
+
+| Phase | Scope | Status |
+|---|---|---|
+| Phase 6 | Production readiness — monitoring, alerting, secrets rotation, rate limiting, staging pipeline | ⬜ |
+| Phase 7 | Auth hardening — email verification, password reset, MFA, OAuth2 | ⬜ |
+| Phase 8 | Billing & payments — Stripe subscriptions, pricing tiers, entitlement guards | ⬜ |
+| Phase 9 | Additional institution templates + escalation tracking — brokerage, mortgage, insurance, probate, escalation letters, 30-day follow-up reminders | ⬜ |
+| Phase 10 | Mobile app (Android + iOS) — *not yet decided* | ⬜ |
+
+See [TASKS.md](./TASKS.md) for the full task breakdown.
 
 ---
 
