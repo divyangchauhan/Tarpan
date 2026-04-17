@@ -2,6 +2,11 @@ import * as cdk from 'aws-cdk-lib';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { resourceName } from '../config';
+import { EnvironmentConfig } from '../environment-config';
+
+interface StorageStackProps extends cdk.StackProps {
+  config: EnvironmentConfig;
+}
 
 /**
  * StorageStack — S3 buckets for raw uploads and generated PDFs.
@@ -15,8 +20,10 @@ export class StorageStack extends cdk.Stack {
   public readonly uploadsBucket: s3.Bucket;
   public readonly generatedDocsBucket: s3.Bucket;
 
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props: StorageStackProps) {
     super(scope, id, props);
+
+    const { config } = props;
 
     // ── Uploads bucket (death certificates) ───────────────────────────────
 
@@ -42,7 +49,8 @@ export class StorageStack extends cdk.Stack {
           maxAge: 3000,
         },
       ],
-      removalPolicy: cdk.RemovalPolicy.RETAIN, // Never auto-delete legal docs
+      removalPolicy: config.s3RemovalPolicy,
+      autoDeleteObjects: config.s3AutoDeleteObjects,
     });
 
     // ── Generated documents bucket (PDFs) ─────────────────────────────────
@@ -59,7 +67,8 @@ export class StorageStack extends cdk.Stack {
           id: 'expire-generated-docs',
         },
       ],
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      removalPolicy: config.s3RemovalPolicy,
+      autoDeleteObjects: config.s3AutoDeleteObjects,
     });
 
     // ── Outputs ───────────────────────────────────────────────────────────

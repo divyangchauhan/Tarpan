@@ -13,7 +13,8 @@
     "rootDir": ".",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": ["node"]
   },
   "include": ["bin/**/*.ts", "lib/**/*.ts"],
   "exclude": ["node_modules", "dist", "cdk.out"]

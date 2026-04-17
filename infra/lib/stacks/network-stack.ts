@@ -2,6 +2,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import { Construct } from 'constructs';
 import { resourceName } from '../config';
+import { EnvironmentConfig } from '../environment-config';
 
 /**
  * NetworkStack — VPC with public + private subnets across 2 AZs.
@@ -14,6 +15,10 @@ import { resourceName } from '../config';
  * - Private subnets: RDS, ECS tasks, Lambda
  * - Single NAT Gateway for POC cost savings; use per-AZ in production
  */
+interface NetworkStackProps extends cdk.StackProps {
+  config: EnvironmentConfig;
+}
+
 export class NetworkStack extends cdk.Stack {
   public readonly vpc: ec2.Vpc;
 
@@ -23,13 +28,15 @@ export class NetworkStack extends cdk.Stack {
   /** RDS PostgreSQL — inbound from VPC CIDR only */
   public readonly rdsSg: ec2.SecurityGroup;
 
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props: NetworkStackProps) {
     super(scope, id, props);
+
+    const { config } = props;
 
     this.vpc = new ec2.Vpc(this, 'Vpc', {
       vpcName: resourceName('vpc'),
       maxAzs: 2,
-      natGateways: 1,
+      natGateways: config.natGateways,
       subnetConfiguration: [
         {
           name: 'Public',
@@ -42,6 +49,13 @@ export class NetworkStack extends cdk.Stack {
           cidrMask: 24,
         },
       ],
+    });
+
+    // ── VPC Endpoints — reduce NAT data transfer costs ────────────────────
+    // S3 Gateway Endpoint: FREE — Lambda + ECS S3 traffic bypasses NAT Gateway
+    // (saves $0.045/GB on S3 reads/writes through NAT)
+    this.vpc.addGatewayEndpoint('S3Endpoint', {
+      service: ec2.GatewayVpcEndpointAwsService.S3,
     });
 
     // ── Lambda security group ──────────────────────────────────────────────
