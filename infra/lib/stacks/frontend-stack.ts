@@ -9,8 +9,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { Construct } from 'constructs';
 import { resourceName } from '../config';
+import { EnvironmentConfig } from '../environment-config';
 
 interface FrontendStackProps extends cdk.StackProps {
+  config: EnvironmentConfig;
   /** ALB DNS name (with http:// prefix) from ApiStack — used as CloudFront origin for /api/* */
   albDnsName: string;
 }
@@ -35,6 +37,7 @@ export class FrontendStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: FrontendStackProps) {
     super(scope, id, props);
 
+    const { config } = props;
     const albHostname = props.albDnsName.replace(/^https?:\/\//, '');
 
     // ── S3 bucket (private — CloudFront OAC only) ─────────────────────────
@@ -57,15 +60,12 @@ export class FrontendStack extends cdk.Stack {
 
     // ── CloudFront distribution ────────────────────────────────────────────
 
-    const oac = new cloudfront.S3OriginAccessControl(this, 'OAC', {
+    const oac = new cloudfront.S3OriginAccessControl(this, 'WebOAC', {
       description: 'Afterlight web OAC',
     });
 
     this.distribution = new cloudfront.Distribution(this, 'Distribution', {
       comment: 'AfterLight React SPA',
-      // WAF auto-created by CloudFront for this account's security subscription.
-      // Must be preserved on every update or CloudFront rejects the change.
-      webAclId: 'arn:aws:wafv2:us-east-1:815374406596:global/webacl/CreatedByCloudFront-b3f36e7e/0cf16c2e-7274-407b-924f-8a7c3414a903',
       defaultBehavior: {
         origin: cloudfront_origins.S3BucketOrigin.withOriginAccessControl(
           this.websiteBucket,
@@ -110,7 +110,12 @@ export class FrontendStack extends cdk.Stack {
           ttl: cdk.Duration.seconds(0),
         },
       ],
-      priceClass: cloudfront.PriceClass.PRICE_CLASS_ALL,
+      // NOTE (POC): CloudFront flat-rate Free plan ($0/month, 1M req + limited transfer)
+      // is cheaper than any PriceClass but is not yet supported in CDK.
+      // After deploying, enable it manually:
+      //   AWS Console → CloudFront → distribution → General → Edit → Pricing → Free plan
+      // or via CLI: aws cloudfront update-distribution --id <ID> --pricing-plan Free
+      priceClass: config.cloudfrontPriceClass,
       httpVersion: cloudfront.HttpVersion.HTTP2,
     });
 

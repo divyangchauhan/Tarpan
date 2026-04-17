@@ -3,10 +3,12 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as rds from 'aws-cdk-lib/aws-rds';
 import { Construct } from 'constructs';
 import { resourceName } from '../config';
+import { EnvironmentConfig } from '../environment-config';
 import { NetworkStack } from './network-stack';
 
 interface DatabaseStackProps extends cdk.StackProps {
   network: NetworkStack;
+  config: EnvironmentConfig;
 }
 
 /**
@@ -26,6 +28,7 @@ export class DatabaseStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: DatabaseStackProps) {
     super(scope, id, props);
 
+    const { config } = props;
     const { vpc, rdsSg } = props.network;
 
     // RDS auto-rotated credentials stored in Secrets Manager
@@ -45,7 +48,7 @@ export class DatabaseStack extends cdk.Stack {
       engine: rds.DatabaseInstanceEngine.postgres({
         version: rds.PostgresEngineVersion.VER_16,
       }),
-      instanceType: ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.MICRO),
+      instanceType: config.dbInstanceType,
       vpc,
       vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
       subnetGroup,
@@ -53,14 +56,14 @@ export class DatabaseStack extends cdk.Stack {
       credentials: rds.Credentials.fromSecret(this.credentials),
       databaseName: 'afterlight',
       instanceIdentifier: resourceName('postgres'),
-      multiAz: false, // Enable for production
+      multiAz: config.dbMultiAz,
       storageEncrypted: true,
       allocatedStorage: 20,
-      maxAllocatedStorage: 100, // Auto-scaling storage up to 100 GB
-      backupRetention: cdk.Duration.days(7),
-      deletionProtection: true, // Prevent accidental deletion of production data
-      removalPolicy: cdk.RemovalPolicy.SNAPSHOT, // Snapshot on stack deletion
-      enablePerformanceInsights: false, // Enable in production
+      maxAllocatedStorage: 100,
+      backupRetention: cdk.Duration.days(config.dbBackupRetentionDays),
+      deletionProtection: config.dbDeletionProtection,
+      removalPolicy: config.dbRemovalPolicy,
+      enablePerformanceInsights: config.dbEnablePerformanceInsights,
       cloudwatchLogsExports: ['postgresql'],
     });
 

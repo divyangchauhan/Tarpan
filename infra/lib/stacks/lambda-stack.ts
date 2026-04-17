@@ -3,14 +3,18 @@ import * as cdk from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as lambda_event_sources from 'aws-cdk-lib/aws-lambda-event-sources';
+import * as ecr_assets from 'aws-cdk-lib/aws-ecr-assets';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as logs from 'aws-cdk-lib/aws-logs';
 import { Construct } from 'constructs';
+import { EnvironmentConfig } from '../environment-config';
 import { NetworkStack } from './network-stack';
 import { StorageStack } from './storage-stack';
 import { MessagingStack } from './messaging-stack';
 import { SecretsStack } from './secrets-stack';
 
 interface LambdaStackProps extends cdk.StackProps {
+  config: EnvironmentConfig;
   network: NetworkStack;
   storage: StorageStack;
   messaging: MessagingStack;
@@ -37,25 +41,39 @@ export class LambdaStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: LambdaStackProps) {
     super(scope, id, props);
 
-    const { network, storage, messaging, secrets, apiCallbackUrl } = props;
+    const { config, network, storage, messaging, secrets, apiCallbackUrl } = props;
 
     // ── Lambda function ────────────────────────────────────────────────────
 
     // Container image Lambda: WeasyPrint requires native gobject/pango/cairo libs
     // that cannot be installed in the standard Lambda ZIP runtime. The Dockerfile
     // in apps/processor/ installs them via dnf on the Amazon Linux 2023 base image.
+    // POC: Lambda outside VPC — uses public AWS endpoints, avoids NAT costs.
+    // Prod: Lambda inside VPC — required for PII compliance (death certificate data).
+    const vpcProps = config.lambdaInVpc
+      ? {
+          vpc: network.vpc,
+          vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
+          securityGroups: [network.lambdaSg],
+        }
+      : {};
+
     this.processorFn = new lambda.DockerImageFunction(this, 'ProcessorFn', {
       description: 'Parses death certificates and generates legal document PDFs',
       code: lambda.DockerImageCode.fromImageAsset(
         path.join(__dirname, '../../../apps/processor'),
+        { platform: ecr_assets.Platform.LINUX_AMD64 },
       ),
+      architecture: lambda.Architecture.X86_64,
       memorySize: 1024, // WeasyPrint + Pillow need headroom
       timeout: cdk.Duration.seconds(300), // 5 min — generous for Claude API + PDF render
       // reservedConcurrentExecutions omitted — SQS maxConcurrency:5 limits blast radius
       // and avoids requiring extra account-level unreserved concurrency headroom
-      vpc: network.vpc,
-      vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
-      securityGroups: [network.lambdaSg], // lambdaSg is in NetworkStack — no cycle (Lambda doesn't own SGs from ApiStack)
+      logGroup: new logs.LogGroup(this, 'ProcessorLogGroup', {
+        retention: config.logRetentionDays,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      }),
+      ...vpcProps,
       environment: {
         AWS_ENDPOINT_URL: '', // Empty = use real AWS (not LocalStack)
         S3_UPLOADS_BUCKET: storage.uploadsBucket.bucketName,

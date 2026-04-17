@@ -3,8 +3,10 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as ecs_patterns from 'aws-cdk-lib/aws-ecs-patterns';
 import * as ecr_assets from 'aws-cdk-lib/aws-ecr-assets';
+import * as logs from 'aws-cdk-lib/aws-logs';
 import * as path from 'path';
 import { Construct } from 'constructs';
+import { EnvironmentConfig } from '../environment-config';
 import { NetworkStack } from './network-stack';
 import { StorageStack } from './storage-stack';
 import { MessagingStack } from './messaging-stack';
@@ -12,6 +14,7 @@ import { SecretsStack } from './secrets-stack';
 import { DatabaseStack } from './database-stack';
 
 interface ApiStackProps extends cdk.StackProps {
+  config: EnvironmentConfig;
   network: NetworkStack;
   storage: StorageStack;
   messaging: MessagingStack;
@@ -36,7 +39,7 @@ export class ApiStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: ApiStackProps) {
     super(scope, id, props);
 
-    const { network, storage, messaging, secrets, database } = props;
+    const { config, network, storage, messaging, secrets, database } = props;
 
     // ── Container image ────────────────────────────────────────────────────
 
@@ -46,12 +49,20 @@ export class ApiStack extends cdk.Stack {
       platform: ecr_assets.Platform.LINUX_AMD64,
     });
 
+    // ── CloudWatch log group (explicit retention — prevents unbounded accumulation) ──
+
+    const apiLogGroup = new logs.LogGroup(this, 'ApiLogGroup', {
+      logGroupName: '/ecs/afterlight-api',
+      retention: config.logRetentionDays,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
     // ── ECS Cluster ────────────────────────────────────────────────────────
 
     const cluster = new ecs.Cluster(this, 'Cluster', {
       clusterName: 'afterlight',
       vpc: network.vpc,
-      containerInsightsV2: ecs.ContainerInsights.DISABLED, // Enable ENHANCED in production
+      containerInsightsV2: config.ecsContainerInsights,
     });
 
     // ── Fargate service with ALB ───────────────────────────────────────────
@@ -62,10 +73,14 @@ export class ApiStack extends cdk.Stack {
       {
         cluster,
         serviceName: 'afterlight-api',
-        cpu: 512,
-        memoryLimitMiB: 1024,
-        desiredCount: 1,
-      minHealthyPercent: 100,
+        cpu: config.fargateCpu,
+        memoryLimitMiB: config.fargateMemoryMiB,
+        desiredCount: config.fargateDesiredCount,
+        minHealthyPercent: 100,
+        runtimePlatform: {
+          cpuArchitecture: ecs.CpuArchitecture.X86_64,
+          operatingSystemFamily: ecs.OperatingSystemFamily.LINUX,
+        },
         taskImageOptions: {
           image: ecs.ContainerImage.fromDockerImageAsset(apiImage),
           containerPort: 3001,
@@ -91,9 +106,15 @@ export class ApiStack extends cdk.Stack {
           },
           logDriver: ecs.LogDrivers.awsLogs({
             streamPrefix: 'afterlight-api',
+            logGroup: apiLogGroup,
           }),
         },
-        taskSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
+        assignPublicIp: config.fargatePublicSubnet,
+        taskSubnets: {
+          subnetType: config.fargatePublicSubnet
+            ? ec2.SubnetType.PUBLIC
+            : ec2.SubnetType.PRIVATE_WITH_EGRESS,
+        },
         loadBalancerName: 'afterlight-alb',
         publicLoadBalancer: true,
         listenerPort: 80, // Add HTTPS + ACM cert for production
@@ -114,8 +135,8 @@ export class ApiStack extends cdk.Stack {
     // ── Auto-scaling ──────────────────────────────────────────────────────
 
     const scaling = service.service.autoScaleTaskCount({
-      minCapacity: 1,
-      maxCapacity: 4,
+      minCapacity: config.fargateMinCapacity,
+      maxCapacity: config.fargateMaxCapacity,
     });
     scaling.scaleOnCpuUtilization('CpuScaling', {
       targetUtilizationPercent: 70,
