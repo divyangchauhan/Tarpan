@@ -100,6 +100,7 @@ async function seed(): Promise<void> {
       firstName: 'Sarah',
       lastName: 'Mitchell',
       role: UserRole.USER,
+      isApproved: true,
     });
     user = await userRepo.save(user);
     console.log(`  ✓  Created demo user: ${DEMO_EMAIL} / ${DEMO_PASSWORD}`);
@@ -208,7 +209,9 @@ async function seed(): Promise<void> {
     const failed = rows.filter((r) => r.status === GeneratedDocumentStatus.FAILED);
     const ready = rows.filter((r) => r.status === GeneratedDocumentStatus.READY);
 
-    console.log(`  …  ${ready.length}/${ids.size} ready, ${pending.length} pending, ${failed.length} failed`);
+    console.log(
+      `  …  ${ready.length}/${ids.size} ready, ${pending.length} pending, ${failed.length} failed`,
+    );
 
     if (failed.length > 0) {
       for (const f of failed) {
@@ -224,7 +227,9 @@ async function seed(): Promise<void> {
 
   if (!allReady) {
     const stillPending = finalRows.filter((r) => r.status === GeneratedDocumentStatus.GENERATING);
-    console.warn(`  ⚠  ${stillPending.length} document(s) still generating after timeout — run the processor worker and re-seed`);
+    console.warn(
+      `  ⚠  ${stillPending.length} document(s) still generating after timeout — run the processor worker and re-seed`,
+    );
   }
 
   // ── Done ──────────────────────────────────────────────────────────────────

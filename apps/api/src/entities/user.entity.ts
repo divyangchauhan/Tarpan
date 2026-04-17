@@ -33,6 +33,9 @@ export class UserEntity {
   })
   role!: UserRole;
 
+  @Column({ default: false })
+  isApproved!: boolean;
+
   @CreateDateColumn()
   createdAt!: Date;
 

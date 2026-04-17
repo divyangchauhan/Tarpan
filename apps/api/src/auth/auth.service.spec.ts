@@ -1,4 +1,4 @@
-import { ConflictException, UnauthorizedException } from '@nestjs/common';
+import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
@@ -17,6 +17,7 @@ const mockUser: UserEntity = {
   firstName: 'John',
   lastName: 'Doe',
   role: UserRole.USER,
+  isApproved: true,
   createdAt: new Date(),
   updatedAt: new Date(),
   cases: [],
@@ -64,45 +65,16 @@ describe('AuthService', () => {
   });
 
   describe('register', () => {
-    const registerDto: RegisterDto = {
-      email: 'new@example.com',
-      password: 'password123',
-      firstName: 'Jane',
-      lastName: 'Smith',
-    };
-
-    it('should create a user with a hashed password and return tokens', async () => {
-      mockUserRepository.findOne.mockResolvedValue(null);
-      mockUserRepository.create.mockReturnValue({ ...mockUser, email: registerDto.email });
-      mockUserRepository.save.mockResolvedValue({ ...mockUser, email: registerDto.email });
-      mockJwtService.sign.mockReturnValue('mock-token');
-
-      const result = await service.register(registerDto);
-
-      expect(mockUserRepository.findOne).toHaveBeenCalledWith({
-        where: { email: registerDto.email },
-      });
-      expect(mockUserRepository.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          email: registerDto.email,
-          firstName: registerDto.firstName,
-          lastName: registerDto.lastName,
-        }),
-      );
-      // Password should be hashed, not stored as plain text
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      const createArg = mockUserRepository.create.mock.calls[0]?.[0] as {
-        passwordHash: string;
+    it('should always throw ForbiddenException — public registration is disabled', async () => {
+      const dto: RegisterDto = {
+        email: 'new@example.com',
+        password: 'password123',
+        firstName: 'Jane',
+        lastName: 'Smith',
       };
-      expect(createArg.passwordHash).not.toBe(registerDto.password);
 
-      expect(result).toEqual({ accessToken: 'mock-token', refreshToken: 'mock-token' });
-    });
-
-    it('should throw ConflictException if email is already registered', async () => {
-      mockUserRepository.findOne.mockResolvedValue(mockUser);
-
-      await expect(service.register(registerDto)).rejects.toThrow(ConflictException);
+      await expect(service.register(dto)).rejects.toThrow(ForbiddenException);
+      expect(mockUserRepository.findOne).not.toHaveBeenCalled();
     });
   });
 
@@ -140,6 +112,17 @@ describe('AuthService', () => {
 
       await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
     });
+
+    it('should throw ForbiddenException for an unapproved user', async () => {
+      const hashedPassword = await bcrypt.hash('plainpassword', 10);
+      mockUserRepository.findOne.mockResolvedValue({
+        ...mockUser,
+        passwordHash: hashedPassword,
+        isApproved: false,
+      });
+
+      await expect(service.login(loginDto)).rejects.toThrow(ForbiddenException);
+    });
   });
 
   describe('generateTokens', () => {
@@ -166,7 +149,10 @@ describe('AuthService', () => {
         where: { id: 'test-user-id' },
       });
       expect(mockJwtService.sign).toHaveBeenCalledTimes(2);
-      expect(result).toEqual({ accessToken: 'new-access-token', refreshToken: 'new-refresh-token' });
+      expect(result).toEqual({
+        accessToken: 'new-access-token',
+        refreshToken: 'new-refresh-token',
+      });
     });
 
     it('should throw UnauthorizedException when user is not found', async () => {

@@ -1,5 +1,5 @@
 import {
-  ConflictException,
+  ForbiddenException,
   Injectable,
   Logger,
   UnauthorizedException,
@@ -14,8 +14,6 @@ import { UserEntity } from '../entities/user.entity';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 
-const BCRYPT_ROUNDS = 10;
-
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
@@ -27,29 +25,8 @@ export class AuthService {
     private readonly config: ConfigService,
   ) {}
 
-  async register(dto: RegisterDto): Promise<AuthTokens> {
-    const existing = await this.userRepository.findOne({
-      where: { email: dto.email },
-    });
-
-    if (existing) {
-      throw new ConflictException('Email is already registered');
-    }
-
-    const passwordHash = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
-
-    const user = this.userRepository.create({
-      email: dto.email,
-      passwordHash,
-      firstName: dto.firstName,
-      lastName: dto.lastName,
-      role: UserRole.USER,
-    });
-
-    const saved = await this.userRepository.save(user);
-    this.logger.log(`Registered new user: ${saved.id}`);
-
-    return this.generateTokens(saved.id, saved.email, saved.role);
+  register(_dto: RegisterDto): Promise<AuthTokens> {
+    throw new ForbiddenException('Public registration is disabled. Contact an administrator.');
   }
 
   async login(dto: LoginDto): Promise<AuthTokens> {
@@ -65,6 +42,10 @@ export class AuthService {
 
     if (!passwordMatch) {
       throw new UnauthorizedException('Invalid credentials');
+    }
+
+    if (!user.isApproved) {
+      throw new ForbiddenException('Account not approved. Contact an administrator.');
     }
 
     this.logger.log(`User logged in: ${user.id}`);

@@ -32,8 +32,9 @@ describe('AuthController', () => {
     jest.clearAllMocks();
   });
 
-  it('should register and return tokens', async () => {
-    mockAuthService.register.mockResolvedValue(mockTokens);
+  it('should delegate register to authService (service enforces disabled signup)', async () => {
+    const { ForbiddenException } = await import('@nestjs/common');
+    mockAuthService.register.mockRejectedValue(new ForbiddenException());
     const dto: RegisterDto = {
       email: 'user@example.com',
       password: 'password',
@@ -41,10 +42,8 @@ describe('AuthController', () => {
       lastName: 'Doe',
     };
 
-    const result = await controller.register(dto);
-
+    await expect(controller.register(dto)).rejects.toThrow(ForbiddenException);
     expect(mockAuthService.register).toHaveBeenCalledWith(dto);
-    expect(result).toEqual(mockTokens);
   });
 
   it('should login and return tokens', async () => {

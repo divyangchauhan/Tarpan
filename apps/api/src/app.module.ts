@@ -10,6 +10,7 @@ import { DocumentsModule } from './documents/documents.module';
 import { EventsModule } from './events/events.module';
 import { GeneratedDocumentsModule } from './generated-documents/generated-documents.module';
 import { TemplatesModule } from './templates/templates.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { TemplatesModule } from './templates/templates.module';
     GeneratedDocumentsModule,
     TemplatesModule,
     EventsModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],
