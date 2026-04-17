@@ -65,7 +65,7 @@ describe('AuthService', () => {
   });
 
   describe('register', () => {
-    it('should always throw ForbiddenException — public registration is disabled', async () => {
+    it('should always throw ForbiddenException — public registration is disabled', () => {
       const dto: RegisterDto = {
         email: 'new@example.com',
         password: 'password123',
@@ -73,7 +73,7 @@ describe('AuthService', () => {
         lastName: 'Smith',
       };
 
-      await expect(service.register(dto)).rejects.toThrow(ForbiddenException);
+      expect(() => service.register(dto)).toThrow(ForbiddenException);
       expect(mockUserRepository.findOne).not.toHaveBeenCalled();
     });
   });
