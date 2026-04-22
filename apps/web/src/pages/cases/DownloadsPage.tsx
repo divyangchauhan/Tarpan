@@ -54,6 +54,7 @@ export function DownloadsPage(): JSX.Element {
   const [documents, setDocuments] = useState<GeneratedDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const errorToastShownRef = useRef(false);
 
   function fetchDocuments(): void {
     if (!caseId) return;
@@ -71,7 +72,10 @@ export function DownloadsPage(): JSX.Element {
         }
       })
       .catch(() => {
-        toast('Failed to load documents', 'error');
+        if (!errorToastShownRef.current) {
+          toast('Failed to load documents', 'error');
+          errorToastShownRef.current = true;
+        }
         setLoading(false);
       });
   }

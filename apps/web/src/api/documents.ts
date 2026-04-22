@@ -48,9 +48,12 @@ export async function getDocuments(caseId: string): Promise<Document[]> {
 }
 
 export async function uploadToS3(uploadUrl: string, file: File): Promise<void> {
-  await fetch(uploadUrl, {
+  const response = await fetch(uploadUrl, {
     method: 'PUT',
     body: file,
     headers: { 'Content-Type': file.type },
   });
+  if (!response.ok) {
+    throw new Error(`Upload failed (${response.status})`);
+  }
 }

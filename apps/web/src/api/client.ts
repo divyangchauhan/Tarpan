@@ -38,10 +38,20 @@ apiClient.interceptors.response.use(
     }) | undefined;
 
     if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
+      // Auth endpoints return 401 for bad credentials — not an expired session.
+      // Let the error propagate so the page's catch block can show the message.
+      const isAuthEndpoint =
+        originalRequest.url?.includes('/auth/login') ||
+        originalRequest.url?.includes('/auth/register');
+      if (isAuthEndpoint) {
+        return Promise.reject(error as Error);
+      }
+
       const refreshToken = localStorage.getItem('refreshToken');
       if (!refreshToken) {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
+        sessionStorage.setItem('authMessage', 'Your session has expired. Please sign in again.');
         window.location.href = '/login';
         return Promise.reject(error as Error);
       }
@@ -79,6 +89,7 @@ apiClient.interceptors.response.use(
         isRefreshing = false;
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
+        sessionStorage.setItem('authMessage', 'Your session has expired. Please sign in again.');
         window.location.href = '/login';
         return Promise.reject(error as Error);
       }

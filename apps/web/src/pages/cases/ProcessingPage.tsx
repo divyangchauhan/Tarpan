@@ -21,6 +21,8 @@ export function ProcessingPage(): JSX.Element {
   const [statusMessage, setStatusMessage] = useState('Uploading to secure storage...');
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const navigatedRef = useRef(false);
+  const pollFailuresRef = useRef(0);
+  const MAX_POLL_FAILURES = 5;
 
   function stopPolling(): void {
     if (pollingRef.current) {
@@ -60,8 +62,13 @@ export function ProcessingPage(): JSX.Element {
         ) {
           handleTerminalStatus(doc.status);
         }
+        pollFailuresRef.current = 0;
       } catch {
-        // Non-fatal polling error; keep trying
+        pollFailuresRef.current += 1;
+        if (pollFailuresRef.current >= MAX_POLL_FAILURES) {
+          stopPolling();
+          toast('Unable to check processing status. Please refresh the page.', 'error');
+        }
       }
     }
 

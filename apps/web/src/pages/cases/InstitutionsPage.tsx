@@ -118,9 +118,17 @@ export function InstitutionsPage(): JSX.Element {
       ),
     );
 
-    const failed = results.filter((r) => r.status === 'rejected').length;
-    if (failed > 0) {
-      toast(`${failed} document(s) failed to queue. Others are generating.`, 'error');
+    const allInstitutions = INSTITUTION_GROUPS.flatMap((g) => g.institutions);
+    const failedLabels = results
+      .map((result, i) =>
+        result.status === 'rejected'
+          ? (allInstitutions.find((inst) => inst.type === types[i])?.label ?? types[i])
+          : null,
+      )
+      .filter((label): label is string => label !== null);
+
+    if (failedLabels.length > 0) {
+      toast(`Failed to queue: ${failedLabels.join(', ')}`, 'error');
     } else {
       toast('All documents queued for generation!', 'success');
     }
