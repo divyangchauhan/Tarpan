@@ -149,12 +149,12 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md) for full rationale. Summary:
 
 ## Testing Standards
 
-| Layer | Framework | Coverage Target |
-|---|---|---|
-| NestJS unit | Jest | 80% |
-| NestJS e2e | Supertest + Jest | Critical paths |
-| Python unit | pytest | 90% (parser logic) |
-| React | Vitest + Testing Library | Key user flows |
+| Layer       | Framework                | Coverage Target    |
+| ----------- | ------------------------ | ------------------ |
+| NestJS unit | Jest                     | 80%                |
+| NestJS e2e  | Supertest + Jest         | Critical paths     |
+| Python unit | pytest                   | 90% (parser logic) |
+| React       | Vitest + Testing Library | Key user flows     |
 
 ---
 
