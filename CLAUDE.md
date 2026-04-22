@@ -8,6 +8,7 @@ It contains project conventions, architecture notes, and workflow rules that mus
 ## Project Summary
 
 AfterLight automates the administrative burden families face after a death:
+
 - Parses death certificates via AI (Claude API / GPT-4 Vision)
 - Generates institution-specific legal letters and forms
 - Provides a guided dashboard to track notifications
@@ -15,11 +16,12 @@ AfterLight automates the administrative burden families face after a death:
 **POC status**: Complete — investor-grade demo shipped across Phases 0–5.
 
 **Active roadmap**:
+
 - Phase 6 — Production readiness (monitoring, alerting, secrets rotation, rate limiting)
 - Phase 7 — Auth hardening (email verification, password reset, MFA, OAuth2)
 - Phase 8 — Billing & payments (Stripe subscriptions, pricing tiers, entitlement guards)
 - Phase 9 — Additional institution templates + escalation workflow (brokerage, mortgage, insurance, probate; escalation letters; notification status lifecycle; 30-day SES reminders)
-- Phase 10 — Mobile app, Android + iOS *(not yet decided)*
+- Phase 10 — Mobile app, Android + iOS _(not yet decided)_
 
 ---
 

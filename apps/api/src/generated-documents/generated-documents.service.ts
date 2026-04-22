@@ -8,11 +8,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
-import {
-  DocumentGenerationJob,
-  DocumentStatus,
-  GeneratedDocumentStatus,
-} from '@afterlight/shared';
+import { DocumentGenerationJob, DocumentStatus, GeneratedDocumentStatus } from '@afterlight/shared';
 import { GeneratedDocumentEntity } from '../entities/generated-document.entity';
 import { CasesService } from '../cases/cases.service';
 import { DocumentsService } from '../documents/documents.service';
@@ -131,9 +127,7 @@ export class GeneratedDocumentsService {
     if (dto.errorMessage !== undefined) doc.errorMessage = dto.errorMessage;
 
     const updated = await this.generatedDocumentRepository.save(doc);
-    this.logger.log(
-      `Generation result for ${dto.generatedDocumentId}: status=${dto.status}`,
-    );
+    this.logger.log(`Generation result for ${dto.generatedDocumentId}: status=${dto.status}`);
     return updated;
   }
 }

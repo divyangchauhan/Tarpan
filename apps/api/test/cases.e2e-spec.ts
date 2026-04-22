@@ -95,7 +95,7 @@ describe('Cases (e2e)', () => {
       caseIdForList = res.body.id as string;
     });
 
-    it('200 — returns only the authenticated user\'s cases', async () => {
+    it("200 — returns only the authenticated user's cases", async () => {
       // Create a case for user B
       await request(app.getHttpServer())
         .post(CASES_URL)

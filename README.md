@@ -16,16 +16,16 @@ AfterLight is the first AI-powered platform to automate this process end-to-end:
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Frontend | React 18 + Vite + Tailwind CSS |
-| Backend API | NestJS (Node.js / TypeScript) |
-| Document Processing | Python + AWS Lambda |
-| AI / OCR | Claude (Anthropic) via API |
-| Database | PostgreSQL + TypeORM |
-| File Storage | AWS S3 |
-| Queue | AWS SQS |
-| Infrastructure | AWS (CDK) |
+| Layer               | Technology                     |
+| ------------------- | ------------------------------ |
+| Frontend            | React 18 + Vite + Tailwind CSS |
+| Backend API         | NestJS (Node.js / TypeScript)  |
+| Document Processing | Python + AWS Lambda            |
+| AI / OCR            | Claude (Anthropic) via API     |
+| Database            | PostgreSQL + TypeORM           |
+| File Storage        | AWS S3                         |
+| Queue               | AWS SQS                        |
+| Infrastructure      | AWS (CDK)                      |
 
 Full rationale in [ARCHITECTURE.md](./ARCHITECTURE.md).
 
@@ -111,16 +111,16 @@ cdk deploy --all
 
 Stacks deploy in dependency order automatically:
 
-| Stack | What it creates |
-|---|---|
-| `AfterLightNetwork` | VPC, subnets, NAT Gateway, security groups |
-| `AfterLightStorage` | S3 buckets for uploads and generated PDFs |
+| Stack                 | What it creates                                |
+| --------------------- | ---------------------------------------------- |
+| `AfterLightNetwork`   | VPC, subnets, NAT Gateway, security groups     |
+| `AfterLightStorage`   | S3 buckets for uploads and generated PDFs      |
 | `AfterLightMessaging` | SQS queues (processing + generation) with DLQs |
-| `AfterLightSecrets` | Secrets Manager entries for all app secrets |
-| `AfterLightDatabase` | RDS PostgreSQL 16 (db.t3.micro) |
-| `AfterLightLambda` | Python processor Lambda with SQS triggers |
-| `AfterLightApi` | ECS Fargate + ALB for the NestJS API |
-| `AfterLightFrontend` | CloudFront + S3 for the React app |
+| `AfterLightSecrets`   | Secrets Manager entries for all app secrets    |
+| `AfterLightDatabase`  | RDS PostgreSQL 16 (db.t3.micro)                |
+| `AfterLightLambda`    | Python processor Lambda with SQS triggers      |
+| `AfterLightApi`       | ECS Fargate + ALB for the NestJS API           |
+| `AfterLightFrontend`  | CloudFront + S3 for the React app              |
 
 ### Post-deploy steps
 
@@ -202,13 +202,13 @@ cd infra && cdk destroy --all
 
 ## Roadmap
 
-| Phase | Scope | Status |
-|---|---|---|
-| Phase 6 | Production readiness — monitoring, alerting, secrets rotation, rate limiting, staging pipeline | ⬜ |
-| Phase 7 | Auth hardening — email verification, password reset, MFA, OAuth2 | ⬜ |
-| Phase 8 | Billing & payments — Stripe subscriptions, pricing tiers, entitlement guards | ⬜ |
-| Phase 9 | Additional institution templates + escalation tracking — brokerage, mortgage, insurance, probate, escalation letters, 30-day follow-up reminders | ⬜ |
-| Phase 10 | Mobile app (Android + iOS) — *not yet decided* | ⬜ |
+| Phase    | Scope                                                                                                                                            | Status |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
+| Phase 6  | Production readiness — monitoring, alerting, secrets rotation, rate limiting, staging pipeline                                                   | ⬜     |
+| Phase 7  | Auth hardening — email verification, password reset, MFA, OAuth2                                                                                 | ⬜     |
+| Phase 8  | Billing & payments — Stripe subscriptions, pricing tiers, entitlement guards                                                                     | ⬜     |
+| Phase 9  | Additional institution templates + escalation tracking — brokerage, mortgage, insurance, probate, escalation letters, 30-day follow-up reminders | ⬜     |
+| Phase 10 | Mobile app (Android + iOS) — _not yet decided_                                                                                                   | ⬜     |
 
 See [TASKS.md](./TASKS.md) for the full task breakdown.
 

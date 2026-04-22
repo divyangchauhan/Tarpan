@@ -55,9 +55,7 @@ export class GeneratedDocumentsController {
   @UseGuards(InternalSecretGuard)
   @Patch('generated-documents/:id/result')
   @HttpCode(HttpStatus.OK)
-  handleGenerationResult(
-    @Body() dto: GenerationResultDto,
-  ): Promise<GeneratedDocumentEntity> {
+  handleGenerationResult(@Body() dto: GenerationResultDto): Promise<GeneratedDocumentEntity> {
     return this.generatedDocumentsService.handleGenerationResult(dto);
   }
 }

@@ -77,9 +77,7 @@ export class DocumentsController {
   @UseGuards(InternalSecretGuard)
   @Patch('documents/:id/processing-result')
   @HttpCode(HttpStatus.OK)
-  handleProcessingResult(
-    @Body() dto: ProcessingResultDto,
-  ): Promise<DocumentEntity> {
+  handleProcessingResult(@Body() dto: ProcessingResultDto): Promise<DocumentEntity> {
     return this.documentsService.handleProcessingResult(dto);
   }
 }

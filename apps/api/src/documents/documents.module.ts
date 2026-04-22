@@ -8,11 +8,7 @@ import { DocumentsController } from './documents.controller';
 import { InternalSecretGuard } from './guards/internal-secret.guard';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([DocumentEntity]),
-    CasesModule,
-    EventsModule,
-  ],
+  imports: [TypeOrmModule.forFeature([DocumentEntity]), CasesModule, EventsModule],
   controllers: [DocumentsController],
   providers: [DocumentsService, InternalSecretGuard],
   exports: [DocumentsService],

@@ -31,10 +31,7 @@ describe('S3Service', () => {
     mockConfigService.getOrThrow.mockReturnValue('us-east-1');
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        S3Service,
-        { provide: ConfigService, useValue: mockConfigService },
-      ],
+      providers: [S3Service, { provide: ConfigService, useValue: mockConfigService }],
     }).compile();
 
     service = module.get<S3Service>(S3Service);
@@ -58,11 +55,9 @@ describe('S3Service', () => {
         Key: 'cases/123/doc.pdf',
         ContentType: 'application/pdf',
       });
-      expect(mockGetSignedUrl).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.anything(),
-        { expiresIn: 900 },
-      );
+      expect(mockGetSignedUrl).toHaveBeenCalledWith(expect.anything(), expect.anything(), {
+        expiresIn: 900,
+      });
     });
 
     it('should use the default TTL when expiresIn is not specified', async () => {
@@ -100,11 +95,9 @@ describe('S3Service', () => {
 
       await service.generateDownloadUrl('bucket', 'key.pdf');
 
-      expect(mockGetSignedUrl).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.anything(),
-        { expiresIn: 900 },
-      );
+      expect(mockGetSignedUrl).toHaveBeenCalledWith(expect.anything(), expect.anything(), {
+        expiresIn: 900,
+      });
     });
   });
 });

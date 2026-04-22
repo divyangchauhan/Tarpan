@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CaseEntity } from '../entities/case.entity';
@@ -49,11 +45,7 @@ export class CasesService {
     return caseEntity;
   }
 
-  async update(
-    userId: string,
-    caseId: string,
-    dto: UpdateCaseDto,
-  ): Promise<CaseEntity> {
+  async update(userId: string, caseId: string, dto: UpdateCaseDto): Promise<CaseEntity> {
     const caseEntity = await this.findOne(userId, caseId);
 
     if (dto.status !== undefined) {
@@ -71,7 +63,10 @@ export class CasesService {
       const patch = Object.fromEntries(
         Object.entries(dto.executorInfo).filter(([, v]) => v !== undefined),
       );
-      caseEntity.executorInfo = { ...(caseEntity.executorInfo ?? {}), ...patch } as typeof caseEntity.executorInfo;
+      caseEntity.executorInfo = {
+        ...(caseEntity.executorInfo ?? {}),
+        ...patch,
+      } as typeof caseEntity.executorInfo;
     }
 
     const updated = await this.caseRepository.save(caseEntity);

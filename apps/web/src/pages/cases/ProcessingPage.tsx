@@ -56,10 +56,7 @@ export function ProcessingPage(): JSX.Element {
           setStatusMessage('Extracting information with AI...');
         }
 
-        if (
-          doc.status === DocumentStatus.PROCESSED ||
-          doc.status === DocumentStatus.FAILED
-        ) {
+        if (doc.status === DocumentStatus.PROCESSED || doc.status === DocumentStatus.FAILED) {
           handleTerminalStatus(doc.status);
         }
         pollFailuresRef.current = 0;
@@ -147,7 +144,9 @@ export function ProcessingPage(): JSX.Element {
                   ].join(' ')}
                 />
                 <span
-                  className={step.done ? 'text-green-700' : step.active ? 'text-brand-700' : 'text-gray-400'}
+                  className={
+                    step.done ? 'text-green-700' : step.active ? 'text-brand-700' : 'text-gray-400'
+                  }
                 >
                   {step.label}
                 </span>
@@ -158,9 +157,7 @@ export function ProcessingPage(): JSX.Element {
 
         {isFailed && (
           <div className="mt-8">
-            <Button onClick={() => void navigate(`/cases/${caseId}/upload`)}>
-              Try again
-            </Button>
+            <Button onClick={() => void navigate(`/cases/${caseId}/upload`)}>Try again</Button>
           </div>
         )}
       </div>

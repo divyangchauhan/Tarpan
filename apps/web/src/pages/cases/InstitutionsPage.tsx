@@ -21,10 +21,13 @@ const INSTITUTION_GROUPS: InstitutionGroup[] = [
   {
     category: 'Government',
     institutions: [
-      { type: InstitutionType.SOCIAL_SECURITY_ADMINISTRATION, label: 'Social Security Administration' },
+      {
+        type: InstitutionType.SOCIAL_SECURITY_ADMINISTRATION,
+        label: 'Social Security Administration',
+      },
       { type: InstitutionType.MEDICARE, label: 'Medicare' },
       { type: InstitutionType.IRS, label: 'Internal Revenue Service (IRS)' },
-      { type: InstitutionType.VETERANS_AFFAIRS, label: "Veterans Affairs (VA)" },
+      { type: InstitutionType.VETERANS_AFFAIRS, label: 'Veterans Affairs (VA)' },
       { type: InstitutionType.STATE_DMV, label: 'State DMV' },
       { type: InstitutionType.VOTER_REGISTRATION, label: 'Voter Registration' },
       { type: InstitutionType.PASSPORT, label: 'U.S. Passport Services' },
@@ -73,7 +76,10 @@ export function InstitutionsPage(): JSX.Element {
         if (processed) {
           setDocumentId(processed.id);
         } else {
-          toast('No processed death certificate found for this case. Please upload one first.', 'error');
+          toast(
+            'No processed death certificate found for this case. Please upload one first.',
+            'error',
+          );
         }
       })
       .catch(() => toast('Failed to load case documents', 'error'));
@@ -165,7 +171,10 @@ export function InstitutionsPage(): JSX.Element {
 
       <div className="space-y-6">
         {INSTITUTION_GROUPS.map((group) => (
-          <div key={group.category} className="rounded-xl bg-white border border-gray-200 p-5 shadow-sm">
+          <div
+            key={group.category}
+            className="rounded-xl bg-white border border-gray-200 p-5 shadow-sm"
+          >
             <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500">
               {group.category}
             </h2>
@@ -178,9 +187,7 @@ export function InstitutionsPage(): JSX.Element {
                     onClick={() => toggle(inst.type)}
                     className={[
                       'flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm transition-colors',
-                      isSelected
-                        ? 'bg-brand-50 text-brand-900'
-                        : 'hover:bg-gray-50 text-gray-700',
+                      isSelected ? 'bg-brand-50 text-brand-900' : 'hover:bg-gray-50 text-gray-700',
                     ].join(' ')}
                   >
                     {isSelected ? (

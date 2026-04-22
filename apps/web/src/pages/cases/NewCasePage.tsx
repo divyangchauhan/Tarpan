@@ -153,9 +153,7 @@ export function NewCasePage(): JSX.Element {
           </div>
 
           <div>
-            <Label htmlFor="socialSecurityNumber">
-              Social Security Number (optional)
-            </Label>
+            <Label htmlFor="socialSecurityNumber">Social Security Number (optional)</Label>
             <Input
               id="socialSecurityNumber"
               type="text"
@@ -163,7 +161,9 @@ export function NewCasePage(): JSX.Element {
               error={errors.socialSecurityNumber?.message}
               {...register('socialSecurityNumber')}
             />
-            <p className="mt-1 text-xs text-gray-500">Stored encrypted. Used only for official documents.</p>
+            <p className="mt-1 text-xs text-gray-500">
+              Stored encrypted. Used only for official documents.
+            </p>
           </div>
 
           <div className="flex justify-end pt-2">

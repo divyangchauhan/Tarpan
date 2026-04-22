@@ -2,9 +2,9 @@
 
 Two pipelines can be tested end-to-end locally:
 
-| Pipeline | Trigger | What it tests |
-|---|---|---|
-| **Processing** | SQS processing queue → Lambda | S3 download → Claude extraction → API callback |
+| Pipeline       | Trigger                       | What it tests                                                    |
+| -------------- | ----------------------------- | ---------------------------------------------------------------- |
+| **Processing** | SQS processing queue → Lambda | S3 download → Claude extraction → API callback                   |
 | **Generation** | SQS generation queue → Lambda | GenerationRequest → Jinja2/WeasyPrint → S3 upload → API callback |
 
 Both pipelines are handled by the same Lambda function (`src/handler.py`). The handler routes by message shape: messages containing `generatedDocumentId` go to the generation path; all others go to the processing path.
@@ -13,11 +13,11 @@ Both pipelines are handled by the same Lambda function (`src/handler.py`). The h
 
 ## Prerequisites
 
-| Requirement | Check |
-|---|---|
-| Docker running | `docker info` |
-| AWS CLI installed | `aws --version` |
-| Poetry installed | `poetry --version` |
+| Requirement            | Check                  |
+| ---------------------- | ---------------------- |
+| Docker running         | `docker info`          |
+| AWS CLI installed      | `aws --version`        |
+| Poetry installed       | `poetry --version`     |
 | Real Anthropic API key | see `.env` setup below |
 
 > **Generation-only testing** (`generate` mode) does not need the NestJS API running and does not call the real Claude API — templates render from pre-supplied data.
@@ -50,14 +50,14 @@ cp .env.example .env
 
 ## Available Modes
 
-| Mode | Description | Requires API? |
-|---|---|---|
-| `typed` | Process typed/text-extractable fixture via SQS processing queue | Yes |
-| `scanned` | Process scanned/image-only fixture via SQS processing queue (Claude Vision) | Yes |
-| `minimal` | Process minimal-fields fixture via SQS processing queue | Yes |
-| `both` | `typed` + `scanned` (default) | Yes |
-| `generate` | Send generation event to SQS generation queue, verify PDF in S3 | No |
-| `all` | `both` + `generate` | Yes |
+| Mode       | Description                                                                 | Requires API? |
+| ---------- | --------------------------------------------------------------------------- | ------------- |
+| `typed`    | Process typed/text-extractable fixture via SQS processing queue             | Yes           |
+| `scanned`  | Process scanned/image-only fixture via SQS processing queue (Claude Vision) | Yes           |
+| `minimal`  | Process minimal-fields fixture via SQS processing queue                     | Yes           |
+| `both`     | `typed` + `scanned` (default)                                               | Yes           |
+| `generate` | Send generation event to SQS generation queue, verify PDF in S3             | No            |
+| `all`      | `both` + `generate`                                                         | Yes           |
 
 > **Queue hygiene**: the script automatically purges both SQS queues at startup to prevent stale messages from a prior run being counted as current-run completions.
 
@@ -93,6 +93,7 @@ docker compose logs -f localstack
 ```
 
 This automatically creates:
+
 - S3 bucket: `afterlight-uploads`
 - S3 bucket: `afterlight-generated-docs`
 - SQS queue: `afterlight-document-processing`
@@ -177,15 +178,15 @@ The worker polls both queues in sequence. When both are empty it sleeps 2 s befo
 
 The extracted fields map to `ExtractedCertificateData`:
 
-| Field | Expected value (typed fixture) |
-|---|---|
-| `full_name` | John Robert Smith |
-| `date_of_death` | 2024-11-20 |
-| `place_of_death` | Springfield, Illinois |
-| `state` | IL |
-| `certificate_number` | 2024-IL-048291 |
-| `certifier_name` | Dr. Emily J. Chen |
-| `certifier_title` | Medical Examiner |
+| Field                | Expected value (typed fixture) |
+| -------------------- | ------------------------------ |
+| `full_name`          | John Robert Smith              |
+| `date_of_death`      | 2024-11-20                     |
+| `place_of_death`     | Springfield, Illinois          |
+| `state`              | IL                             |
+| `certificate_number` | 2024-IL-048291                 |
+| `certifier_name`     | Dr. Emily J. Chen              |
+| `certifier_title`    | Medical Examiner               |
 
 ---
 
@@ -314,23 +315,23 @@ xdg-open /tmp/test-gen-001.pdf  # Linux
 
 ## Available Template IDs
 
-| Template ID | Institution |
-|---|---|
-| `ssa-721` | Social Security Administration |
-| `medicare` | Centers for Medicare & Medicaid Services |
-| `bank-closure` | Generic bank account closure |
-| `credit-card-cancellation` | Generic credit card cancellation |
-| `subscription-cancellation` | Streaming / utility subscriptions |
-| `irs-notification` | Internal Revenue Service |
-| `dmv-notification` | State DMV / driver's license |
-| `voter-registration` | State Board of Elections |
-| `usps-notification` | USPS mail forwarding |
-| `life-insurance` | Life insurance claim initiation |
-| `pension-401k` | Pension / 401(k) beneficiary |
-| `veterans-affairs` | U.S. Department of Veterans Affairs |
-| `passport-cancellation` | U.S. Department of State |
-| `professional-license` | State professional licensing board |
-| `employer-notification` | Employer / HR department |
+| Template ID                 | Institution                              |
+| --------------------------- | ---------------------------------------- |
+| `ssa-721`                   | Social Security Administration           |
+| `medicare`                  | Centers for Medicare & Medicaid Services |
+| `bank-closure`              | Generic bank account closure             |
+| `credit-card-cancellation`  | Generic credit card cancellation         |
+| `subscription-cancellation` | Streaming / utility subscriptions        |
+| `irs-notification`          | Internal Revenue Service                 |
+| `dmv-notification`          | State DMV / driver's license             |
+| `voter-registration`        | State Board of Elections                 |
+| `usps-notification`         | USPS mail forwarding                     |
+| `life-insurance`            | Life insurance claim initiation          |
+| `pension-401k`              | Pension / 401(k) beneficiary             |
+| `veterans-affairs`          | U.S. Department of Veterans Affairs      |
+| `passport-cancellation`     | U.S. Department of State                 |
+| `professional-license`      | State professional licensing board       |
+| `employer-notification`     | Employer / HR department                 |
 
 Generic templates (`bank-closure`, `credit-card-cancellation`, `subscription-cancellation`, `dmv-notification`, `voter-registration`, `professional-license`, `employer-notification`) accept optional `institutionName` and `institutionAddress` fields in the generation event to customise the recipient block.
 
@@ -338,12 +339,12 @@ Generic templates (`bank-closure`, `credit-card-cancellation`, `subscription-can
 
 ## Available Test Fixtures
 
-| File | Type | Exercises |
-|---|---|---|
-| `sample_death_cert_typed.pdf` | Filled form, text-extractable | Text extraction path (`pdfplumber`) |
-| `sample_death_cert_minimal.pdf` | Minimal fields, text-extractable | Text extraction path — sparse data |
-| `sample_death_cert_scanned.pdf` | Image-only (rasterised) | Claude Vision path |
-| `blank_us_death_certificate.pdf` | CDC blank form (official) | Reference / visual comparison |
+| File                             | Type                             | Exercises                           |
+| -------------------------------- | -------------------------------- | ----------------------------------- |
+| `sample_death_cert_typed.pdf`    | Filled form, text-extractable    | Text extraction path (`pdfplumber`) |
+| `sample_death_cert_minimal.pdf`  | Minimal fields, text-extractable | Text extraction path — sparse data  |
+| `sample_death_cert_scanned.pdf`  | Image-only (rasterised)          | Claude Vision path                  |
+| `blank_us_death_certificate.pdf` | CDC blank form (official)        | Reference / visual comparison       |
 
 Fixtures are generated from the [US Standard Certificate of Death (CDC, 2003)](https://www.cdc.gov/nchs/data/dvs/DEATH11-03final-ACC.pdf)
 using entirely fabricated data. To regenerate:
@@ -357,10 +358,10 @@ poetry run python tests/fixtures/generate_fixtures.py
 
 ## API Callback Behaviour
 
-| Callback | Endpoint | Auth | Status |
-|---|---|---|---|
+| Callback          | Endpoint                                         | Auth                | Status              |
+| ----------------- | ------------------------------------------------ | ------------------- | ------------------- |
 | Processing result | `PATCH /api/v1/documents/{id}/processing-result` | `X-Internal-Secret` | Implemented (PR #3) |
-| Generation result | `PATCH /api/v1/generated-documents/{id}/result` | `X-Internal-Secret` | Implemented (PR #5) |
+| Generation result | `PATCH /api/v1/generated-documents/{id}/result`  | `X-Internal-Secret` | Implemented (PR #5) |
 
 Both callbacks use the `X-Internal-Secret` header (value from `INTERNAL_API_SECRET` env var).
 

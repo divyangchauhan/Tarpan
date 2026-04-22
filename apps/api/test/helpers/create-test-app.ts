@@ -64,9 +64,8 @@ export async function cleanupUser(app: INestApplication, email: string): Promise
      WHERE case_id IN (SELECT id FROM cases WHERE user_id = (SELECT id FROM users WHERE email = $1))`,
     [email],
   );
-  await ds.query(
-    `DELETE FROM cases WHERE user_id = (SELECT id FROM users WHERE email = $1)`,
-    [email],
-  );
+  await ds.query(`DELETE FROM cases WHERE user_id = (SELECT id FROM users WHERE email = $1)`, [
+    email,
+  ]);
   await ds.query(`DELETE FROM users WHERE email = $1`, [email]);
 }

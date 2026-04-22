@@ -24,10 +24,7 @@ describe('InternalSecretGuard', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        InternalSecretGuard,
-        { provide: ConfigService, useValue: mockConfigService },
-      ],
+      providers: [InternalSecretGuard, { provide: ConfigService, useValue: mockConfigService }],
     }).compile();
 
     guard = module.get<InternalSecretGuard>(InternalSecretGuard);

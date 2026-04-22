@@ -32,8 +32,12 @@ interface FieldRowProps {
 function FieldRow({ label, value }: FieldRowProps): JSX.Element {
   return (
     <div className="flex flex-col py-3 border-b border-gray-100 last:border-0 sm:flex-row">
-      <dt className="mb-0.5 w-full flex-shrink-0 text-sm font-medium text-gray-500 sm:mb-0 sm:w-40">{label}</dt>
-      <dd className="text-sm text-gray-900">{value ?? <span className="text-gray-400 italic">Not extracted</span>}</dd>
+      <dt className="mb-0.5 w-full flex-shrink-0 text-sm font-medium text-gray-500 sm:mb-0 sm:w-40">
+        {label}
+      </dt>
+      <dd className="text-sm text-gray-900">
+        {value ?? <span className="text-gray-400 italic">Not extracted</span>}
+      </dd>
     </div>
   );
 }
@@ -133,13 +137,17 @@ export function ReviewPage(): JSX.Element {
           <FieldRow
             label="Date of birth"
             value={new Date(deceasedInfo.dateOfBirth).toLocaleDateString('en-US', {
-              year: 'numeric', month: 'long', day: 'numeric',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
             })}
           />
           <FieldRow
             label="Date of death"
             value={new Date(deceasedInfo.dateOfDeath).toLocaleDateString('en-US', {
-              year: 'numeric', month: 'long', day: 'numeric',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
             })}
           />
           <FieldRow label="Place of death" value={deceasedInfo.placeOfDeath} />
@@ -152,15 +160,23 @@ export function ReviewPage(): JSX.Element {
 
       {/* Executor info — editable */}
       <section className="rounded-xl bg-white border border-gray-200 p-6 shadow-sm">
-        <h2 className="mb-1 text-base font-semibold text-gray-900">Executor / Estate representative</h2>
+        <h2 className="mb-1 text-base font-semibold text-gray-900">
+          Executor / Estate representative
+        </h2>
         <p className="mb-5 text-sm text-gray-500">
           This person&apos;s information will appear on all generated letters.
         </p>
 
-        <form onSubmit={(e) => void handleSubmit(onExecutorSubmit)(e)} className="space-y-5" noValidate>
+        <form
+          onSubmit={(e) => void handleSubmit(onExecutorSubmit)(e)}
+          className="space-y-5"
+          noValidate
+        >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <Label htmlFor="ex-name" required>Full name</Label>
+              <Label htmlFor="ex-name" required>
+                Full name
+              </Label>
               <Input
                 id="ex-name"
                 type="text"
@@ -170,7 +186,9 @@ export function ReviewPage(): JSX.Element {
               />
             </div>
             <div>
-              <Label htmlFor="ex-relationship" required>Relationship to deceased</Label>
+              <Label htmlFor="ex-relationship" required>
+                Relationship to deceased
+              </Label>
               <Input
                 id="ex-relationship"
                 type="text"
@@ -183,7 +201,9 @@ export function ReviewPage(): JSX.Element {
           </div>
 
           <div>
-            <Label htmlFor="ex-address" required>Mailing address</Label>
+            <Label htmlFor="ex-address" required>
+              Mailing address
+            </Label>
             <Input
               id="ex-address"
               type="text"

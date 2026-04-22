@@ -64,7 +64,9 @@ export function DownloadsPage(): JSX.Element {
         setLoading(false);
 
         const allDone = docs.every(
-          (d) => d.status === GeneratedDocumentStatus.READY || d.status === GeneratedDocumentStatus.FAILED,
+          (d) =>
+            d.status === GeneratedDocumentStatus.READY ||
+            d.status === GeneratedDocumentStatus.FAILED,
         );
         if (allDone && pollingRef.current) {
           clearInterval(pollingRef.current);
@@ -90,7 +92,9 @@ export function DownloadsPage(): JSX.Element {
 
   const readyCount = documents.filter((d) => d.status === GeneratedDocumentStatus.READY).length;
   const generatingCount = documents.filter(
-    (d) => d.status === GeneratedDocumentStatus.GENERATING || d.status === GeneratedDocumentStatus.PENDING,
+    (d) =>
+      d.status === GeneratedDocumentStatus.GENERATING ||
+      d.status === GeneratedDocumentStatus.PENDING,
   ).length;
 
   return (
@@ -163,9 +167,7 @@ export function DownloadsPage(): JSX.Element {
               )}
 
               {(doc.status === GeneratedDocumentStatus.GENERATING ||
-                doc.status === GeneratedDocumentStatus.PENDING) && (
-                <Spinner size="sm" />
-              )}
+                doc.status === GeneratedDocumentStatus.PENDING) && <Spinner size="sm" />}
             </div>
           ))}
         </div>

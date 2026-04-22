@@ -16,11 +16,7 @@ const variantClasses: Record<BadgeVariant, string> = {
   info: 'bg-brand-100 text-brand-700',
 };
 
-export function Badge({
-  variant = 'default',
-  children,
-  className = '',
-}: BadgeProps): JSX.Element {
+export function Badge({ variant = 'default', children, className = '' }: BadgeProps): JSX.Element {
   return (
     <span
       className={[

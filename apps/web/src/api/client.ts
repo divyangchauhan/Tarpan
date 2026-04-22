@@ -33,9 +33,11 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as (InternalAxiosRequestConfig & {
-      _retry?: boolean;
-    }) | undefined;
+    const originalRequest = error.config as
+      | (InternalAxiosRequestConfig & {
+          _retry?: boolean;
+        })
+      | undefined;
 
     if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
       // Auth endpoints return 401 for bad credentials — not an expired session.

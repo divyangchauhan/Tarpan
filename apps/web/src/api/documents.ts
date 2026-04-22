@@ -22,23 +22,15 @@ export async function createDocument(
   return response.data;
 }
 
-export async function enqueueProcessing(
-  caseId: string,
-  documentId: string,
-): Promise<Document> {
+export async function enqueueProcessing(caseId: string, documentId: string): Promise<Document> {
   const response = await apiClient.post<Document>(
     `/cases/${caseId}/documents/${documentId}/process`,
   );
   return response.data;
 }
 
-export async function getDocument(
-  caseId: string,
-  documentId: string,
-): Promise<Document> {
-  const response = await apiClient.get<Document>(
-    `/cases/${caseId}/documents/${documentId}`,
-  );
+export async function getDocument(caseId: string, documentId: string): Promise<Document> {
+  const response = await apiClient.get<Document>(`/cases/${caseId}/documents/${documentId}`);
   return response.data;
 }
 

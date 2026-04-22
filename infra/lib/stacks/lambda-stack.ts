@@ -60,10 +60,9 @@ export class LambdaStack extends cdk.Stack {
 
     this.processorFn = new lambda.DockerImageFunction(this, 'ProcessorFn', {
       description: 'Parses death certificates and generates legal document PDFs',
-      code: lambda.DockerImageCode.fromImageAsset(
-        path.join(__dirname, '../../../apps/processor'),
-        { platform: ecr_assets.Platform.LINUX_AMD64 },
-      ),
+      code: lambda.DockerImageCode.fromImageAsset(path.join(__dirname, '../../../apps/processor'), {
+        platform: ecr_assets.Platform.LINUX_AMD64,
+      }),
       architecture: lambda.Architecture.X86_64,
       memorySize: 1024, // WeasyPrint + Pillow need headroom
       timeout: cdk.Duration.seconds(300), // 5 min — generous for Claude API + PDF render
@@ -97,14 +96,8 @@ export class LambdaStack extends cdk.Stack {
     // For Lambda, we use the Secrets Manager extension or fetch in code.
     // Here we pass the secret ARNs and fetch in a Lambda layer or startup code.
     // Simpler for POC: grant read and let the Python code use boto3 to fetch.
-    this.processorFn.addEnvironment(
-      'ANTHROPIC_API_KEY_SECRET_ARN',
-      anthropicApiKey.secretArn,
-    );
-    this.processorFn.addEnvironment(
-      'INTERNAL_API_SECRET_ARN',
-      internalApiSecret.secretArn,
-    );
+    this.processorFn.addEnvironment('ANTHROPIC_API_KEY_SECRET_ARN', anthropicApiKey.secretArn);
+    this.processorFn.addEnvironment('INTERNAL_API_SECRET_ARN', internalApiSecret.secretArn);
 
     // ── IAM — least privilege ─────────────────────────────────────────────
 

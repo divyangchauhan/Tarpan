@@ -6,7 +6,8 @@
 **Duration:** 12–15 minutes  
 **Format:** Live walkthrough of the running app + brief architecture slide
 
-**Core narrative:**  
+**Core narrative:**
+
 > "When someone dies, their family faces 500+ hours of administrative work — notifying banks, government agencies, insurance companies, utilities. AfterLight eliminates 80% of that burden in under 10 minutes."
 
 ---
@@ -43,11 +44,12 @@ Click **New Case**.
 > "Step one — tell us about the deceased. This takes about 30 seconds."
 
 Fill in (or use the pre-seeded case):
+
 - First name: **Robert**, Last name: **Mitchell**
 - Date of birth: **July 14, 1942**
 - Date of death: **November 3, 2024**
 - Place of death: **Springfield, IL**
-- SSN: **123-45-6789** *(point out: "stored encrypted, never logged")*
+- SSN: **123-45-6789** _(point out: "stored encrypted, never logged")_
 
 Click **Continue to upload**.
 
@@ -88,6 +90,7 @@ Point to the extracted fields panel.
 > "Now we add the executor — the person managing the estate. This information will appear on every letter we generate."
 
 Fill in executor:
+
 - Name: **Sarah Mitchell**
 - Relationship: **Daughter**
 - Address: **412 Maple Ave, Springfield, IL 62701**
@@ -131,6 +134,7 @@ Close the app and switch to the architecture slide (optional).
 > "Under the hood: React frontend on CloudFront, NestJS API on ECS Fargate, PostgreSQL on RDS, Python Lambda triggered by SQS. Everything is async — no blocking HTTP calls to Claude."
 
 Key metrics to mention:
+
 - **500+ hours** of admin work automated to **< 10 minutes**
 - **16 institution types** supported at launch, extensible to any institution
 - **Escalation built in** — if an authority fails to act, the app guides the family through the next step: follow-up letters, regulatory complaint portals, 30-day reminders
@@ -140,42 +144,49 @@ Key metrics to mention:
 
 ## Anticipated Questions
 
-**"How accurate is the AI extraction?"**  
+**"How accurate is the AI extraction?"**
+
 > "We've tested against a range of certificate formats — typed, handwritten, and photocopied. Claude handles all of them. Structured extraction with Pydantic validation catches any fields it can't confidently extract, and the Review screen lets families correct anything."
 
-**"What's stopping someone from just doing this in ChatGPT?"**  
+**"What's stopping someone from just doing this in ChatGPT?"**
+
 > "Workflow integration, security, and templates. ChatGPT can't generate a correctly formatted SSA-721 form, doesn't know the right mailing address for each agency, and has no audit trail. We own the full stack — upload, extraction, template library, delivery, and now escalation: if an institution ignores a letter, we guide the family through the regulatory complaint process automatically."
 
-**"What happens if the institution ignores the letter?"**  
+**"What happens if the institution ignores the letter?"**
+
 > "That's a real problem — banks sometimes keep charging fees for months after notification. We're building an escalation layer directly into the app: status tracking per notification, institution-specific guides (CFPB for banks, state insurance commissioner for insurers, IRS Taxpayer Advocate for the IRS), escalation letter generation that CCs the regulator, and a 30-day reminder email if nothing has been marked resolved. We turn a dead end into a clear next step."
 
-**"What does the go-to-market look like?"**  
+**"What does the go-to-market look like?"**
+
 > "Direct-to-family for quick adoption, but the real opportunity is B2B: funeral homes, estate attorneys, and banks. They're the first call a family makes — we become their value-add service."
 
-**"How much does a run cost?"**  
+**"How much does a run cost?"**
+
 > "Claude API for extraction: ~$0.05–0.15 per document depending on length. Lambda, S3, SQS for a full 16-letter run: under $0.01. Marginal cost per case is under $0.20."
 
-**"Is this HIPAA compliant?"**  
+**"Is this HIPAA compliant?"**
+
 > "We're not yet HIPAA-certified, but the architecture is designed for it: data encrypted at rest and in transit, no PII in logs, pre-signed URLs, audit trail via CloudWatch. Certification is on the roadmap before enterprise sales."
 
 ---
 
 ## If Something Goes Wrong
 
-| Problem | Recovery |
-|---|---|
-| Upload stalls | Switch to the pre-seeded Robert Mitchell case — it's already in state `PROCESSED` |
-| Letters don't appear | Refresh — SQS polling has a ~5s delay |
-| Login fails | Use incognito + re-enter credentials |
-| CloudFront down | Switch to localhost (`pnpm dev`) |
+| Problem              | Recovery                                                                          |
+| -------------------- | --------------------------------------------------------------------------------- |
+| Upload stalls        | Switch to the pre-seeded Robert Mitchell case — it's already in state `PROCESSED` |
+| Letters don't appear | Refresh — SQS polling has a ~5s delay                                             |
+| Login fails          | Use incognito + re-enter credentials                                              |
+| CloudFront down      | Switch to localhost (`pnpm dev`)                                                  |
 
 ---
 
 ## After the Demo
 
 Send the investor:
+
 1. This deck: `docs/ARCHITECTURE.md`
 2. GitHub repo link (if sharing)
 3. A live link to the deployed app with a personal demo account
 
-Ask: *"What part resonated most? Is the B2C or B2B angle more interesting to you?"*
+Ask: _"What part resonated most? Is the B2C or B2B angle more interesting to you?"_

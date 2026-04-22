@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
@@ -44,9 +40,7 @@ export class DocumentsService {
     const caseEntity = await this.casesService.findOne(userId, caseId);
 
     const documentId = uuidv4();
-    const extension = dto.fileName.includes('.')
-      ? dto.fileName.split('.').pop() ?? 'bin'
-      : 'bin';
+    const extension = dto.fileName.includes('.') ? (dto.fileName.split('.').pop() ?? 'bin') : 'bin';
     const s3Key = `cases/${caseEntity.id}/documents/${documentId}.${extension}`;
 
     const bucket = this.config.getOrThrow<string>('S3_UPLOADS_BUCKET');
@@ -81,11 +75,7 @@ export class DocumentsService {
     });
   }
 
-  async findOne(
-    userId: string,
-    caseId: string,
-    documentId: string,
-  ): Promise<DocumentEntity> {
+  async findOne(userId: string, caseId: string, documentId: string): Promise<DocumentEntity> {
     // Verify case ownership
     await this.casesService.findOne(userId, caseId);
 
@@ -149,9 +139,7 @@ export class DocumentsService {
     if (dto.errorMessage !== undefined) extra.errorMessage = dto.errorMessage;
     this.eventsGateway.emitDocumentStatus(document.caseId, document.id, dto.status, extra);
 
-    this.logger.log(
-      `Processed result for document ${dto.documentId}: status=${dto.status}`,
-    );
+    this.logger.log(`Processed result for document ${dto.documentId}: status=${dto.status}`);
 
     return updated;
   }

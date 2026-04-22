@@ -73,7 +73,7 @@ describe('CasesService', () => {
   });
 
   describe('findAll', () => {
-    it("should return all cases for the given user", async () => {
+    it('should return all cases for the given user', async () => {
       mockCaseRepository.find.mockResolvedValue([mockCase]);
 
       const result = await service.findAll('user-id');

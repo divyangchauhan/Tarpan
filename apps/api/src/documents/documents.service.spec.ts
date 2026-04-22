@@ -137,11 +137,11 @@ describe('DocumentsService', () => {
     });
 
     it('should propagate NotFoundException from CasesService when case not found', async () => {
-      mockCasesService.findOne.mockRejectedValue(
-        new NotFoundException('Case not found'),
-      );
+      mockCasesService.findOne.mockRejectedValue(new NotFoundException('Case not found'));
 
-      await expect(service.initiateUpload('user-id', 'case-id', dto)).rejects.toThrow(NotFoundException);
+      await expect(service.initiateUpload('user-id', 'case-id', dto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 

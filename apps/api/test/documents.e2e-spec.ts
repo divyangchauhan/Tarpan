@@ -148,9 +148,7 @@ describe('Documents + GeneratedDocuments (e2e)', () => {
     });
 
     it('401 — no token', async () => {
-      await request(app.getHttpServer())
-        .get(`/api/v1/cases/${caseId}/documents`)
-        .expect(401);
+      await request(app.getHttpServer()).get(`/api/v1/cases/${caseId}/documents`).expect(401);
     });
   });
 
@@ -588,28 +586,28 @@ describe('Documents + GeneratedDocuments (e2e)', () => {
       docId = res.body.document.id as string;
     });
 
-    it('404 — user B cannot list documents belonging to user A\'s case', async () => {
+    it("404 — user B cannot list documents belonging to user A's case", async () => {
       await request(app.getHttpServer())
         .get(`/api/v1/cases/${caseId}/documents`)
         .set('Authorization', `Bearer ${tokenB}`)
         .expect(404);
     });
 
-    it('404 — user B cannot get a specific document in user A\'s case', async () => {
+    it("404 — user B cannot get a specific document in user A's case", async () => {
       await request(app.getHttpServer())
         .get(`/api/v1/cases/${caseId}/documents/${docId}`)
         .set('Authorization', `Bearer ${tokenB}`)
         .expect(404);
     });
 
-    it('404 — user B cannot enqueue processing for user A\'s document', async () => {
+    it("404 — user B cannot enqueue processing for user A's document", async () => {
       await request(app.getHttpServer())
         .post(`/api/v1/cases/${caseId}/documents/${docId}/process`)
         .set('Authorization', `Bearer ${tokenB}`)
         .expect(404);
     });
 
-    it('404 — user B cannot list generated documents in user A\'s case', async () => {
+    it("404 — user B cannot list generated documents in user A's case", async () => {
       await request(app.getHttpServer())
         .get(`/api/v1/cases/${caseId}/generated-documents`)
         .set('Authorization', `Bearer ${tokenB}`)
@@ -682,14 +680,11 @@ describe('Documents + GeneratedDocuments (e2e)', () => {
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
 
-      const readyDoc = (listRes.body as Array<{ id: string; downloadUrl?: string }>)
-        .find((d) => d.id === genDocId);
-      expect(readyDoc?.downloadUrl).toBeTruthy();
-      expect(mockS3.generateDownloadUrl).toHaveBeenCalledWith(
-        expect.any(String),
-        s3Key,
-        900,
+      const readyDoc = (listRes.body as Array<{ id: string; downloadUrl?: string }>).find(
+        (d) => d.id === genDocId,
       );
+      expect(readyDoc?.downloadUrl).toBeTruthy();
+      expect(mockS3.generateDownloadUrl).toHaveBeenCalledWith(expect.any(String), s3Key, 900);
     });
   });
 });

@@ -27,10 +27,7 @@ describe('SqsService', () => {
     mockConfigService.getOrThrow.mockReturnValue('us-east-1');
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        SqsService,
-        { provide: ConfigService, useValue: mockConfigService },
-      ],
+      providers: [SqsService, { provide: ConfigService, useValue: mockConfigService }],
     }).compile();
 
     service = module.get<SqsService>(SqsService);
@@ -55,9 +52,9 @@ describe('SqsService', () => {
     it('should propagate errors from the SQS client', async () => {
       mockSend.mockRejectedValue(new Error('SQS unavailable'));
 
-      await expect(
-        service.sendMessage('https://queue-url', { key: 'value' }),
-      ).rejects.toThrow('SQS unavailable');
+      await expect(service.sendMessage('https://queue-url', { key: 'value' })).rejects.toThrow(
+        'SQS unavailable',
+      );
     });
   });
 });
