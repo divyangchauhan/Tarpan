@@ -166,7 +166,10 @@ describe('AuthService', () => {
         where: { id: 'test-user-id' },
       });
       expect(mockJwtService.sign).toHaveBeenCalledTimes(2);
-      expect(result).toEqual({ accessToken: 'new-access-token', refreshToken: 'new-refresh-token' });
+      expect(result).toEqual({
+        accessToken: 'new-access-token',
+        refreshToken: 'new-refresh-token',
+      });
     });
 
     it('should throw UnauthorizedException when user is not found', async () => {

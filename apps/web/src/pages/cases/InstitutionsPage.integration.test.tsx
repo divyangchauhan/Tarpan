@@ -6,7 +6,12 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { vi } from 'vitest';
-import { DocumentStatus, DocumentType, GeneratedDocumentStatus, InstitutionType } from '@afterlight/shared';
+import {
+  DocumentStatus,
+  DocumentType,
+  GeneratedDocumentStatus,
+  InstitutionType,
+} from '@afterlight/shared';
 import type { Document, GeneratedDocument } from '@afterlight/shared';
 import { InstitutionsPage } from './InstitutionsPage';
 import { ToastProvider } from '@/context/ToastContext';
@@ -61,7 +66,10 @@ function makeGeneratedDoc(institutionType: InstitutionType): GeneratedDocument {
 
 function renderPage(): void {
   render(
-    <MemoryRouter initialEntries={[`/cases/${CASE_ID}/institutions`]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+    <MemoryRouter
+      initialEntries={[`/cases/${CASE_ID}/institutions`]}
+      future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+    >
       <ToastProvider>
         <Routes>
           <Route path="/cases/:caseId/institutions" element={<InstitutionsPage />} />
@@ -187,7 +195,10 @@ describe('InstitutionsPage (integration)', () => {
 
     expect(mockCreateGeneratedDocument).toHaveBeenCalledWith(
       CASE_ID,
-      expect.objectContaining({ documentId: DOCUMENT_ID, institutionType: InstitutionType.SOCIAL_SECURITY_ADMINISTRATION }),
+      expect.objectContaining({
+        documentId: DOCUMENT_ID,
+        institutionType: InstitutionType.SOCIAL_SECURITY_ADMINISTRATION,
+      }),
     );
     expect(mockCreateGeneratedDocument).toHaveBeenCalledWith(
       CASE_ID,
@@ -220,7 +231,7 @@ describe('InstitutionsPage (integration)', () => {
     await user.click(screen.getByRole('button', { name: /generate selected/i }));
 
     await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent(/1 document\(s\) failed/i);
+      expect(screen.getByRole('alert')).toHaveTextContent(/failed to queue: medicare/i);
     });
 
     // Still navigates to downloads so the user can see what succeeded
@@ -244,7 +255,9 @@ describe('InstitutionsPage (integration)', () => {
 
     await waitFor(() => {
       const alerts = screen.getAllByRole('alert');
-      expect(alerts.some((a) => /no processed death certificate/i.test(a.textContent ?? ''))).toBe(true);
+      expect(alerts.some((a) => /no processed death certificate/i.test(a.textContent ?? ''))).toBe(
+        true,
+      );
     });
 
     expect(mockNavigate).toHaveBeenCalledWith(`/cases/${CASE_ID}/upload`);

@@ -161,8 +161,12 @@ export class InitialSchema1700000000000 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`ALTER TABLE "generated_documents" DROP CONSTRAINT "FK_generated_documents_document_id"`);
-    await queryRunner.query(`ALTER TABLE "generated_documents" DROP CONSTRAINT "FK_generated_documents_case_id"`);
+    await queryRunner.query(
+      `ALTER TABLE "generated_documents" DROP CONSTRAINT "FK_generated_documents_document_id"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "generated_documents" DROP CONSTRAINT "FK_generated_documents_case_id"`,
+    );
     await queryRunner.query(`DROP INDEX "IDX_generated_documents_document_id"`);
     await queryRunner.query(`DROP INDEX "IDX_generated_documents_case_id"`);
     await queryRunner.query(`DROP TABLE "generated_documents"`);

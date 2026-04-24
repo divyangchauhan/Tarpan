@@ -17,9 +17,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           'placeholder:text-gray-400',
           'focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500',
           'disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed',
-          error
-            ? 'border-red-400 focus:ring-red-400 focus:border-red-400'
-            : 'border-gray-300',
+          error ? 'border-red-400 focus:ring-red-400 focus:border-red-400' : 'border-gray-300',
           className,
         ].join(' ')}
         {...props}

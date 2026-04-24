@@ -1,10 +1,4 @@
-import {
-  IsEnum,
-  IsObject,
-  IsOptional,
-  IsString,
-  IsUUID,
-} from 'class-validator';
+import { IsEnum, IsObject, IsOptional, IsString, IsUUID } from 'class-validator';
 import { DocumentStatus, ExtractedCertificateData } from '@afterlight/shared';
 
 // Allowed statuses for processing callback

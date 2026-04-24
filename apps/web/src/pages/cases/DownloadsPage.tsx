@@ -54,6 +54,7 @@ export function DownloadsPage(): JSX.Element {
   const [documents, setDocuments] = useState<GeneratedDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const errorToastShownRef = useRef(false);
 
   function fetchDocuments(): void {
     if (!caseId) return;
@@ -63,7 +64,9 @@ export function DownloadsPage(): JSX.Element {
         setLoading(false);
 
         const allDone = docs.every(
-          (d) => d.status === GeneratedDocumentStatus.READY || d.status === GeneratedDocumentStatus.FAILED,
+          (d) =>
+            d.status === GeneratedDocumentStatus.READY ||
+            d.status === GeneratedDocumentStatus.FAILED,
         );
         if (allDone && pollingRef.current) {
           clearInterval(pollingRef.current);
@@ -71,7 +74,10 @@ export function DownloadsPage(): JSX.Element {
         }
       })
       .catch(() => {
-        toast('Failed to load documents', 'error');
+        if (!errorToastShownRef.current) {
+          toast('Failed to load documents', 'error');
+          errorToastShownRef.current = true;
+        }
         setLoading(false);
       });
   }
@@ -86,7 +92,9 @@ export function DownloadsPage(): JSX.Element {
 
   const readyCount = documents.filter((d) => d.status === GeneratedDocumentStatus.READY).length;
   const generatingCount = documents.filter(
-    (d) => d.status === GeneratedDocumentStatus.GENERATING || d.status === GeneratedDocumentStatus.PENDING,
+    (d) =>
+      d.status === GeneratedDocumentStatus.GENERATING ||
+      d.status === GeneratedDocumentStatus.PENDING,
   ).length;
 
   return (
@@ -159,9 +167,7 @@ export function DownloadsPage(): JSX.Element {
               )}
 
               {(doc.status === GeneratedDocumentStatus.GENERATING ||
-                doc.status === GeneratedDocumentStatus.PENDING) && (
-                <Spinner size="sm" />
-              )}
+                doc.status === GeneratedDocumentStatus.PENDING) && <Spinner size="sm" />}
             </div>
           ))}
         </div>

@@ -59,7 +59,9 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       this.logger.log(`Client connected: ${client.id} (user: ${client.userId})`);
     } catch (error) {
-      this.logger.warn(`Connection rejected: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      this.logger.warn(
+        `Connection rejected: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
       client.disconnect();
     }
   }

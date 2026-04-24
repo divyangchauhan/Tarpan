@@ -46,9 +46,7 @@ export function CasesPage(): JSX.Element {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Cases</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Manage estate notification cases
-          </p>
+          <p className="mt-1 text-sm text-gray-500">Manage estate notification cases</p>
         </div>
         <Button onClick={handleNewCase}>
           <Plus className="h-4 w-4" />

@@ -14,10 +14,7 @@ describe('JwtRefreshStrategy', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        JwtRefreshStrategy,
-        { provide: ConfigService, useValue: mockConfigService },
-      ],
+      providers: [JwtRefreshStrategy, { provide: ConfigService, useValue: mockConfigService }],
     }).compile();
 
     strategy = module.get<JwtRefreshStrategy>(JwtRefreshStrategy);
@@ -29,7 +26,11 @@ describe('JwtRefreshStrategy', () => {
         get: jest.fn().mockReturnValue('Bearer my-refresh-token'),
       } as unknown as Request;
 
-      const payload: JwtPayload = { sub: 'user-id', email: 'user@example.com', role: UserRole.USER };
+      const payload: JwtPayload = {
+        sub: 'user-id',
+        email: 'user@example.com',
+        role: UserRole.USER,
+      };
 
       const result = strategy.validate(req, payload);
 
@@ -44,7 +45,11 @@ describe('JwtRefreshStrategy', () => {
         get: jest.fn().mockReturnValue(undefined),
       } as unknown as Request;
 
-      const payload: JwtPayload = { sub: 'user-id', email: 'user@example.com', role: UserRole.USER };
+      const payload: JwtPayload = {
+        sub: 'user-id',
+        email: 'user@example.com',
+        role: UserRole.USER,
+      };
 
       const result = strategy.validate(req, payload);
 

@@ -19,8 +19,6 @@ export async function createGeneratedDocument(
 }
 
 export async function getGeneratedDocuments(caseId: string): Promise<GeneratedDocument[]> {
-  const response = await apiClient.get<GeneratedDocument[]>(
-    `/cases/${caseId}/generated-documents`,
-  );
+  const response = await apiClient.get<GeneratedDocument[]>(`/cases/${caseId}/generated-documents`);
   return response.data;
 }

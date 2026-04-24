@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -20,6 +21,14 @@ export function LoginPage(): JSX.Element {
   const { login } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const message = sessionStorage.getItem('authMessage');
+    if (message) {
+      sessionStorage.removeItem('authMessage');
+      toast(message, 'info');
+    }
+  }, [toast]);
 
   const {
     register,

@@ -38,10 +38,7 @@ export class CasesController {
 
   @Version('1')
   @Post()
-  create(
-    @Request() req: AuthenticatedRequest,
-    @Body() dto: CreateCaseDto,
-  ): Promise<CaseEntity> {
+  create(@Request() req: AuthenticatedRequest, @Body() dto: CreateCaseDto): Promise<CaseEntity> {
     return this.casesService.create(req.user.userId, dto);
   }
 

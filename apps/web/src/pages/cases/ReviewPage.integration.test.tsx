@@ -66,7 +66,10 @@ const PROCESSED_DOC: Document = {
 
 function renderPage(): void {
   render(
-    <MemoryRouter initialEntries={[`/cases/${CASE_ID}/review`]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+    <MemoryRouter
+      initialEntries={[`/cases/${CASE_ID}/review`]}
+      future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+    >
       <ToastProvider>
         <Routes>
           <Route path="/cases/:caseId/review" element={<ReviewPage />} />

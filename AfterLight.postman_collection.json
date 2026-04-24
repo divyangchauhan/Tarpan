@@ -720,7 +720,15 @@
             "url": {
               "raw": "{{base_url}}/api/v1/cases/{{case_id}}/documents/{{document_id}}/process",
               "host": ["{{base_url}}"],
-              "path": ["api", "v1", "cases", "{{case_id}}", "documents", "{{document_id}}", "process"]
+              "path": [
+                "api",
+                "v1",
+                "cases",
+                "{{case_id}}",
+                "documents",
+                "{{document_id}}",
+                "process"
+              ]
             },
             "description": "Triggers AI processing (Claude Vision) for the uploaded document. Sends a message to SQS and the Lambda processor picks it up asynchronously.\n\nReturns 202 Accepted immediately. Poll Get Document or listen to WebSocket `document:status` event for completion."
           },
@@ -733,7 +741,15 @@
                 "url": {
                   "raw": "{{base_url}}/api/v1/cases/{{case_id}}/documents/{{document_id}}/process",
                   "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "cases", "{{case_id}}", "documents", "{{document_id}}", "process"]
+                  "path": [
+                    "api",
+                    "v1",
+                    "cases",
+                    "{{case_id}}",
+                    "documents",
+                    "{{document_id}}",
+                    "process"
+                  ]
                 }
               },
               "status": "Accepted",

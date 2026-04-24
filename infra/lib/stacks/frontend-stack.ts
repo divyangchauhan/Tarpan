@@ -67,10 +67,9 @@ export class FrontendStack extends cdk.Stack {
     this.distribution = new cloudfront.Distribution(this, 'Distribution', {
       comment: 'AfterLight React SPA',
       defaultBehavior: {
-        origin: cloudfront_origins.S3BucketOrigin.withOriginAccessControl(
-          this.websiteBucket,
-          { originAccessControl: oac },
-        ),
+        origin: cloudfront_origins.S3BucketOrigin.withOriginAccessControl(this.websiteBucket, {
+          originAccessControl: oac,
+        }),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
         allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
