@@ -231,7 +231,7 @@ describe('InstitutionsPage (integration)', () => {
     await user.click(screen.getByRole('button', { name: /generate selected/i }));
 
     await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent(/1 document\(s\) failed/i);
+      expect(screen.getByRole('alert')).toHaveTextContent(/failed to queue: medicare/i);
     });
 
     // Still navigates to downloads so the user can see what succeeded
