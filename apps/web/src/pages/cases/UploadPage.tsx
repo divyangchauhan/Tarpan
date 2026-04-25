@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { ArrowLeft, UploadCloud, FileText, X } from 'lucide-react';
 import { createDocument, uploadToS3, enqueueProcessing } from '@/api/documents';
 import { useToast } from '@/hooks/useToast';
@@ -12,7 +12,10 @@ const MAX_SIZE_MB = 20;
 export function UploadPage(): JSX.Element {
   const { caseId } = useParams<{ caseId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+  // If the browser history has a previous entry within the app, go back; otherwise fall back to the case list.
+  const canGoBack = location.key !== 'default';
 
   const [file, setFile] = useState<File | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -83,11 +86,11 @@ export function UploadPage(): JSX.Element {
   return (
     <div className="mx-auto max-w-2xl px-6 py-8">
       <button
-        onClick={() => void navigate('/cases')}
+        onClick={() => (canGoBack ? navigate(-1) : void navigate('/cases'))}
         className="mb-6 flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700"
       >
         <ArrowLeft className="h-4 w-4" />
-        Back to cases
+        Back
       </button>
 
       <div className="mb-8">

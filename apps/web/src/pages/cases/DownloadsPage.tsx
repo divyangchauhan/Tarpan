@@ -132,7 +132,39 @@ export function DownloadsPage(): JSX.Element {
         />
       ) : (
         <div className="space-y-3">
-          {documents.map((doc) => (
+          {(() => {
+            // Determine which entry is the newest per institution key so we can badge it.
+            const latestIdByKey = new Map<string, string>();
+            for (const doc of documents) {
+              const key = `${doc.institutionType}::${doc.institutionName ?? ''}`;
+              const current = latestIdByKey.get(key);
+              if (!current) {
+                latestIdByKey.set(key, doc.id);
+              } else {
+                const prev = documents.find((d) => d.id === current);
+                if (prev && new Date(doc.createdAt) > new Date(prev.createdAt)) {
+                  latestIdByKey.set(key, doc.id);
+                }
+              }
+            }
+            const duplicatedKeys = new Set(
+              [...latestIdByKey.entries()]
+                .filter(([key]) => documents.filter((d) => `${d.institutionType}::${d.institutionName ?? ''}` === key).length > 1)
+                .map(([key]) => key),
+            );
+
+            return documents.map((doc) => {
+              const key = `${doc.institutionType}::${doc.institutionName ?? ''}`;
+              const isDuplicated = duplicatedKeys.has(key);
+              const isLatest = latestIdByKey.get(key) === doc.id;
+              const generatedAt = new Date(doc.createdAt).toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+              });
+
+              return (
             <div
               key={doc.id}
               className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm"
@@ -140,9 +172,17 @@ export function DownloadsPage(): JSX.Element {
               <div className="flex items-center gap-3">
                 <FileText className="h-5 w-5 text-gray-400 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-medium text-gray-900">
-                    {doc.institutionName ?? INSTITUTION_LABELS[doc.institutionType]}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-gray-900">
+                      {doc.institutionName ?? INSTITUTION_LABELS[doc.institutionType]}
+                    </p>
+                    {isDuplicated && isLatest && (
+                      <span className="rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">
+                        Latest
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-0.5 text-xs text-gray-400">Generated {generatedAt}</p>
                   <Badge variant={statusBadgeVariant(doc.status)} className="mt-1">
                     {doc.status === GeneratedDocumentStatus.GENERATING && (
                       <Loader2 className="h-3 w-3 animate-spin" />
@@ -169,7 +209,9 @@ export function DownloadsPage(): JSX.Element {
               {(doc.status === GeneratedDocumentStatus.GENERATING ||
                 doc.status === GeneratedDocumentStatus.PENDING) && <Spinner size="sm" />}
             </div>
-          ))}
+              );
+            });
+          })()}
         </div>
       )}
     </div>
