@@ -98,7 +98,7 @@ This separation drives every architectural decision below.
 
 **Why Python:**
 
-- The best AI/ML library ecosystem (LangChain, Anthropic SDK, PDFPlumber, WeasyPrint, Pillow).
+- The best AI/ML library ecosystem (Anthropic SDK, PDFPlumber, WeasyPrint, Pillow, Jinja2).
 - Claude's official Python SDK is more mature and has more examples than the Node.js version for document parsing use cases.
 - PDFPlumber and Pillow are battle-tested for PDF/image preprocessing before sending to vision models.
 
@@ -127,7 +127,7 @@ Two SQS queues are used — one per workload type — both consumed by the same 
 
 | Queue                            | Purpose                                                          |
 | -------------------------------- | ---------------------------------------------------------------- |
-| `afterlight-document-processing` | Death certificate parse jobs (`{ documentId, s3Key }`)           |
+| `afterlight-document-processing` | Death certificate parse jobs (`{ documentId, caseId, s3Key }`)   |
 | `afterlight-document-generation` | PDF generation jobs (`{ generatedDocumentId, templateId, ... }`) |
 
 The Lambda handler routes messages by inspecting the body: presence of `generatedDocumentId` identifies a generation job; otherwise it is a processing job.
@@ -135,14 +135,14 @@ The Lambda handler routes messages by inspecting the body: presence of `generate
 **Why async processing for generation:**
 
 - WeasyPrint PDF rendering can take several seconds, especially for complex templates.
-- A user triggering 15 simultaneous institution letters must not wait — the API returns `202 Accepted` immediately and the frontend polls.
+- A user triggering 16 simultaneous institution letters must not wait — the API returns `202 Accepted` immediately and the frontend polls.
 - Using SQS for generation is consistent with the processing path: same worker, same retry/DLQ semantics, same back-pressure behaviour under load.
 
 **Why not direct Lambda invocation for generation:**
 
 - Direct invocation couples the API's response latency to WeasyPrint render time.
 - Direct invocation bypasses SQS retry and dead-letter-queue semantics.
-- Generating all 15 templates in parallel would require 15 simultaneous direct invocations from the API; SQS naturally queues and throttles them.
+- Generating all 16 institution letters in parallel would require 16 simultaneous direct invocations from the API; SQS naturally queues and throttles them.
 
 **Why async processing for certificate parsing:**
 
@@ -208,8 +208,8 @@ The Lambda handler routes messages by inspecting the body: presence of `generate
         │
 4. React notifies API: "file uploaded at s3://bucket/key"
         │
-5. NestJS creates a Document record (status: PENDING) and publishes
-   { documentId, s3Key } to SQS processing queue
+5. NestJS creates a Document record (status: PENDING), then updates it to
+   PROCESSING and publishes { documentId, s3Key } to SQS processing queue
         │
 6. Lambda picks up SQS message:
    a. Download file from S3
@@ -265,7 +265,7 @@ The Lambda handler routes messages by inspecting the body: presence of `generate
 ## Security Considerations
 
 - **PII handling**: Death certificates contain highly sensitive PII. S3 buckets are private; all access via pre-signed URLs with short TTLs (15 min).
-- **Encryption at rest**: S3 SSE-S3; RDS encryption enabled.
+- **Encryption at rest**: S3 SSE-S3 and RDS encryption are enabled. Application-layer encryption for SSNs before storage in `Document.extractedData` is tracked as production-readiness task `P6-09`.
 - **Auth**: JWT with short expiry + refresh tokens. All API routes behind auth guard.
 - **HIPAA posture**: Not HIPAA-covered for POC, but architecture is compatible with HIPAA-compliant AWS services when required.
 - **No logging of PII**: Lambda and NestJS structured logs must not include document content or extracted fields.
@@ -298,7 +298,7 @@ Email verification via SES on registration, forgot-password flow, account lockou
 
 ### Phase 8 — Billing & Payments
 
-Stripe customer and subscription creation at registration, free tier (1 case) vs. paid (unlimited) plan, Stripe webhook handler for lifecycle events, entitlement guard that blocks case creation over the plan limit, Stripe customer portal link in account settings, and per-case/per-document usage metrics.
+Stripe customer and subscription creation at registration, free tier (1 case - 1 pdf generatetion) vs. paid (unlimited) plan, Stripe webhook handler for lifecycle events, entitlement guard that blocks case creation over the plan limit, Stripe customer portal link in account settings, and per-case/per-document usage metrics.
 
 ### Phase 9 — Additional Institution Templates + Escalation
 

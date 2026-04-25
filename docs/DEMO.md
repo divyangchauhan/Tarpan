@@ -4,7 +4,7 @@
 
 **Audience:** Seed-stage investors  
 **Duration:** 12–15 minutes  
-**Format:** Live walkthrough of the running app + brief architecture slide
+**Format:** Live walkthrough of the running app + brief architecture overview (share `ARCHITECTURE.md`)
 
 **Core narrative:**
 
@@ -15,9 +15,9 @@
 ## Pre-Demo Checklist
 
 - [ ] App is live and reachable (CloudFront URL or localhost)
-- [ ] Full stack running: `docker compose up -d && pnpm dev` + processor worker (`cd apps/processor && ./start_worker.sh`)
+- [ ] Full stack running: `docker compose up -d && pnpm dev` (Turborepo starts the API, web app, and processor worker together)
 - [ ] Demo account seeded: `pnpm --filter api seed` — waits for real PDFs to be generated (~30s); requires the stack above to be up first
-- [ ] Demo account credentials ready: `demo@afterlight.app` / ask for password in `.env`
+- [ ] Demo account credentials ready: `demo@afterlight.app` / `AfterLight2024!` (hardcoded in `seed.ts`)
 - [ ] Backup PDF prepared and saved to `docs/sample-death-certificate.pdf` (not committed — use any synthetic death certificate scan; needed only if live upload fails)
 - [ ] Second browser tab open on the downloads page for instant "wow" moment
 
@@ -49,7 +49,7 @@ Fill in (or use the pre-seeded case):
 - Date of birth: **July 14, 1942**
 - Date of death: **November 3, 2024**
 - Place of death: **Springfield, IL**
-- SSN: **123-45-6789** _(point out: "stored encrypted, never logged")_
+- SSN: **123-45-6789** _(point out: "masked in the UI, never logged; database encryption is tracked for production hardening")_
 
 Click **Continue to upload**.
 
@@ -71,7 +71,7 @@ Click **Upload and process**.
 
 The processing screen shows live status updates.
 
-> "This is our Python Lambda running on AWS. It downloads the certificate, preprocesses it, then sends it to Claude — Anthropic's model — which extracts every structured field: name, dates, SSN, cause of death."
+> "This is our Python Lambda running on AWS. It downloads the certificate, preprocesses it, then sends it to Claude — Anthropic's model — which extracts every structured field: name, dates of birth and death, SSN, place of death, certifier details."
 
 Point to the animated steps as they complete.
 
@@ -129,7 +129,7 @@ Scroll through 2–3 different downloaded PDFs.
 
 ### 8. The Bigger Picture (2 min)
 
-Close the app and switch to the architecture slide (optional).
+Close the app and open `ARCHITECTURE.md` for reference (optional).
 
 > "Under the hood: React frontend on CloudFront, NestJS API on ECS Fargate, PostgreSQL on RDS, Python Lambda triggered by SQS. Everything is async — no blocking HTTP calls to Claude."
 
@@ -137,8 +137,8 @@ Key metrics to mention:
 
 - **500+ hours** of admin work automated to **< 10 minutes**
 - **16 institution types** supported at launch, extensible to any institution
-- **Escalation built in** — if an authority fails to act, the app guides the family through the next step: follow-up letters, regulatory complaint portals, 30-day reminders
-- **HIPAA-conscious design** — death certificates never logged, SSNs encrypted at rest, pre-signed URLs with 15-minute TTL
+- **Escalation on the roadmap (Phase 9)** — when an authority fails to act, the app will guide the family through follow-up letters, regulatory complaint portals, and 30-day reminders
+- **HIPAA-conscious design** — death certificates never logged, pre-signed URLs use a 15-minute TTL, and SSN database encryption is tracked for production hardening
 
 ---
 
@@ -146,7 +146,7 @@ Key metrics to mention:
 
 **"How accurate is the AI extraction?"**
 
-> "We've tested against a range of certificate formats — typed, handwritten, and photocopied. Claude handles all of them. Structured extraction with Pydantic validation catches any fields it can't confidently extract, and the Review screen lets families correct anything."
+> "Our current accuracy report uses synthetic death certificates generated from realistic layouts. Real death certificates have not been tested yet. Structured extraction with Pydantic validation catches fields Claude can't confidently extract, and the Review screen lets families correct anything."
 
 **"What's stopping someone from just doing this in ChatGPT?"**
 
@@ -185,7 +185,7 @@ Key metrics to mention:
 
 Send the investor:
 
-1. This deck: `docs/ARCHITECTURE.md`
+1. This document: `ARCHITECTURE.md` (repo root)
 2. GitHub repo link (if sharing)
 3. A live link to the deployed app with a personal demo account
 

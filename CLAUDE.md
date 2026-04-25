@@ -5,11 +5,73 @@ It contains project conventions, architecture notes, and workflow rules that mus
 
 ---
 
+**Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
+
+## 1. Think Before Coding
+
+**Don't assume. Don't hide confusion. Surface tradeoffs.**
+
+Before implementing:
+- State your assumptions explicitly. If uncertain, ask.
+- If multiple interpretations exist, present them - don't pick silently.
+- If a simpler approach exists, say so. Push back when warranted.
+- If something is unclear, stop. Name what's confusing. Ask.
+
+## 2. Simplicity First
+
+**Minimum code that solves the problem. Nothing speculative.**
+
+- No features beyond what was asked.
+- No abstractions for single-use code.
+- No "flexibility" or "configurability" that wasn't requested.
+- No error handling for impossible scenarios.
+- If you write 200 lines and it could be 50, rewrite it.
+
+Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
+
+## 3. Surgical Changes
+
+**Touch only what you must. Clean up only your own mess.**
+
+When editing existing code:
+- Don't "improve" adjacent code, comments, or formatting.
+- Don't refactor things that aren't broken.
+- Match existing style, even if you'd do it differently.
+- If you notice unrelated dead code, mention it - don't delete it.
+
+When your changes create orphans:
+- Remove imports/variables/functions that YOUR changes made unused.
+- Don't remove pre-existing dead code unless asked.
+
+The test: Every changed line should trace directly to the user's request.
+
+## 4. Goal-Driven Execution
+
+**Define success criteria. Loop until verified.**
+
+Transform tasks into verifiable goals:
+- "Add validation" → "Write tests for invalid inputs, then make them pass"
+- "Fix the bug" → "Write a test that reproduces it, then make it pass"
+- "Refactor X" → "Ensure tests pass before and after"
+
+For multi-step tasks, state a brief plan:
+```
+1. [Step] → verify: [check]
+2. [Step] → verify: [check]
+3. [Step] → verify: [check]
+```
+
+Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+
+---
+
+**These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+
 ## Project Summary
 
 AfterLight automates the administrative burden families face after a death:
 
-- Parses death certificates via AI (Claude API / GPT-4 Vision)
+- Parses death certificates via AI (Claude API)
 - Generates institution-specific legal letters and forms
 - Provides a guided dashboard to track notifications
 
@@ -36,7 +98,7 @@ AfterLight/
 ├── packages/
 │   └── shared/       # Shared TypeScript types and constants
 ├── infra/            # AWS CDK (TypeScript)
-└── docs/             # Additional architecture diagrams, API specs
+└── docs/             # Investor demo script and supporting documentation
 ```
 
 Package manager: **pnpm** with workspaces.
@@ -64,7 +126,7 @@ Build orchestration: **Turborepo**.
 - **Pydantic v2** for all data models and validation.
 - **Type hints** on every function signature.
 - **Ruff** for linting; **Black** for formatting. Both run in CI.
-- Handler function signature: `def handler(event: dict, context: LambdaContext) -> dict`.
+- Handler function signature: `def handler(event: dict[str, Any], context: object) -> dict[str, Any]`.
 - Never log PII (names, dates of birth, SSNs, cause of death).
 
 ### General
@@ -97,7 +159,7 @@ S3_GENERATED_DOCS_BUCKET=afterlight-generated-docs
 SQS_DOCUMENT_PROCESSING_QUEUE_URL=http://localhost:4566/000000000000/afterlight-document-processing
 SQS_DOCUMENT_GENERATION_QUEUE_URL=http://localhost:4566/000000000000/afterlight-document-generation
 INTERNAL_API_SECRET=...
-ANTHROPIC_API_KEY=...                    # Not used by API directly — only by Lambda
+ANTHROPIC_API_KEY=...                    # Not read by the API at runtime — only by the Lambda processor. Included here for completeness when running the full local stack.
 CORS_ORIGIN=http://localhost:5173
 ```
 
@@ -202,9 +264,9 @@ cd apps/processor && poetry run ruff check src tests   # Python lint separately
 pnpm turbo run test --filter=!@afterlight/processor
 
 # Database migrations (from apps/api)
-pnpm --filter api typeorm migration:generate -- -n MigrationName
-pnpm --filter api typeorm migration:run
-pnpm --filter api typeorm migration:revert
+pnpm --filter api migration:generate -- src/database/migrations/MigrationName
+pnpm --filter api migration:run
+pnpm --filter api migration:revert
 
 # CDK — deploy infrastructure to AWS
 cd infra && pnpm install && cdk bootstrap && cdk deploy --all

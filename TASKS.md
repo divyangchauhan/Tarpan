@@ -119,7 +119,7 @@
 | ID    | Task                                                             | Status | Notes                                                                         |
 | ----- | ---------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------- |
 | P5-01 | Seed script: demo case with real-looking data                    | ✅     | PR #9 — apps/api/src/database/seed.ts                                         |
-| P5-02 | Accuracy report: test parser against 20 sample certificates      | ⬜     | Requires real certificate samples — deferred                                  |
+| P5-02 | Synthetic accuracy report: test parser against generated certificates | ⬜     | Uses synthetic certificate fixtures only; real death certificates are not yet tested |
 | P5-03 | Loading performance: add per-stage timing logs to Lambda handler | ✅     | PR #10 — per-stage and total duration_ms logged for processing and generation |
 | P5-04 | Mobile responsiveness audit                                      | ✅     | PR #10 — sidebar drawer, responsive form grids, card overflow fix             |
 | P5-05 | Investor demo script and walkthrough notes                       | ✅     | PR #10 — docs/DEMO.md                                                         |
@@ -138,6 +138,7 @@
 | P6-06 | Rate limiting: NestJS throttler guard on auth + upload endpoints         | ⬜     |       |
 | P6-07 | Health check endpoints + ALB health check hardening                      | ⬜     |       |
 | P6-08 | CDK environment promotion: staging → production pipeline                 | ⬜     |       |
+| P6-09 | Encrypt SSNs before storing extracted certificate data in the database   | ⬜     | Planned PR #11 — add application-layer encryption for SSN fields in `Document.extractedData`, migration/backfill for existing rows, tests for encryption/decryption boundaries, and update `CLAUDE.md` sensitive-data guidance |
 
 ---
 
@@ -236,4 +237,13 @@
 | #6  | Bug fixes: upload flow, CORS, SQS queues                  | —                                                 |
 | #7  | React frontend + WebSocket improvements                   | P3-01 to P3-13                                    |
 | #8  | AWS CDK infrastructure                                    | P4-01 to P4-09                                    |
-| #9  | Tests, polish, demo prep                                  | P1-11, P1-12, P2-23, P2-24, P3-14, P5-01 to P5-05 |
+| #9  | Tests, polish, demo prep                                  | P1-11, P1-12, P2-23, P2-24, P3-14, P5-01          |
+| #10 | Performance logging, mobile responsiveness, demo script   | P5-03, P5-04, P5-05                                |
+
+---
+
+## PR Schedule (Planned)
+
+| PR  | Scope                                          | Phase Tasks |
+| --- | ---------------------------------------------- | ----------- |
+| #11 | Security hardening: SSN encryption at rest + `CLAUDE.md` guidance sync | P6-09       |

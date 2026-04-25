@@ -8,9 +8,9 @@ When someone dies, their family must notify Social Security, Medicare, banks, in
 
 AfterLight is the first AI-powered platform to automate this process end-to-end:
 
-1. **Upload a death certificate** — our parser (powered by GPT-4 Vision / Claude) extracts the key legal data with 95%+ accuracy.
+1. **Upload a death certificate** — our parser (powered by Claude) extracts the key legal data with 95%+ accuracy.
 2. **Generate institution-specific legal documents** — 15+ pre-built templates for Social Security, Medicare, major banks, and subscription services.
-3. **Track and manage notifications** — a guided dashboard that walks families through every required step.
+3. **Track and manage notifications** — a guided dashboard that walks families through every step.
 
 ---
 
@@ -73,12 +73,14 @@ pnpm install
 # Copy environment variables
 cp apps/api/.env.example apps/api/.env
 cp apps/web/.env.example apps/web/.env
+cp apps/processor/.env.example apps/processor/.env
+# Edit apps/processor/.env and set ANTHROPIC_API_KEY — required for document parsing
 
 # Start local services (PostgreSQL, S3-compatible storage)
 docker compose up -d
 
 # Run database migrations
-pnpm --filter api typeorm migration:run
+pnpm --filter api migration:run
 
 # Start all apps in development mode
 pnpm dev
@@ -99,7 +101,7 @@ pnpm dev
 
 ```bash
 cd infra
-npm install
+pnpm install
 cdk bootstrap aws://<ACCOUNT_ID>/<REGION>
 ```
 
@@ -141,7 +143,7 @@ DB_URL=$(aws secretsmanager get-secret-value \
   --query SecretString --output text | \
   python3 -c "import sys,json; s=json.load(sys.stdin); print(f\"postgresql://{s['username']}:{s['password']}@{s['host']}:5432/{s['dbname']}\")")
 
-DATABASE_URL=$DB_URL pnpm --filter api typeorm migration:run
+DATABASE_URL=$DB_URL pnpm --filter api migration:run
 ```
 
 **3. Build and deploy the frontend:**

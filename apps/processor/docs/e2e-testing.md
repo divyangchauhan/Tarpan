@@ -9,6 +9,8 @@ Two pipelines can be tested end-to-end locally:
 
 Both pipelines are handled by the same Lambda function (`src/handler.py`). The handler routes by message shape: messages containing `generatedDocumentId` go to the generation path; all others go to the processing path.
 
+The automated `scripts/e2e-test.sh` script does not exercise generation via SQS. Its `generate` mode direct-invokes the handler after preparing a processed document through the API, then verifies the generated PDF in S3. Use the manual generation steps below when you specifically want to exercise the SQS generation queue.
+
 ---
 
 ## Prerequisites
@@ -20,7 +22,7 @@ Both pipelines are handled by the same Lambda function (`src/handler.py`). The h
 | Poetry installed       | `poetry --version`     |
 | Real Anthropic API key | see `.env` setup below |
 
-> **Generation-only testing** (`generate` mode) does not need the NestJS API running and does not call the real Claude API — templates render from pre-supplied data.
+> **Generation mode in `scripts/e2e-test.sh` requires the NestJS API and credentials.** When run standalone, it first creates and processes a typed fixture so `extractedData` is available, which means it can call the real Claude API during setup. The PDF rendering step itself does not call Claude.
 
 ---
 
@@ -36,11 +38,14 @@ cp .env.example .env
 # Test processing pipeline only (typed + scanned fixtures)
 ./scripts/e2e-test.sh both --email user@example.com --password s3cr3t
 
-# Test generation pipeline only (no API auth needed)
-./scripts/e2e-test.sh generate
+# Test minimal-fields fixture only
+./scripts/e2e-test.sh minimal --email user@example.com --password s3cr3t
+
+# Test generation rendering via direct handler invocation
+./scripts/e2e-test.sh generate --email user@example.com --password s3cr3t
 
 # Test a specific template
-./scripts/e2e-test.sh generate --template irs-notification
+./scripts/e2e-test.sh generate --template irs-notification --email user@example.com --password s3cr3t
 
 # Test everything
 ./scripts/e2e-test.sh all --email user@example.com --password s3cr3t
@@ -56,7 +61,7 @@ cp .env.example .env
 | `scanned`  | Process scanned/image-only fixture via SQS processing queue (Claude Vision) | Yes           |
 | `minimal`  | Process minimal-fields fixture via SQS processing queue                     | Yes           |
 | `both`     | `typed` + `scanned` (default)                                               | Yes           |
-| `generate` | Send generation event to SQS generation queue, verify PDF in S3             | No            |
+| `generate` | Direct-invoke generation handler after API-backed fixture setup; verify PDF in S3 | Yes           |
 | `all`      | `both` + `generate`                                                         | Yes           |
 
 > **Queue hygiene**: the script automatically purges both SQS queues at startup to prevent stale messages from a prior run being counted as current-run completions.
@@ -136,10 +141,10 @@ aws --endpoint-url=http://localhost:4566 --region us-east-1 \
 aws --endpoint-url=http://localhost:4566 --region us-east-1 \
   sqs send-message \
   --queue-url http://localhost:4566/000000000000/afterlight-document-processing \
-  --message-body '{"documentId":"test-doc-001","s3Key":"documents/test-doc-001.pdf"}'
+  --message-body '{"documentId":"test-doc-001","caseId":"test-case-001","s3Key":"documents/test-doc-001.pdf"}'
 ```
 
-For the scanned fixture, change both IDs to `test-doc-002`.
+For the scanned fixture, change `test-doc-001` to `test-doc-002` in both `documentId` and `s3Key`.
 
 ---
 
@@ -278,7 +283,8 @@ event = {
     "executorRelationship": "Son",
 }
 
-result = handler(event, object())
+import types
+result = handler(event, types.SimpleNamespace(aws_request_id="local-test"))
 print(json.dumps(result, indent=2))
 EOF
 ```
