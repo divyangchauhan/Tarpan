@@ -47,9 +47,9 @@ const MOCK_CASE: Case = {
 };
 
 async function fillRequiredFields(user: ReturnType<typeof userEvent.setup>): Promise<void> {
-  await user.type(screen.getByLabelText(/full name/i), 'Sarah Mitchell');
-  await user.type(screen.getByLabelText(/relationship to deceased/i), 'Daughter');
+  await user.type(screen.getByLabelText(/legal name/i), 'Sarah Mitchell');
   await user.type(screen.getByLabelText(/mailing address/i), '412 Maple Ave, Springfield, IL');
+  await user.selectOptions(screen.getByLabelText(/relationship to the deceased/i), 'Child');
 }
 
 describe('NewCasePage (integration)', () => {
@@ -60,10 +60,10 @@ describe('NewCasePage (integration)', () => {
   it('renders the form with all required fields', () => {
     renderPage();
 
-    expect(screen.getByRole('heading', { name: /enter your information/i })).toBeInTheDocument();
-    expect(screen.getByLabelText(/full name/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/relationship to deceased/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /your information/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/legal name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/mailing address/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/relationship to the deceased/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /continue to upload/i })).toBeInTheDocument();
   });
 
@@ -81,7 +81,7 @@ describe('NewCasePage (integration)', () => {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           executorInfo: expect.objectContaining({
             name: 'Sarah Mitchell',
-            relationship: 'Daughter',
+            relationship: 'Child',
             address: '412 Maple Ave, Springfield, IL',
           }),
         }),
@@ -129,7 +129,7 @@ describe('NewCasePage (integration)', () => {
     renderPage();
 
     await fillRequiredFields(user);
-    await user.type(screen.getByLabelText(/email address/i), 'not-an-email');
+    await user.type(screen.getByLabelText(/email/i), 'not-an-email');
     await user.click(screen.getByRole('button', { name: /continue to upload/i }));
 
     await waitFor(() => {
@@ -145,8 +145,8 @@ describe('NewCasePage (integration)', () => {
 
     renderPage();
     await fillRequiredFields(user);
-    await user.type(screen.getByLabelText(/phone number/i), '217-555-0198');
-    await user.type(screen.getByLabelText(/email address/i), 'sarah@example.com');
+    await user.type(screen.getByLabelText(/phone/i), '217-555-0198');
+    await user.type(screen.getByLabelText(/email/i), 'sarah@example.com');
     await user.click(screen.getByRole('button', { name: /continue to upload/i }));
 
     await waitFor(() => {
