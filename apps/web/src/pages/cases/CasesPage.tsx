@@ -74,15 +74,16 @@ export function CasesPage(): JSX.Element {
             >
               <div className="min-w-0">
                 <p className="font-semibold text-gray-900 truncate">
-                  {c.deceasedInfo.firstName} {c.deceasedInfo.lastName}
+                  {c.deceasedInfo?.firstName ?? '—'} {c.deceasedInfo?.lastName ?? ''}
                 </p>
                 <p className="text-sm text-gray-500">
-                  Died{' '}
-                  {new Date(c.deceasedInfo.dateOfDeath).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                  })}
+                  {c.deceasedInfo
+                    ? `Died ${new Date(c.deceasedInfo.dateOfDeath).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                      })}`
+                    : 'Certificate not yet processed'}
                 </p>
               </div>
               <div className="flex flex-shrink-0 items-center gap-2">

@@ -131,29 +131,37 @@ export function ReviewPage(): JSX.Element {
       <section className="mb-6 rounded-xl bg-white border border-gray-200 p-6 shadow-sm">
         <h2 className="mb-4 text-base font-semibold text-gray-900">Deceased&apos;s information</h2>
         <dl>
-          <FieldRow label="First name" value={deceasedInfo.firstName} />
-          <FieldRow label="Middle name" value={deceasedInfo.middleName} />
-          <FieldRow label="Last name" value={deceasedInfo.lastName} />
+          <FieldRow label="First name" value={deceasedInfo?.firstName} />
+          <FieldRow label="Middle name" value={deceasedInfo?.middleName} />
+          <FieldRow label="Last name" value={deceasedInfo?.lastName} />
           <FieldRow
             label="Date of birth"
-            value={new Date(deceasedInfo.dateOfBirth).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })}
+            value={
+              deceasedInfo?.dateOfBirth
+                ? new Date(deceasedInfo.dateOfBirth).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })
+                : undefined
+            }
           />
           <FieldRow
             label="Date of death"
-            value={new Date(deceasedInfo.dateOfDeath).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })}
+            value={
+              deceasedInfo?.dateOfDeath
+                ? new Date(deceasedInfo.dateOfDeath).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })
+                : undefined
+            }
           />
-          <FieldRow label="Place of death" value={deceasedInfo.placeOfDeath} />
+          <FieldRow label="Place of death" value={deceasedInfo?.placeOfDeath} />
           <FieldRow
             label="SSN"
-            value={deceasedInfo.socialSecurityNumber ? '•••–••–••••' : undefined}
+            value={deceasedInfo?.socialSecurityNumber ? '•••–••–••••' : undefined}
           />
         </dl>
       </section>

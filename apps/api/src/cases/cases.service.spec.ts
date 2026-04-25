@@ -87,6 +87,7 @@ describe('CasesService', () => {
       expect(mockCaseRepository.find).toHaveBeenCalledWith({
         where: { userId: 'user-id' },
         order: { createdAt: 'DESC' },
+        relations: { generatedDocuments: true },
       });
       expect(result).toEqual([mockCase]);
     });

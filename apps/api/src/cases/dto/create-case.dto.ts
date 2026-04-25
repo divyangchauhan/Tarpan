@@ -59,9 +59,10 @@ export class ExecutorInfoDto {
 }
 
 export class CreateCaseDto {
+  @IsOptional()
   @ValidateNested()
   @Type(() => DeceasedInfoDto)
-  deceasedInfo!: DeceasedInfoDto;
+  deceasedInfo?: DeceasedInfoDto;
 
   @IsOptional()
   @ValidateNested()

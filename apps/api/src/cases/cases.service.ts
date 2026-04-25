@@ -18,7 +18,7 @@ export class CasesService {
     const caseEntity = this.caseRepository.create({
       userId,
       deceasedInfo: dto.deceasedInfo ?? null,
-      executorInfo: dto.executorInfo,
+      executorInfo: dto.executorInfo ?? null,
     });
 
     const saved = await this.caseRepository.save(caseEntity);
