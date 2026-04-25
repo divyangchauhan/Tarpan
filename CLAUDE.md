@@ -1,6 +1,7 @@
-# CLAUDE.md — Agent Context for AfterLight
+# CLAUDE.md
 
-This file is read by AI coding agents (Claude Code, etc.) at the start of every session.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 It contains project conventions, architecture notes, and workflow rules that must be followed.
 
 ---
@@ -104,6 +105,10 @@ AfterLight/
 Package manager: **pnpm** with workspaces.
 Build orchestration: **Turborepo**.
 
+### packages/shared
+
+`@afterlight/shared` is the canonical source of truth for all TypeScript types (`Case`, `Document`, `GeneratedDocument`, `ExtractedCertificateData`, `WsEvent`, enums). Both `apps/api` and `apps/web` import from it. When changing a shared type, update it here first, then fix downstream compilation errors.
+
 ---
 
 ## Coding Conventions
@@ -198,6 +203,41 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md) for full rationale. Summary:
 - **S3 pre-signed URLs**: sensitive legal documents never pass through API server memory.
 - **PostgreSQL + TypeORM**: relational model fits the data; JSONB columns for flexible extracted fields per state; repository pattern for testability.
 
+### Async Data Flow
+
+```
+User uploads death certificate
+  → API: POST /documents  (presigned URL returned)
+  → Client: PUT directly to S3
+  → API: PATCH /documents/:id/confirm  →  SQS (afterlight-document-processing)
+  → Lambda: downloads from S3, calls Claude Vision API, POSTs result to API
+  → API: PATCH /documents/:id/callback  (InternalSecretGuard)
+  → API: emits WebSocket event (document.processing.complete | failed) to user's room
+  → Client: navigates to ReviewPage on success
+
+User requests PDF generation
+  → API: POST /generated-documents  →  SQS (afterlight-document-generation)
+  → Lambda: direct invocation renders Jinja2 HTML template → WeasyPrint PDF → S3
+  → Lambda: POSTs result to API callback
+  → API: emits generation.complete WebSocket event
+  → Client: shows download link (pre-signed S3 URL)
+```
+
+### Lambda Routing
+
+`apps/processor/src/handler.py` has a single entry point. If `event["Records"]` is non-empty it's an SQS trigger → `_handle_processing`. If the event has no `Records` it's a direct Lambda invocation (generation request) → `_handle_generation`.
+
+### API Guards
+
+Two guard types protect different route classes:
+
+- `JwtAuthGuard` — validates the user's Bearer JWT. Applied to all user-facing routes.
+- `InternalSecretGuard` — validates the `x-internal-secret` header against `INTERNAL_API_SECRET`. Used exclusively on Lambda callback endpoints (`/documents/:id/callback`, `/generated-documents/:id/callback`). Never apply this to user-facing routes.
+
+### PDF Templates
+
+16 Jinja2/HTML templates live in `apps/processor/src/templates/`. Each file's stem (e.g. `ssa-721`, `bank-closure`) is the `templateId` referenced in generation requests. WeasyPrint renders them to PDF.
+
 ---
 
 ## PR Workflow
@@ -253,6 +293,10 @@ cd apps/processor && ./start_worker.sh
 # Run Python tests
 cd apps/processor && poetry run pytest
 
+# Run a single Python test file or test by name
+cd apps/processor && poetry run pytest tests/test_extractor.py
+cd apps/processor && poetry run pytest -k "test_parse_dates"
+
 # Type check all TypeScript packages (excludes processor — Python only)
 pnpm turbo run typecheck --filter=!@afterlight/processor
 
@@ -262,6 +306,15 @@ cd apps/processor && poetry run ruff check src tests   # Python lint separately
 
 # Run all tests (excludes processor — run Python tests separately above)
 pnpm turbo run test --filter=!@afterlight/processor
+
+# Run a single NestJS test file
+pnpm --filter api test -- --testPathPattern=cases.service
+
+# Run a single Vitest test file
+pnpm --filter web test -- src/pages/cases/NewCasePage.integration.test.tsx
+
+# Seed the database (from apps/api)
+pnpm --filter api seed
 
 # Database migrations (from apps/api)
 pnpm --filter api migration:generate -- src/database/migrations/MigrationName
