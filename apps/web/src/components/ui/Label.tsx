@@ -5,14 +5,21 @@ interface LabelProps extends LabelHTMLAttributes<HTMLLabelElement> {
   children: ReactNode;
 }
 
-export function Label({ required, children, className = '', ...props }: LabelProps): JSX.Element {
+export function Label({ required, children, ...props }: LabelProps): JSX.Element {
   return (
     <label
-      className={['block text-sm font-medium text-gray-700 mb-1', className].join(' ')}
+      style={{
+        display: 'block',
+        fontSize: 13,
+        fontWeight: 500,
+        color: 'var(--text-muted)',
+        letterSpacing: '0.02em',
+        marginBottom: 6,
+      }}
       {...props}
     >
       {children}
-      {required && <span className="ml-0.5 text-red-500">*</span>}
+      {required && <span style={{ marginLeft: 2, color: 'var(--error)' }}>*</span>}
     </label>
   );
 }

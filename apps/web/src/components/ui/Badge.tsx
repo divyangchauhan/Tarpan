@@ -8,22 +8,27 @@ interface BadgeProps {
   className?: string;
 }
 
-const variantClasses: Record<BadgeVariant, string> = {
-  default: 'bg-gray-100 text-gray-700',
-  success: 'bg-green-100 text-green-700',
-  warning: 'bg-yellow-100 text-yellow-800',
-  error: 'bg-red-100 text-red-700',
-  info: 'bg-brand-100 text-brand-700',
+const variantStyles: Record<BadgeVariant, React.CSSProperties> = {
+  default: { background: 'var(--border)', color: 'var(--text-muted)' },
+  success: { background: 'var(--success-bg)', color: 'var(--success)', border: '1px solid var(--success-border)' },
+  warning: { background: 'var(--warning-bg)', color: 'var(--warning)' },
+  error: { background: 'var(--error-bg)', color: 'var(--error)', border: '1px solid var(--error-border)' },
+  info: { background: 'var(--gold-light)', color: 'var(--gold)' },
 };
 
-export function Badge({ variant = 'default', children, className = '' }: BadgeProps): JSX.Element {
+export function Badge({ variant = 'default', children }: BadgeProps): JSX.Element {
   return (
     <span
-      className={[
-        'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium',
-        variantClasses[variant],
-        className,
-      ].join(' ')}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 4,
+        borderRadius: 20,
+        padding: '4px 12px',
+        fontSize: 12.5,
+        fontWeight: 500,
+        ...variantStyles[variant],
+      }}
     >
       {children}
     </span>
