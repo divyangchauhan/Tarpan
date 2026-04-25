@@ -11,6 +11,7 @@ import {
 import { CaseStatus, DeceasedInfo, ExecutorInfo } from '@afterlight/shared';
 import { UserEntity } from './user.entity';
 import { DocumentEntity } from './document.entity';
+import { GeneratedDocumentEntity } from './generated-document.entity';
 
 @Entity('cases')
 export class CaseEntity {
@@ -45,4 +46,7 @@ export class CaseEntity {
 
   @OneToMany(() => DocumentEntity, (document) => document.case)
   documents!: DocumentEntity[];
+
+  @OneToMany(() => GeneratedDocumentEntity, (gd) => gd.case)
+  generatedDocuments!: GeneratedDocumentEntity[];
 }

@@ -25,6 +25,7 @@ const mockCase: CaseEntity = {
   updatedAt: new Date(),
   user: null as unknown as import('../entities/user.entity').UserEntity,
   documents: [],
+  generatedDocuments: [],
 };
 
 const mockCaseRepository = {
@@ -86,6 +87,7 @@ describe('CasesService', () => {
       expect(mockCaseRepository.find).toHaveBeenCalledWith({
         where: { userId: 'user-id' },
         order: { createdAt: 'DESC' },
+        relations: { generatedDocuments: true },
       });
       expect(result).toEqual([mockCase]);
     });

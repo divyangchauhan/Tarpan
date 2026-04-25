@@ -29,6 +29,7 @@ export class CasesService {
   async findAll(userId: string): Promise<CaseEntity[]> {
     return this.caseRepository.find({
       where: { userId },
+      relations: { generatedDocuments: true },
       order: { createdAt: 'DESC' },
     });
   }

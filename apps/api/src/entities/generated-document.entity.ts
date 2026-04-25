@@ -50,7 +50,7 @@ export class GeneratedDocumentEntity {
   @UpdateDateColumn()
   updatedAt!: Date;
 
-  @ManyToOne(() => CaseEntity, (caseEntity) => caseEntity.documents)
+  @ManyToOne(() => CaseEntity, (caseEntity) => caseEntity.generatedDocuments)
   @JoinColumn({ name: 'case_id' })
   case!: CaseEntity;
 
