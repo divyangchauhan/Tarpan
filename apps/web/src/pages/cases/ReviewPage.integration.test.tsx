@@ -237,7 +237,12 @@ describe('ReviewPage (integration)', () => {
 
   it('navigates to institutions page when "Continue to institutions" is clicked', async () => {
     const user = userEvent.setup();
-    mockGetCase.mockResolvedValue(MOCK_CASE);
+    // Button is disabled until executor info (name, address, relationship) is saved.
+    const caseWithExecutor: Case = {
+      ...MOCK_CASE,
+      executorInfo: { name: 'Sarah Mitchell', address: '412 Maple Ave', relationship: 'Daughter' },
+    };
+    mockGetCase.mockResolvedValue(caseWithExecutor);
     mockGetDocuments.mockResolvedValue([PROCESSED_DOC]);
 
     renderPage();
@@ -252,7 +257,10 @@ describe('ReviewPage (integration)', () => {
   });
 
   it('shows "Upload death certificate" button when no processed doc exists', async () => {
-    mockGetCase.mockResolvedValue(MOCK_CASE);
+    // deceasedInfo must be null to trigger the upload empty state; if it is set the
+    // page shows the data view with a subtle re-upload link instead.
+    const caseWithoutDeceased: Case = { ...MOCK_CASE, deceasedInfo: null };
+    mockGetCase.mockResolvedValue(caseWithoutDeceased);
     mockGetDocuments.mockResolvedValue([]); // no documents
 
     renderPage();
