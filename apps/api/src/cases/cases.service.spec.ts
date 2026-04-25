@@ -25,6 +25,7 @@ const mockCase: CaseEntity = {
   updatedAt: new Date(),
   user: null as unknown as import('../entities/user.entity').UserEntity,
   documents: [],
+  generatedDocuments: [],
 };
 
 const mockCaseRepository = {
@@ -54,8 +55,13 @@ describe('CasesService', () => {
   });
 
   describe('create', () => {
-    it('should save a case and return it', async () => {
-      const dto: CreateCaseDto = { deceasedInfo: mockDeceasedInfo };
+    it('should save a case with executorInfo and return it', async () => {
+      const mockExecutorInfo = {
+        name: 'Jane Doe',
+        address: '123 Main St',
+        relationship: 'Daughter',
+      };
+      const dto: CreateCaseDto = { executorInfo: mockExecutorInfo };
 
       mockCaseRepository.create.mockReturnValue(mockCase);
       mockCaseRepository.save.mockResolvedValue(mockCase);
@@ -64,8 +70,8 @@ describe('CasesService', () => {
 
       expect(mockCaseRepository.create).toHaveBeenCalledWith({
         userId: 'user-id',
-        deceasedInfo: mockDeceasedInfo,
-        executorInfo: null,
+        deceasedInfo: null,
+        executorInfo: mockExecutorInfo,
       });
       expect(mockCaseRepository.save).toHaveBeenCalledWith(mockCase);
       expect(result).toEqual(mockCase);
@@ -154,7 +160,7 @@ describe('CasesService', () => {
           }),
         }),
       );
-      expect(result.deceasedInfo.firstName).toBe('Updated');
+      expect(result.deceasedInfo?.firstName).toBe('Updated');
     });
 
     it('should set executorInfo when provided', async () => {

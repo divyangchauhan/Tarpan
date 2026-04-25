@@ -1,3 +1,5 @@
+import type { GeneratedDocument } from './generated-document.types';
+
 export enum CaseStatus {
   ACTIVE = 'ACTIVE',
   COMPLETED = 'COMPLETED',
@@ -26,8 +28,9 @@ export interface Case {
   id: string;
   userId: string;
   status: CaseStatus;
-  deceasedInfo: DeceasedInfo;
+  deceasedInfo: DeceasedInfo | null;
   executorInfo?: ExecutorInfo;
+  generatedDocuments?: GeneratedDocument[];
   createdAt: Date;
   updatedAt: Date;
 }

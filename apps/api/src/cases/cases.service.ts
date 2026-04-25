@@ -17,8 +17,8 @@ export class CasesService {
   async create(userId: string, dto: CreateCaseDto): Promise<CaseEntity> {
     const caseEntity = this.caseRepository.create({
       userId,
-      deceasedInfo: dto.deceasedInfo,
-      executorInfo: dto.executorInfo ?? null,
+      deceasedInfo: dto.deceasedInfo ?? null,
+      executorInfo: dto.executorInfo,
     });
 
     const saved = await this.caseRepository.save(caseEntity);
@@ -29,6 +29,7 @@ export class CasesService {
   async findAll(userId: string): Promise<CaseEntity[]> {
     return this.caseRepository.find({
       where: { userId },
+      relations: { generatedDocuments: true },
       order: { createdAt: 'DESC' },
     });
   }
@@ -56,7 +57,10 @@ export class CasesService {
       const patch = Object.fromEntries(
         Object.entries(dto.deceasedInfo).filter(([, v]) => v !== undefined),
       );
-      caseEntity.deceasedInfo = { ...caseEntity.deceasedInfo, ...patch };
+      caseEntity.deceasedInfo = {
+        ...(caseEntity.deceasedInfo ?? {}),
+        ...patch,
+      } as typeof caseEntity.deceasedInfo;
     }
 
     if (dto.executorInfo !== undefined) {

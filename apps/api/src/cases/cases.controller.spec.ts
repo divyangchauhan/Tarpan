@@ -34,6 +34,7 @@ const mockCase: CaseEntity = {
   updatedAt: new Date(),
   user: null as unknown as import('../entities/user.entity').UserEntity,
   documents: [],
+  generatedDocuments: [],
 };
 
 const mockCasesService = {
@@ -68,7 +69,9 @@ describe('CasesController', () => {
 
   it('should create a case', async () => {
     mockCasesService.create.mockResolvedValue(mockCase);
-    const dto = { deceasedInfo: mockCase.deceasedInfo };
+    const dto = {
+      executorInfo: { name: 'Jane Doe', address: '123 Main St', relationship: 'Daughter' },
+    };
 
     const result = await controller.create(mockReq, dto);
 

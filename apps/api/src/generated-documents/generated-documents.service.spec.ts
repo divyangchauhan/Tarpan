@@ -44,6 +44,7 @@ const mockCase: CaseEntity = {
   updatedAt: new Date(),
   user: null as unknown as import('../entities/user.entity').UserEntity,
   documents: [],
+  generatedDocuments: [],
 };
 
 const mockDocument: DocumentEntity = {
