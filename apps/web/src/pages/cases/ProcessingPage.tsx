@@ -41,7 +41,7 @@ export function ProcessingPage(): JSX.Element {
     stepTimerRef.current = setInterval((): void => {
       setStepIdx((i) => Math.min(i + 1, STATUS_STEPS.length - 1));
     }, 1200);
-    return () => {
+    return (): void => {
       if (stepTimerRef.current) clearInterval(stepTimerRef.current);
     };
   }, []);

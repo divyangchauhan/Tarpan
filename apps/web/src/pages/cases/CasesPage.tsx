@@ -178,7 +178,7 @@ export function CasesPage(): JSX.Element {
                   cursor: isEditing ? 'default' : 'pointer',
                   transition: 'box-shadow var(--transition)',
                 }}
-                onClick={isEditing ? undefined : () => void navigate(`/cases/${c.id}/${meta.path}`)}
+                onClick={isEditing ? undefined : (): void => { void navigate(`/cases/${c.id}/${meta.path}`); }}
                 role={isEditing ? undefined : 'button'}
                 tabIndex={isEditing ? undefined : 0}
                 onKeyDown={(e) => !isEditing && e.key === 'Enter' && void navigate(`/cases/${c.id}/${meta.path}`)}

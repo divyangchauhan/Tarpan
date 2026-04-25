@@ -160,7 +160,6 @@ describe('ReviewPage (integration)', () => {
 
     // Each field has an Edit button; click the one next to Place of death
     const editButtons = screen.getAllByRole('button', { name: /^edit$/i });
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     await user.click(editButtons[5]!);
 
     // Use fireEvent.change to avoid userEvent pointer events landing on the Done
@@ -216,7 +215,6 @@ describe('ReviewPage (integration)', () => {
     });
 
     const editButtons = screen.getAllByRole('button', { name: /^edit$/i });
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     await user.click(editButtons[5]!);
 
     const input = await screen.findByDisplayValue('Springfield, IL');
@@ -228,7 +226,7 @@ describe('ReviewPage (integration)', () => {
       expect(mockUpdateCase).toHaveBeenCalledWith(
         CASE_ID,
         expect.objectContaining({
-          deceasedInfo: expect.objectContaining({ placeOfDeath: 'Chicago, IL' }),
+          deceasedInfo: expect.objectContaining({ placeOfDeath: 'Chicago, IL' }) as unknown,
         }),
       );
     });
@@ -249,7 +247,6 @@ describe('ReviewPage (integration)', () => {
     });
 
     const editButtons = screen.getAllByRole('button', { name: /^edit$/i });
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     await user.click(editButtons[5]!);
     const input = await screen.findByDisplayValue('Springfield, IL');
     fireEvent.change(input, { target: { value: 'Chicago, IL' } });
