@@ -41,23 +41,15 @@ const MOCK_CASE: Case = {
   id: 'case-123',
   userId: 'user-1',
   status: CaseStatus.ACTIVE,
-  deceasedInfo: {
-    firstName: 'Robert',
-    lastName: 'Mitchell',
-    dateOfBirth: '1942-07-14',
-    dateOfDeath: '2024-11-03',
-    placeOfDeath: 'Springfield, IL',
-  },
+  deceasedInfo: null,
   createdAt: new Date().toISOString() as unknown as Date,
   updatedAt: new Date().toISOString() as unknown as Date,
 };
 
 async function fillRequiredFields(user: ReturnType<typeof userEvent.setup>): Promise<void> {
-  await user.type(screen.getByLabelText(/first name/i), 'Robert');
-  await user.type(screen.getByLabelText(/last name/i), 'Mitchell');
-  await user.type(screen.getByLabelText(/date of birth/i), '1942-07-14');
-  await user.type(screen.getByLabelText(/date of death/i), '2024-11-03');
-  await user.type(screen.getByLabelText(/place of death/i), 'Springfield, IL');
+  await user.type(screen.getByLabelText(/full name/i), 'Sarah Mitchell');
+  await user.type(screen.getByLabelText(/relationship to deceased/i), 'Daughter');
+  await user.type(screen.getByLabelText(/mailing address/i), '412 Maple Ave, Springfield, IL');
 }
 
 describe('NewCasePage (integration)', () => {
@@ -68,12 +60,10 @@ describe('NewCasePage (integration)', () => {
   it('renders the form with all required fields', () => {
     renderPage();
 
-    expect(screen.getByRole('heading', { name: /enter deceased/i })).toBeInTheDocument();
-    expect(screen.getByLabelText(/first name/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/last name/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/date of birth/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/date of death/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/place of death/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /enter your information/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/full name/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/relationship to deceased/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/mailing address/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /continue to upload/i })).toBeInTheDocument();
   });
 
@@ -89,10 +79,10 @@ describe('NewCasePage (integration)', () => {
       expect(mockCreateCase).toHaveBeenCalledWith(
         expect.objectContaining({
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-          deceasedInfo: expect.objectContaining({
-            firstName: 'Robert',
-            lastName: 'Mitchell',
-            placeOfDeath: 'Springfield, IL',
+          executorInfo: expect.objectContaining({
+            name: 'Sarah Mitchell',
+            relationship: 'Daughter',
+            address: '412 Maple Ave, Springfield, IL',
           }),
         }),
       );
@@ -126,43 +116,47 @@ describe('NewCasePage (integration)', () => {
     await user.click(screen.getByRole('button', { name: /continue to upload/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/first name is required/i)).toBeInTheDocument();
-      expect(screen.getByText(/last name is required/i)).toBeInTheDocument();
+      expect(screen.getByText(/full name is required/i)).toBeInTheDocument();
+      expect(screen.getByText(/relationship is required/i)).toBeInTheDocument();
+      expect(screen.getByText(/mailing address is required/i)).toBeInTheDocument();
     });
 
     expect(mockCreateCase).not.toHaveBeenCalled();
   });
 
-  it('shows a format error for an invalid SSN', async () => {
+  it('shows an email validation error for an invalid email address', async () => {
     const user = userEvent.setup();
     renderPage();
 
     await fillRequiredFields(user);
-    await user.type(screen.getByLabelText(/social security/i), '123456789'); // no dashes
-
+    await user.type(screen.getByLabelText(/email address/i), 'not-an-email');
     await user.click(screen.getByRole('button', { name: /continue to upload/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/format: 123-45-6789/i)).toBeInTheDocument();
+      expect(screen.getByText(/invalid email address/i)).toBeInTheDocument();
     });
 
     expect(mockCreateCase).not.toHaveBeenCalled();
   });
 
-  it('includes SSN in the request when a valid value is provided', async () => {
+  it('includes optional phone and email in the request when provided', async () => {
     const user = userEvent.setup();
     mockCreateCase.mockResolvedValue(MOCK_CASE);
 
     renderPage();
     await fillRequiredFields(user);
-    await user.type(screen.getByLabelText(/social security/i), '123-45-6789');
+    await user.type(screen.getByLabelText(/phone number/i), '217-555-0198');
+    await user.type(screen.getByLabelText(/email address/i), 'sarah@example.com');
     await user.click(screen.getByRole('button', { name: /continue to upload/i }));
 
     await waitFor(() => {
       expect(mockCreateCase).toHaveBeenCalledWith(
         expect.objectContaining({
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-          deceasedInfo: expect.objectContaining({ socialSecurityNumber: '123-45-6789' }),
+          executorInfo: expect.objectContaining({
+            phone: '217-555-0198',
+            email: 'sarah@example.com',
+          }),
         }),
       );
     });
