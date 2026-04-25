@@ -136,7 +136,7 @@ class TestProcessingIntegration:
         assert result["batchItemFailures"] == []
         assert result["results"][0]["status"] == "PROCESSED"
         mock_api.report_success.assert_called_once_with(
-            "doc-001", _EXTRACTED.model_dump(exclude_none=True)
+            "doc-001", _EXTRACTED.model_dump(by_alias=True, exclude_none=True)
         )
 
     def test_processing_passes_correct_bytes_to_pdf_processor(self, aws: Any) -> None:

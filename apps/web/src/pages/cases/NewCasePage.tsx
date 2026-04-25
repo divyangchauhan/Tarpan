@@ -10,17 +10,11 @@ import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 
 const schema = z.object({
-  firstName: z.string().min(1, 'First name is required'),
-  middleName: z.string().optional(),
-  lastName: z.string().min(1, 'Last name is required'),
-  dateOfBirth: z.string().min(1, 'Date of birth is required'),
-  dateOfDeath: z.string().min(1, 'Date of death is required'),
-  placeOfDeath: z.string().min(1, 'Place of death is required'),
-  socialSecurityNumber: z
-    .string()
-    .regex(/^\d{3}-\d{2}-\d{4}$/, 'Format: 123-45-6789')
-    .optional()
-    .or(z.literal('')),
+  name: z.string().min(1, 'Full name is required'),
+  address: z.string().min(1, 'Mailing address is required'),
+  relationship: z.string().min(1, 'Relationship is required'),
+  phone: z.string().optional(),
+  email: z.string().email('Invalid email address').optional().or(z.literal('')),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -37,16 +31,14 @@ export function NewCasePage(): JSX.Element {
 
   async function onSubmit(data: FormData): Promise<void> {
     try {
-      const deceasedInfo = {
-        firstName: data.firstName,
-        lastName: data.lastName,
-        dateOfBirth: data.dateOfBirth,
-        dateOfDeath: data.dateOfDeath,
-        placeOfDeath: data.placeOfDeath,
-        ...(data.middleName ? { middleName: data.middleName } : {}),
-        ...(data.socialSecurityNumber ? { socialSecurityNumber: data.socialSecurityNumber } : {}),
+      const executorInfo = {
+        name: data.name,
+        address: data.address,
+        relationship: data.relationship,
+        ...(data.phone ? { phone: data.phone } : {}),
+        ...(data.email ? { email: data.email } : {}),
       };
-      const newCase = await createCase({ deceasedInfo });
+      const newCase = await createCase({ executorInfo });
       toast('Case created successfully', 'success');
       void navigate(`/cases/${newCase.id}/upload`);
     } catch {
@@ -69,11 +61,12 @@ export function NewCasePage(): JSX.Element {
           <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-600 text-xs text-white">
             1
           </span>
-          Step 1 of 3 — Deceased&apos;s information
+          Step 1 of 3 — Your information
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">Enter deceased&apos;s information</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Enter your information</h1>
         <p className="mt-1 text-sm text-gray-500">
-          This information will be used to generate official correspondence.
+          As the executor or estate representative, your details will appear on all generated
+          correspondence.
         </p>
       </div>
 
@@ -81,89 +74,69 @@ export function NewCasePage(): JSX.Element {
         <form onSubmit={(e) => void handleSubmit(onSubmit)(e)} className="space-y-5" noValidate>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <Label htmlFor="firstName" required>
-                First name
+              <Label htmlFor="name" required>
+                Full name
               </Label>
               <Input
-                id="firstName"
+                id="name"
                 type="text"
-                error={errors.firstName?.message}
-                {...register('firstName')}
+                autoComplete="name"
+                error={errors.name?.message}
+                {...register('name')}
               />
             </div>
             <div>
-              <Label htmlFor="middleName">Middle name</Label>
+              <Label htmlFor="relationship" required>
+                Relationship to deceased
+              </Label>
               <Input
-                id="middleName"
+                id="relationship"
                 type="text"
-                error={errors.middleName?.message}
-                {...register('middleName')}
+                placeholder="e.g. Spouse, Child, Executor"
+                autoComplete="off"
+                error={errors.relationship?.message}
+                {...register('relationship')}
               />
             </div>
           </div>
 
           <div>
-            <Label htmlFor="lastName" required>
-              Last name
+            <Label htmlFor="address" required>
+              Mailing address
             </Label>
             <Input
-              id="lastName"
+              id="address"
               type="text"
-              error={errors.lastName?.message}
-              {...register('lastName')}
+              placeholder="123 Main St, City, State 12345"
+              autoComplete="street-address"
+              error={errors.address?.message}
+              {...register('address')}
             />
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <Label htmlFor="dateOfBirth" required>
-                Date of birth
-              </Label>
+              <Label htmlFor="phone">Phone number</Label>
               <Input
-                id="dateOfBirth"
-                type="date"
-                error={errors.dateOfBirth?.message}
-                {...register('dateOfBirth')}
+                id="phone"
+                type="tel"
+                placeholder="555-123-4567"
+                autoComplete="tel"
+                error={errors.phone?.message}
+                {...register('phone')}
               />
             </div>
             <div>
-              <Label htmlFor="dateOfDeath" required>
-                Date of death
-              </Label>
+              <Label htmlFor="email">Email address</Label>
               <Input
-                id="dateOfDeath"
-                type="date"
-                error={errors.dateOfDeath?.message}
-                {...register('dateOfDeath')}
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                autoComplete="email"
+                error={errors.email?.message}
+                {...register('email')}
               />
             </div>
-          </div>
-
-          <div>
-            <Label htmlFor="placeOfDeath" required>
-              Place of death
-            </Label>
-            <Input
-              id="placeOfDeath"
-              type="text"
-              placeholder="City, State"
-              error={errors.placeOfDeath?.message}
-              {...register('placeOfDeath')}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="socialSecurityNumber">Social Security Number (optional)</Label>
-            <Input
-              id="socialSecurityNumber"
-              type="text"
-              placeholder="123-45-6789"
-              error={errors.socialSecurityNumber?.message}
-              {...register('socialSecurityNumber')}
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              Stored encrypted. Used only for official documents.
-            </p>
           </div>
 
           <div className="flex justify-end pt-2">

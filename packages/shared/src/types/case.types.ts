@@ -26,7 +26,7 @@ export interface Case {
   id: string;
   userId: string;
   status: CaseStatus;
-  deceasedInfo: DeceasedInfo;
+  deceasedInfo: DeceasedInfo | null;
   executorInfo?: ExecutorInfo;
   createdAt: Date;
   updatedAt: Date;

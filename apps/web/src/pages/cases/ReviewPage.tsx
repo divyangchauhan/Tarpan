@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowRight, Download, UploadCloud } from 'lucide-react';
+import { AlertCircle, ArrowRight, Download, UploadCloud } from 'lucide-react';
 import type { Case, Document } from '@afterlight/shared';
 import { DocumentStatus } from '@afterlight/shared';
 import { getCase, updateCase } from '@/api/cases';
@@ -42,6 +42,10 @@ function FieldRow({ label, value }: FieldRowProps): JSX.Element {
   );
 }
 
+function hasRequiredExecutorFields(executorInfo: Case['executorInfo']): boolean {
+  return !!(executorInfo?.name && executorInfo.address && executorInfo.relationship);
+}
+
 export function ReviewPage(): JSX.Element {
   const { caseId } = useParams<{ caseId: string }>();
   const navigate = useNavigate();
@@ -51,6 +55,7 @@ export function ReviewPage(): JSX.Element {
   const [processedDoc, setProcessedDoc] = useState<Document | null>(null);
   const [loading, setLoading] = useState(true);
   const [savingExecutor, setSavingExecutor] = useState(false);
+  const [savedExecutorInfo, setSavedExecutorInfo] = useState<Case['executorInfo']>(undefined);
 
   const {
     register,
@@ -64,6 +69,7 @@ export function ReviewPage(): JSX.Element {
     Promise.all([getCase(caseId), getDocuments(caseId)])
       .then(([c, docs]) => {
         setCaseData(c);
+        setSavedExecutorInfo(c.executorInfo);
         const processed = docs.find((d) => d.status === DocumentStatus.PROCESSED) ?? null;
         setProcessedDoc(processed);
         if (c.executorInfo) {
@@ -91,7 +97,8 @@ export function ReviewPage(): JSX.Element {
         ...(data.phone ? { phone: data.phone } : {}),
         ...(data.email ? { email: data.email } : {}),
       };
-      await updateCase(caseId, { executorInfo });
+      const updated = await updateCase(caseId, { executorInfo });
+      setSavedExecutorInfo(updated.executorInfo);
       toast('Executor information saved', 'success');
     } catch {
       toast('Failed to save executor information', 'error');
@@ -116,55 +123,129 @@ export function ReviewPage(): JSX.Element {
     );
   }
 
-  const { deceasedInfo } = caseData;
+  const extracted = processedDoc?.extractedData;
+  // extractedData may have camelCase keys (new processor output) or snake_case
+  // keys (records processed before the camelCase fix). Cast to unknown so we
+  // can read both without defeating TypeScript everywhere else.
+  const raw = extracted as Record<string, unknown> | undefined;
+  function exField(camel: string, snake: string): string | undefined {
+    if (!raw) return undefined;
+    const v = raw[camel] ?? raw[snake];
+    return typeof v === 'string' ? v : undefined;
+  }
+
+  // Merge extracted fields with case.deceasedInfo — extraction takes priority,
+  // case.deceasedInfo fills gaps (e.g. partial extraction or old-flow cases).
+  const deceased = caseData.deceasedInfo;
+  const firstName = exField('firstName', 'first_name') ?? deceased?.firstName;
+  const middleName = exField('middleName', 'middle_name') ?? deceased?.middleName;
+  const lastName = exField('lastName', 'last_name') ?? deceased?.lastName;
+  const dateOfBirth = exField('dateOfBirth', 'date_of_birth') ?? deceased?.dateOfBirth;
+  const dateOfDeath = exField('dateOfDeath', 'date_of_death') ?? deceased?.dateOfDeath;
+  const placeOfDeath = exField('placeOfDeath', 'place_of_death') ?? deceased?.placeOfDeath;
+  const hasSsn = !!(
+    exField('socialSecurityNumber', 'social_security_number') ?? deceased?.socialSecurityNumber
+  );
+  const hasDeceasedData = !!(firstName ?? lastName ?? dateOfDeath);
+  const executorComplete = hasRequiredExecutorFields(savedExecutorInfo);
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-8">
       <div className="mb-8">
+        <div className="mb-2 flex items-center gap-2 text-sm font-medium text-brand-600">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-600 text-xs text-white">
+            3
+          </span>
+          Step 3 of 3 — Review
+        </div>
         <h1 className="text-2xl font-bold text-gray-900">Review extracted information</h1>
         <p className="mt-1 text-sm text-gray-500">
-          Verify the information extracted from the death certificate, then add executor details.
+          Verify the information extracted from the death certificate and confirm your details.
         </p>
       </div>
 
-      {/* Deceased info — read-only */}
+      {/* Deceased info — from extracted certificate data or case record */}
       <section className="mb-6 rounded-xl bg-white border border-gray-200 p-6 shadow-sm">
-        <h2 className="mb-4 text-base font-semibold text-gray-900">Deceased&apos;s information</h2>
-        <dl>
-          <FieldRow label="First name" value={deceasedInfo.firstName} />
-          <FieldRow label="Middle name" value={deceasedInfo.middleName} />
-          <FieldRow label="Last name" value={deceasedInfo.lastName} />
-          <FieldRow
-            label="Date of birth"
-            value={new Date(deceasedInfo.dateOfBirth).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })}
-          />
-          <FieldRow
-            label="Date of death"
-            value={new Date(deceasedInfo.dateOfDeath).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })}
-          />
-          <FieldRow label="Place of death" value={deceasedInfo.placeOfDeath} />
-          <FieldRow
-            label="SSN"
-            value={deceasedInfo.socialSecurityNumber ? '•••–••–••••' : undefined}
-          />
-        </dl>
+        <div className="mb-4 flex items-baseline justify-between">
+          <h2 className="text-base font-semibold text-gray-900">
+            Deceased&apos;s information
+            {extracted && (
+              <span className="ml-2 text-xs font-normal text-gray-400">
+                (extracted from death certificate)
+              </span>
+            )}
+          </h2>
+          {hasDeceasedData && (
+            <button
+              type="button"
+              onClick={() => void navigate(`/cases/${caseId}/upload`)}
+              className="flex items-center gap-1 text-xs text-gray-400 hover:text-brand-600 transition-colors"
+            >
+              <UploadCloud className="h-3 w-3" />
+              Re-upload certificate
+            </button>
+          )}
+        </div>
+        {hasDeceasedData ? (
+          <dl>
+            <FieldRow label="First name" value={firstName} />
+            <FieldRow label="Middle name" value={middleName} />
+            <FieldRow label="Last name" value={lastName} />
+            <FieldRow
+              label="Date of birth"
+              value={
+                dateOfBirth
+                  ? new Date(dateOfBirth).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })
+                  : undefined
+              }
+            />
+            <FieldRow
+              label="Date of death"
+              value={
+                dateOfDeath
+                  ? new Date(dateOfDeath).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })
+                  : undefined
+              }
+            />
+            <FieldRow label="Place of death" value={placeOfDeath} />
+            <FieldRow label="SSN" value={hasSsn ? '•••–••–••••' : undefined} />
+          </dl>
+        ) : (
+          <div className="flex flex-col items-center gap-4 py-6 text-center">
+            <UploadCloud className="h-10 w-10 text-gray-300" />
+            <div>
+              <p className="text-sm font-medium text-gray-700">No death certificate uploaded yet</p>
+              <p className="mt-0.5 text-xs text-gray-400">
+                Upload a certificate so our AI can extract the deceased&apos;s information.
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => void navigate(`/cases/${caseId}/upload`)}
+            >
+              <UploadCloud className="h-4 w-4" />
+              Upload death certificate
+            </Button>
+          </div>
+        )}
       </section>
 
-      {/* Executor info — editable */}
+      {/* Executor info — editable, pre-filled from step 1 */}
       <section className="rounded-xl bg-white border border-gray-200 p-6 shadow-sm">
         <h2 className="mb-1 text-base font-semibold text-gray-900">
           Executor / Estate representative
         </h2>
         <p className="mb-5 text-sm text-gray-500">
-          This person&apos;s information will appear on all generated letters.
+          This information will appear on all generated letters. Update if anything has changed.
         </p>
 
         <form
@@ -239,12 +320,22 @@ export function ReviewPage(): JSX.Element {
             </div>
           </div>
 
+          {!executorComplete && (
+            <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+              <span>
+                Save your executor information (name, address, and relationship are required) before
+                continuing to institutions.
+              </span>
+            </div>
+          )}
+
           <div className="flex items-center justify-between pt-2">
-            <Button type="submit" variant="secondary" loading={savingExecutor}>
-              Save executor info
-            </Button>
-            {processedDoc ? (
-              <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3">
+              <Button type="submit" variant="secondary" loading={savingExecutor}>
+                Save executor info
+              </Button>
+              {processedDoc && (
                 <button
                   type="button"
                   onClick={() => void navigate(`/cases/${caseId}/downloads`)}
@@ -253,24 +344,22 @@ export function ReviewPage(): JSX.Element {
                   <Download className="h-4 w-4" />
                   View downloads
                 </button>
-                <Button
-                  type="button"
-                  onClick={() => void navigate(`/cases/${caseId}/institutions`)}
-                >
-                  Continue to institutions
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </div>
-            ) : (
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => void navigate(`/cases/${caseId}/upload`)}
-              >
-                <UploadCloud className="h-4 w-4" />
-                Upload death certificate
-              </Button>
-            )}
+              )}
+            </div>
+
+            <Button
+              type="button"
+              disabled={!executorComplete}
+              onClick={() => void navigate(`/cases/${caseId}/institutions`)}
+              title={
+                !executorComplete
+                  ? 'Save executor information (name, address, relationship) first'
+                  : undefined
+              }
+            >
+              Continue to institutions
+              <ArrowRight className="h-4 w-4" />
+            </Button>
           </div>
         </form>
       </section>

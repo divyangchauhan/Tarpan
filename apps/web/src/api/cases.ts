@@ -2,8 +2,8 @@ import type { Case, DeceasedInfo, ExecutorInfo } from '@afterlight/shared';
 import { apiClient } from './client';
 
 export interface CreateCaseRequest {
-  deceasedInfo: DeceasedInfo;
-  executorInfo?: ExecutorInfo;
+  executorInfo: ExecutorInfo;
+  deceasedInfo?: DeceasedInfo;
 }
 
 export interface UpdateCaseRequest {
