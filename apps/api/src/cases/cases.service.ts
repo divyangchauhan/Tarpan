@@ -56,7 +56,10 @@ export class CasesService {
       const patch = Object.fromEntries(
         Object.entries(dto.deceasedInfo).filter(([, v]) => v !== undefined),
       );
-      caseEntity.deceasedInfo = { ...(caseEntity.deceasedInfo ?? {}), ...patch } as typeof caseEntity.deceasedInfo;
+      caseEntity.deceasedInfo = {
+        ...(caseEntity.deceasedInfo ?? {}),
+        ...patch,
+      } as typeof caseEntity.deceasedInfo;
     }
 
     if (dto.executorInfo !== undefined) {

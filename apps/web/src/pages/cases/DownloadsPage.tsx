@@ -132,7 +132,7 @@ export function DownloadsPage(): JSX.Element {
         />
       ) : (
         <div className="space-y-3">
-          {(() => {
+          {((): JSX.Element[] => {
             // Determine which entry is the newest per institution key so we can badge it.
             const latestIdByKey = new Map<string, string>();
             for (const doc of documents) {
@@ -149,7 +149,12 @@ export function DownloadsPage(): JSX.Element {
             }
             const duplicatedKeys = new Set(
               [...latestIdByKey.entries()]
-                .filter(([key]) => documents.filter((d) => `${d.institutionType}::${d.institutionName ?? ''}` === key).length > 1)
+                .filter(
+                  ([key]) =>
+                    documents.filter(
+                      (d) => `${d.institutionType}::${d.institutionName ?? ''}` === key,
+                    ).length > 1,
+                )
                 .map(([key]) => key),
             );
 
@@ -165,50 +170,50 @@ export function DownloadsPage(): JSX.Element {
               });
 
               return (
-            <div
-              key={doc.id}
-              className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm"
-            >
-              <div className="flex items-center gap-3">
-                <FileText className="h-5 w-5 text-gray-400 flex-shrink-0" />
-                <div>
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium text-gray-900">
-                      {doc.institutionName ?? INSTITUTION_LABELS[doc.institutionType]}
-                    </p>
-                    {isDuplicated && isLatest && (
-                      <span className="rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">
-                        Latest
-                      </span>
-                    )}
-                  </div>
-                  <p className="mt-0.5 text-xs text-gray-400">Generated {generatedAt}</p>
-                  <Badge variant={statusBadgeVariant(doc.status)} className="mt-1">
-                    {doc.status === GeneratedDocumentStatus.GENERATING && (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    )}
-                    {doc.status === GeneratedDocumentStatus.FAILED && (
-                      <XCircle className="h-3 w-3" />
-                    )}
-                    {doc.status}
-                  </Badge>
-                </div>
-              </div>
-
-              {doc.status === GeneratedDocumentStatus.READY && doc.downloadUrl && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => window.open(doc.downloadUrl, '_blank')}
+                <div
+                  key={doc.id}
+                  className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm"
                 >
-                  <Download className="h-4 w-4" />
-                  Download
-                </Button>
-              )}
+                  <div className="flex items-center gap-3">
+                    <FileText className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium text-gray-900">
+                          {doc.institutionName ?? INSTITUTION_LABELS[doc.institutionType]}
+                        </p>
+                        {isDuplicated && isLatest && (
+                          <span className="rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">
+                            Latest
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-0.5 text-xs text-gray-400">Generated {generatedAt}</p>
+                      <Badge variant={statusBadgeVariant(doc.status)} className="mt-1">
+                        {doc.status === GeneratedDocumentStatus.GENERATING && (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        )}
+                        {doc.status === GeneratedDocumentStatus.FAILED && (
+                          <XCircle className="h-3 w-3" />
+                        )}
+                        {doc.status}
+                      </Badge>
+                    </div>
+                  </div>
 
-              {(doc.status === GeneratedDocumentStatus.GENERATING ||
-                doc.status === GeneratedDocumentStatus.PENDING) && <Spinner size="sm" />}
-            </div>
+                  {doc.status === GeneratedDocumentStatus.READY && doc.downloadUrl && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => window.open(doc.downloadUrl, '_blank')}
+                    >
+                      <Download className="h-4 w-4" />
+                      Download
+                    </Button>
+                  )}
+
+                  {(doc.status === GeneratedDocumentStatus.GENERATING ||
+                    doc.status === GeneratedDocumentStatus.PENDING) && <Spinner size="sm" />}
+                </div>
               );
             });
           })()}

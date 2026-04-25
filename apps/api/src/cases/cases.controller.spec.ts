@@ -68,7 +68,9 @@ describe('CasesController', () => {
 
   it('should create a case', async () => {
     mockCasesService.create.mockResolvedValue(mockCase);
-    const dto = { executorInfo: { name: 'Jane Doe', address: '123 Main St', relationship: 'Daughter' } };
+    const dto = {
+      executorInfo: { name: 'Jane Doe', address: '123 Main St', relationship: 'Daughter' },
+    };
 
     const result = await controller.create(mockReq, dto);
 
