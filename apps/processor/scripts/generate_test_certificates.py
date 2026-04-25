@@ -694,6 +694,12 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         default=42,
         help="Random seed for reproducibility (default: 42)",
     )
+    parser.add_argument(
+        "--format",
+        choices=["image", "pdf"],
+        default="image",
+        help="Output format: image (PNG/JPG with quality tiers) or pdf (default: image)",
+    )
     return parser.parse_args(argv)
 
 
@@ -710,8 +716,11 @@ def main(argv: list[str] | None = None) -> int:
     ground_truth: dict[str, dict] = {}  # filename → CertificateData dict
     tiers: list[QualityTier] = (_TIER_CYCLE * ((args.count // len(_TIER_CYCLE)) + 1))[: args.count]
 
-    print(f"Generating {args.count} synthetic certificates → {out_dir}/")
-    print(f"Quality distribution: {', '.join(f'{tiers.count(t)} {t}' for t in _TIER_CYCLE)}\n")
+    if args.format == "pdf":
+        print(f"Generating {args.count} synthetic certificates (PDF) → {out_dir}/\n")
+    else:
+        print(f"Generating {args.count} synthetic certificates → {out_dir}/")
+        print(f"Quality distribution: {', '.join(f'{tiers.count(t)} {t}' for t in _TIER_CYCLE)}\n")
 
     for i in range(args.count):
         tier = tiers[i]
@@ -723,22 +732,30 @@ def main(argv: list[str] | None = None) -> int:
         # 2. Render to PDF.
         pdf_bytes = _render_pdf(data)
 
-        # 3. Rasterise to PIL Image at tier-appropriate DPI.
-        resolution = _TIER_RESOLUTION[tier]
-        img = _pdf_to_pil(pdf_bytes, resolution)
+        if args.format == "pdf":
+            # 3a. Write PDF directly.
+            filename = f"cert_{cert_num:03d}.pdf"
+            out_path = out_dir / filename
+            out_path.write_bytes(pdf_bytes)
+            kb = len(pdf_bytes) // 1024
+            print(f"  [{cert_num:02d}/{args.count}] {filename}  ({kb} KB)")
+        else:
+            # 3b. Rasterise to PIL Image at tier-appropriate DPI.
+            resolution = _TIER_RESOLUTION[tier]
+            img = _pdf_to_pil(pdf_bytes, resolution)
 
-        # 4. Apply quality degradation and encode.
-        image_bytes, ext = _apply_tier(img, tier)
+            # 4. Apply quality degradation and encode.
+            image_bytes, ext = _apply_tier(img, tier)
 
-        # 5. Write image file.
-        filename = f"cert_{cert_num:03d}_{tier}.{ext}"
-        out_path = out_dir / filename
-        out_path.write_bytes(image_bytes)
+            # 5. Write image file.
+            filename = f"cert_{cert_num:03d}_{tier}.{ext}"
+            out_path = out_dir / filename
+            out_path.write_bytes(image_bytes)
 
-        kb = len(image_bytes) // 1024
-        print(f"  [{cert_num:02d}/{args.count}] {filename}  ({kb} KB, {resolution} DPI)")
+            kb = len(image_bytes) // 1024
+            print(f"  [{cert_num:02d}/{args.count}] {filename}  ({kb} KB, {resolution} DPI)")
 
-        # 6. Record ground truth.
+        # Record ground truth.
         ground_truth[filename] = asdict(data)
 
     # Write ground_truth.json.
