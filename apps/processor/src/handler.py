@@ -92,10 +92,11 @@ def _handle_processing(body: dict[str, Any]) -> dict[str, Any]:
             extra={"document_id": document_id, "duration_ms": int((time.monotonic() - t0) * 1000)},
         )
 
-        # P2-06: Report success to API
+        # P2-06: Report success to API — serialize with camelCase aliases so the
+        # stored JSONB matches the TypeScript ExtractedCertificateData interface.
         api_client.report_success(
             document_id,
-            extracted.model_dump(exclude_none=True),
+            extracted.model_dump(by_alias=True, exclude_none=True),
         )
 
         total_ms = int((time.monotonic() - t_start) * 1000)

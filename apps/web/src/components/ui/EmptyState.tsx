@@ -13,14 +13,28 @@ interface EmptyStateProps {
 
 export function EmptyState({ icon, title, description, action }: EmptyStateProps): JSX.Element {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 py-16 px-8 text-center">
-      {icon && <div className="mb-4 text-gray-400">{icon}</div>}
-      <h3 className="text-base font-semibold text-gray-900">{title}</h3>
-      {description && <p className="mt-1 text-sm text-gray-500">{description}</p>}
+    <div style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      padding: '80px 40px', textAlign: 'center',
+      background: 'var(--surface)', border: '1px solid var(--border)',
+      borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-sm)',
+    }}>
+      {icon && (
+        <div style={{ color: 'var(--border-strong)', marginBottom: 20 }}>{icon}</div>
+      )}
+      <h3 style={{
+        fontFamily: 'var(--serif)', fontSize: 26, fontWeight: 300, marginBottom: 10,
+        color: 'var(--text)',
+      }}>
+        {title}
+      </h3>
+      {description && (
+        <p style={{ color: 'var(--text-muted)', fontSize: 14.5, marginBottom: 28, lineHeight: 1.6 }}>
+          {description}
+        </p>
+      )}
       {action && (
-        <div className="mt-6">
-          <Button onClick={action.onClick}>{action.label}</Button>
-        </div>
+        <Button onClick={action.onClick}>{action.label}</Button>
       )}
     </div>
   );

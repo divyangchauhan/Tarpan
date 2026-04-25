@@ -27,8 +27,8 @@ export class CaseEntity {
   })
   status!: CaseStatus;
 
-  @Column({ type: 'jsonb' })
-  deceasedInfo!: DeceasedInfo;
+  @Column({ type: 'jsonb', nullable: true })
+  deceasedInfo!: DeceasedInfo | null;
 
   @Column({ type: 'jsonb', nullable: true })
   executorInfo!: ExecutorInfo | null;

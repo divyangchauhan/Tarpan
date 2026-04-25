@@ -20,6 +20,7 @@ _VALID_TOOL_INPUT: dict[str, Any] = {
     "certificate_number": "IL-2026-00482",
     "certifier_name": "Dr. Emily Chen",
     "certifier_title": "Medical Examiner",
+    "social_security_number": "123-45-6789",
 }
 
 _TEXT_CONTENT: list[dict[str, Any]] = [
@@ -52,6 +53,38 @@ class TestExtractCertificateData:
         assert result.full_name == "Robert James Smith"
         assert result.date_of_death == "2026-02-28"
         assert result.place_of_death == "Chicago, IL"
+        assert result.social_security_number == "123-45-6789"
+
+    def test_ssn_redacted_format_preserved(self) -> None:
+        redacted_input: dict[str, Any] = {
+            **_VALID_TOOL_INPUT,
+            "social_security_number": "XXX-XX-6789",
+        }
+        mock_response = _make_mock_response(redacted_input)
+
+        with patch("src.extractor.Anthropic") as mock_anthropic_cls:
+            mock_client = MagicMock()
+            mock_client.messages.create.return_value = mock_response
+            mock_anthropic_cls.return_value = mock_client
+
+            result = extract_certificate_data(_TEXT_CONTENT)
+
+        assert result.social_security_number == "XXX-XX-6789"
+
+    def test_ssn_absent_is_none(self) -> None:
+        no_ssn_input: dict[str, Any] = {
+            k: v for k, v in _VALID_TOOL_INPUT.items() if k != "social_security_number"
+        }
+        mock_response = _make_mock_response(no_ssn_input)
+
+        with patch("src.extractor.Anthropic") as mock_anthropic_cls:
+            mock_client = MagicMock()
+            mock_client.messages.create.return_value = mock_response
+            mock_anthropic_cls.return_value = mock_client
+
+            result = extract_certificate_data(_TEXT_CONTENT)
+
+        assert result.social_security_number is None
 
     def test_optional_fields_are_none_when_absent(self) -> None:
         minimal_input: dict[str, Any] = {
@@ -72,6 +105,7 @@ class TestExtractCertificateData:
         assert result.first_name is None
         assert result.middle_name is None
         assert result.certificate_number is None
+        assert result.social_security_number is None
 
     def test_passes_image_content_to_claude(self) -> None:
         image_content: list[dict[str, Any]] = [
