@@ -1,18 +1,24 @@
-import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, FolderOpen, LogOut, Moon, X } from 'lucide-react';
+import { useState } from 'react';
+import { useNavigate, useMatch, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
+import { useActiveCase } from '@/context/ActiveCaseContext';
+import { FlameIcon } from '@/components/ui/FlameIcon';
 
-interface NavItem {
-  to: string;
-  icon: JSX.Element;
-  label: string;
-}
-
-const navItems: NavItem[] = [
-  { to: '/cases', icon: <LayoutDashboard className="h-5 w-5" />, label: 'Cases' },
-  { to: '/cases/new', icon: <FolderOpen className="h-5 w-5" />, label: 'New Case' },
+const CASE_STEPS = [
+  { path: 'upload', label: 'Upload' },
+  { path: 'review', label: 'Review' },
+  { path: 'institutions', label: 'Institutions' },
+  { path: 'downloads', label: 'Downloads' },
 ];
+
+function getCurrentStepIndex(pathname: string): number {
+  if (pathname.includes('/upload') || pathname.includes('/processing')) return 0;
+  if (pathname.includes('/review')) return 1;
+  if (pathname.includes('/institutions')) return 2;
+  if (pathname.includes('/downloads')) return 3;
+  return -1;
+}
 
 interface SidebarProps {
   onClose?: () => void;
@@ -21,6 +27,14 @@ interface SidebarProps {
 export function Sidebar({ onClose }: SidebarProps): JSX.Element {
   const { logout, user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { activeCaseName } = useActiveCase();
+
+  const caseMatch = useMatch('/cases/:caseId/*');
+  const caseId = caseMatch?.params.caseId;
+  const currentStepIndex = getCurrentStepIndex(location.pathname);
+  const isProfilesPage = location.pathname === '/cases';
 
   async function handleLogout(): Promise<void> {
     try {
@@ -30,65 +44,162 @@ export function Sidebar({ onClose }: SidebarProps): JSX.Element {
     }
   }
 
+  function nav(path: string): void {
+    onClose?.();
+    void navigate(path);
+  }
+
   return (
-    <aside className="flex h-full w-64 flex-col bg-brand-950 text-white">
+    <div style={{
+      width: 220, flexShrink: 0,
+      background: 'var(--sidebar)',
+      display: 'flex', flexDirection: 'column',
+      borderRight: '1px solid var(--sidebar-border)',
+      height: '100%',
+    }}>
       {/* Logo */}
-      <div className="flex items-center justify-between px-6 py-5 border-b border-brand-800">
-        <div className="flex items-center gap-2">
-          <Moon className="h-6 w-6 text-brand-300" />
-          <span className="text-lg font-bold tracking-tight">AfterLight</span>
+      <div style={{ padding: '28px 20px 24px', borderBottom: '1px solid var(--sidebar-border)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <FlameIcon size={22} />
+          <span style={{
+            fontFamily: 'var(--serif)', fontSize: 20, fontWeight: 500,
+            color: 'white', letterSpacing: '0.01em',
+          }}>
+            AfterLight
+          </span>
         </div>
-        {/* Close button — mobile only */}
-        {onClose && (
-          <button
-            onClick={onClose}
-            className="rounded-lg p-1 text-brand-400 hover:text-white sm:hidden"
-            aria-label="Close menu"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        )}
+        <p style={{ fontSize: 11.5, color: 'var(--sidebar-muted)', marginTop: 6, lineHeight: 1.5 }}>
+          Guided estate administration
+        </p>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-1">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.to === '/cases'}
-            onClick={onClose ?? undefined}
-            className={({ isActive }) =>
-              [
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                isActive
-                  ? 'bg-brand-800 text-white'
-                  : 'text-brand-300 hover:bg-brand-900 hover:text-white',
-              ].join(' ')
-            }
-          >
-            {item.icon}
-            {item.label}
-          </NavLink>
-        ))}
-      </nav>
+      <div style={{ flex: 1, padding: '16px 12px', overflowY: 'auto' }}>
+        <NavItem
+          label="All Profiles"
+          active={isProfilesPage}
+          onClick={() => nav('/cases')}
+        />
+
+        {caseId && (
+          <div style={{ marginTop: 24 }}>
+            <div style={{
+              fontSize: 11, fontWeight: 500,
+              color: 'var(--sidebar-muted)',
+              letterSpacing: '0.08em', textTransform: 'uppercase',
+              padding: '0 4px', marginBottom: 10,
+            }}>
+              Current Profile
+            </div>
+            {activeCaseName && (
+              <div style={{
+                fontSize: 13, color: 'var(--sidebar-text)',
+                padding: '0 4px', marginBottom: 12,
+                fontStyle: 'italic', fontFamily: 'var(--serif)',
+              }}>
+                {activeCaseName}
+              </div>
+            )}
+            {CASE_STEPS.map((step, i) => {
+              const done = i < currentStepIndex;
+              const active = i === currentStepIndex;
+              const clickable = done || active;
+              return (
+                <button
+                  key={step.path}
+                  onClick={() => clickable ? nav(`/cases/${caseId}/${step.path}`) : undefined}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    width: '100%', padding: '7px 4px',
+                    border: 'none', background: 'transparent',
+                    color: active ? 'white' : done ? 'var(--sidebar-accent)' : 'oklch(38% 0.008 265)',
+                    fontSize: 13, fontFamily: 'var(--sans)',
+                    cursor: clickable ? 'pointer' : 'default',
+                    transition: 'color var(--transition)',
+                    textAlign: 'left',
+                  }}
+                >
+                  <span style={{
+                    width: 18, height: 18, borderRadius: '50%', flexShrink: 0,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 10, fontWeight: 500,
+                    background: done
+                      ? 'var(--sidebar-accent)'
+                      : active
+                        ? 'oklch(25% 0.015 265)'
+                        : 'oklch(20% 0.01 265)',
+                    border: active ? '1.5px solid oklch(45% 0.015 265)' : 'none',
+                    color: done ? 'var(--sidebar)' : active ? 'white' : 'oklch(38% 0.008 265)',
+                  }}>
+                    {done ? '✓' : i + 2}
+                  </span>
+                  {step.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
       {/* User */}
-      <div className="border-t border-brand-800 px-3 py-4">
+      <div style={{ padding: '16px 20px', borderTop: '1px solid var(--sidebar-border)' }}>
         {user && (
-          <div className="mb-3 px-3">
-            <p className="text-xs text-brand-400">Signed in as</p>
-            <p className="text-sm font-medium text-brand-200 truncate">{user.email}</p>
-          </div>
+          <>
+            <div style={{ fontSize: 13.5, color: 'var(--sidebar-text)', fontWeight: 450 }}>
+              {user.firstName ? `${user.firstName} ${user.lastName ?? ''}`.trim() : user.email}
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--sidebar-muted)', marginBottom: 12 }}>
+              {user.email}
+            </div>
+          </>
         )}
         <button
           onClick={() => void handleLogout()}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-brand-300 hover:bg-brand-900 hover:text-white transition-colors"
+          style={{
+            fontSize: 12.5, color: 'var(--sidebar-muted)',
+            background: 'none', border: 'none',
+            cursor: 'pointer', padding: 0,
+            fontFamily: 'var(--sans)',
+            transition: 'color var(--transition)',
+          }}
+          onMouseEnter={(e) => ((e.target as HTMLElement).style.color = 'var(--sidebar-text)')}
+          onMouseLeave={(e) => ((e.target as HTMLElement).style.color = 'var(--sidebar-muted)')}
         >
-          <LogOut className="h-5 w-5" />
-          Sign out
+          Sign out →
         </button>
       </div>
-    </aside>
+    </div>
+  );
+}
+
+function NavItem({
+  label,
+  active,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}): JSX.Element {
+  const [hov, setHov] = useState(false);
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 10,
+        width: '100%', padding: '9px 16px',
+        border: 'none', borderRadius: 8,
+        background: active ? 'oklch(22% 0.015 265)' : hov ? 'var(--sidebar-hover)' : 'transparent',
+        color: active ? 'white' : hov ? 'var(--sidebar-text)' : 'var(--sidebar-muted)',
+        fontSize: 13.5, fontFamily: 'var(--sans)',
+        fontWeight: active ? 500 : 400,
+        cursor: 'pointer', transition: 'all var(--transition)',
+        textAlign: 'left',
+      }}
+    >
+      {label}
+    </button>
   );
 }
