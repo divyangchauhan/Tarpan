@@ -72,7 +72,9 @@ class TestExtractCertificateData:
         assert result.social_security_number == "XXX-XX-6789"
 
     def test_ssn_absent_is_none(self) -> None:
-        no_ssn_input: dict[str, Any] = {k: v for k, v in _VALID_TOOL_INPUT.items() if k != "social_security_number"}
+        no_ssn_input: dict[str, Any] = {
+            k: v for k, v in _VALID_TOOL_INPUT.items() if k != "social_security_number"
+        }
         mock_response = _make_mock_response(no_ssn_input)
 
         with patch("src.extractor.Anthropic") as mock_anthropic_cls:

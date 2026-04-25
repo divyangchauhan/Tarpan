@@ -24,7 +24,10 @@ class ExtractedCertificateData(BaseModel):
     certificate_number: str | None = Field(None, description="Certificate registration number")
     certifier_name: str | None = Field(None, description="Name of certifying physician or official")
     certifier_title: str | None = Field(None, description="Title of certifying official")
-    social_security_number: str | None = Field(None, description="Social Security Number as it appears on the certificate (full or redacted)")
+    social_security_number: str | None = Field(
+        None,
+        description="Social Security Number as it appears on the certificate (full or redacted)",
+    )
 
 
 class GenerationRequest(BaseModel):
