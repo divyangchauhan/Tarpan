@@ -1,9 +1,9 @@
 import { useCallback, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, UploadCloud, FileText, X } from 'lucide-react';
 import { createDocument, uploadToS3, enqueueProcessing } from '@/api/documents';
 import { useToast } from '@/hooks/useToast';
 import { Button } from '@/components/ui/Button';
+import { ProgressBar } from '@/components/ui/ProgressBar';
 
 const ACCEPTED_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/tiff'];
 const ACCEPTED_EXTENSIONS = '.pdf,.jpg,.jpeg,.png,.tiff,.tif';
@@ -61,16 +61,13 @@ export function UploadPage(): JSX.Element {
   async function handleUpload(): Promise<void> {
     if (!file || !caseId) return;
     setUploading(true);
-
     try {
       const { uploadUrl, document } = await createDocument(caseId, {
         fileName: file.name,
         contentType: file.type,
       });
-
       await uploadToS3(uploadUrl, file);
       await enqueueProcessing(caseId, document.id);
-
       toast('Death certificate uploaded. Processing will begin shortly.', 'success');
       void navigate(`/cases/${caseId}/processing?documentId=${document.id}`);
     } catch {
@@ -81,93 +78,126 @@ export function UploadPage(): JSX.Element {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-6 py-8">
-      <button
-        onClick={() => void navigate('/cases')}
-        className="mb-6 flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to cases
-      </button>
+    <div style={{ padding: '56px 64px', maxWidth: 720 }}>
+      <ProgressBar stage="upload" />
 
-      <div className="mb-8">
-        <div className="mb-2 flex items-center gap-2 text-sm font-medium text-brand-600">
-          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-600 text-xs text-white">
-            2
-          </span>
-          Step 2 of 3 — Upload death certificate
-        </div>
-        <h1 className="text-2xl font-bold text-gray-900">Upload death certificate</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Our AI will extract information from the certificate automatically.
-        </p>
-      </div>
+      <h1 style={{
+        fontFamily: 'var(--serif)', fontSize: 40, fontWeight: 300,
+        marginBottom: 8, color: 'var(--text)',
+        animation: 'fadeInUp 0.35s both',
+      }}>
+        Upload the death certificate
+      </h1>
+      <p style={{
+        fontSize: 15, color: 'var(--text-muted)', marginBottom: 40,
+        lineHeight: 1.6, animation: 'fadeInUp 0.35s 60ms both',
+      }}>
+        Our AI will read the document and extract the necessary information.<br />
+        Your file is encrypted and never shared.
+      </p>
 
-      <div className="rounded-xl bg-white p-8 shadow-sm border border-gray-200 space-y-6">
-        {/* Drop zone */}
-        <div
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          className={[
-            'flex flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-12 text-center transition-colors cursor-pointer',
-            isDragOver
-              ? 'border-brand-400 bg-brand-50'
-              : 'border-gray-300 hover:border-brand-300 hover:bg-gray-50',
-          ].join(' ')}
-          onClick={() => document.getElementById('file-input')?.click()}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => e.key === 'Enter' && document.getElementById('file-input')?.click()}
-        >
-          <UploadCloud
-            className={['h-12 w-12 mb-3', isDragOver ? 'text-brand-500' : 'text-gray-400'].join(
-              ' ',
-            )}
-          />
-          <p className="text-sm font-medium text-gray-700">
-            Drag and drop your death certificate here
-          </p>
-          <p className="mt-1 text-xs text-gray-500">
-            PDF, JPEG, PNG, or TIFF — max {MAX_SIZE_MB} MB
-          </p>
-          <input
-            id="file-input"
-            type="file"
-            accept={ACCEPTED_EXTENSIONS}
-            onChange={handleInputChange}
-            className="hidden"
-          />
-        </div>
-
-        {/* Selected file */}
-        {file && (
-          <div className="flex items-center gap-3 rounded-lg bg-brand-50 border border-brand-200 px-4 py-3">
-            <FileText className="h-5 w-5 text-brand-600 flex-shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-brand-900 truncate">{file.name}</p>
-              <p className="text-xs text-brand-600">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+      <div style={{
+        background: 'var(--surface)', border: '1px solid var(--border)',
+        borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-sm)',
+        padding: 8, animation: 'fadeInUp 0.35s 100ms both',
+      }}>
+        {!file ? (
+          <div
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onClick={() => document.getElementById('file-input')?.click()}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => e.key === 'Enter' && document.getElementById('file-input')?.click()}
+            style={{
+              border: `2px dashed ${isDragOver ? 'var(--gold)' : 'var(--border-strong)'}`,
+              borderRadius: 12, padding: '64px 40px',
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', textAlign: 'center',
+              background: isDragOver ? 'var(--gold-light)' : 'var(--cream)',
+              transition: 'all var(--transition)',
+            }}
+          >
+            <div style={{
+              width: 56, height: 56, borderRadius: '50%',
+              background: 'var(--gold-light)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              marginBottom: 20, fontSize: 24,
+            }}>
+              📄
             </div>
-            <button
-              onClick={() => setFile(null)}
-              className="text-brand-500 hover:text-brand-700"
-              aria-label="Remove file"
-            >
-              <X className="h-4 w-4" />
-            </button>
+            <h3 style={{
+              fontFamily: 'var(--serif)', fontSize: 22, fontWeight: 400,
+              marginBottom: 8, color: 'var(--text)',
+            }}>
+              {isDragOver ? 'Drop it here' : 'Drag & drop your certificate'}
+            </h3>
+            <p style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 20 }}>
+              or click to browse your files
+            </p>
+            <span style={{
+              fontSize: 12.5, color: 'var(--text-faint)',
+              background: 'var(--border)', padding: '4px 12px', borderRadius: 20,
+            }}>
+              PDF, JPG, or PNG accepted
+            </span>
+            <input
+              id="file-input"
+              type="file"
+              accept={ACCEPTED_EXTENSIONS}
+              onChange={handleInputChange}
+              style={{ display: 'none' }}
+            />
+          </div>
+        ) : (
+          <div style={{ padding: '24px 28px' }}>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 16,
+              padding: '16px 20px', background: 'var(--gold-light)',
+              borderRadius: 10, marginBottom: 24,
+            }}>
+              <div style={{
+                width: 40, height: 40, borderRadius: 8,
+                background: 'white', display: 'flex',
+                alignItems: 'center', justifyContent: 'center', fontSize: 20,
+              }}>
+                📄
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text)', marginBottom: 2 }}>
+                  {file.name}
+                </div>
+                <div style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>
+                  {(file.size / 1024).toFixed(1)} KB
+                </div>
+              </div>
+              <button
+                onClick={() => setFile(null)}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  fontSize: 18, color: 'var(--text-faint)', padding: 4,
+                  borderRadius: 4, transition: 'color var(--transition)',
+                }}
+              >
+                ✕
+              </button>
+            </div>
+            <p style={{ fontSize: 13.5, color: 'var(--text-muted)', marginBottom: 24, lineHeight: 1.6 }}>
+              Ready to upload. Our AI will extract the deceased&apos;s name, dates, and other
+              information from this certificate.
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+              <Button variant="secondary" onClick={() => setFile(null)}>
+                Remove file
+              </Button>
+              <Button onClick={() => void handleUpload()} loading={uploading}>
+                Upload & Continue →
+              </Button>
+            </div>
           </div>
         )}
-
-        <div className="flex justify-end">
-          <Button
-            onClick={() => void handleUpload()}
-            disabled={!file}
-            loading={uploading}
-            size="lg"
-          >
-            Upload and process
-          </Button>
-        </div>
       </div>
     </div>
   );

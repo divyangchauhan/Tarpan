@@ -7,7 +7,6 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { X, CheckCircle, AlertCircle, Info } from 'lucide-react';
 
 type ToastVariant = 'success' | 'error' | 'info';
 
@@ -25,18 +24,21 @@ export const ToastContext = createContext<ToastContextValue | null>(null);
 
 const DISMISS_AFTER_MS = 4000;
 
-const variantStyles: Record<ToastVariant, { bg: string; icon: ReactNode }> = {
+const variantConfig: Record<ToastVariant, { icon: string; borderColor: string; bg: string }> = {
   success: {
-    bg: 'bg-green-50 border-green-200 text-green-800',
-    icon: <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />,
+    icon: '✓',
+    borderColor: 'var(--success-border)',
+    bg: 'oklch(99.5% 0.003 75)',
   },
   error: {
-    bg: 'bg-red-50 border-red-200 text-red-800',
-    icon: <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />,
+    icon: '✕',
+    borderColor: 'var(--error-border)',
+    bg: 'oklch(99% 0.01 25)',
   },
   info: {
-    bg: 'bg-brand-50 border-brand-200 text-brand-800',
-    icon: <Info className="h-5 w-5 text-brand-500 flex-shrink-0" />,
+    icon: 'ℹ',
+    borderColor: 'var(--gold-mid)',
+    bg: 'oklch(99.5% 0.003 75)',
   },
 };
 
@@ -55,24 +57,37 @@ function ToastItem({ toast, onDismiss }: ToastItemProps): JSX.Element {
     };
   }, [toast.id, onDismiss]);
 
-  const { bg, icon } = variantStyles[toast.variant];
+  const { icon, borderColor, bg } = variantConfig[toast.variant];
 
   return (
     <div
-      className={[
-        'flex items-start gap-3 rounded-lg border p-4 shadow-md max-w-sm w-full',
-        bg,
-      ].join(' ')}
       role="alert"
+      style={{
+        display: 'flex', alignItems: 'center', gap: 12,
+        background: bg,
+        border: `1px solid ${borderColor}`,
+        borderRadius: 12, padding: '14px 18px',
+        boxShadow: 'var(--shadow-lg)',
+        minWidth: 280, maxWidth: 380,
+        animation: 'toastIn 0.32s cubic-bezier(0.4,0,0.2,1) both',
+      }}
     >
-      {icon}
-      <p className="flex-1 text-sm font-medium">{toast.message}</p>
+      <span style={{ fontSize: 18 }}>{icon}</span>
+      <span style={{ fontSize: 13.5, color: 'var(--text)', lineHeight: 1.4, flex: 1 }}>
+        {toast.message}
+      </span>
       <button
         onClick={() => onDismiss(toast.id)}
-        className="ml-auto -mt-0.5 text-current opacity-60 hover:opacity-100"
         aria-label="Dismiss"
+        style={{
+          background: 'none', border: 'none', cursor: 'pointer',
+          color: 'var(--text-faint)', fontSize: 16, padding: 2,
+          lineHeight: 1, transition: 'color var(--transition)',
+        }}
+        onMouseEnter={(e) => ((e.target as HTMLElement).style.color = 'var(--text)')}
+        onMouseLeave={(e) => ((e.target as HTMLElement).style.color = 'var(--text-faint)')}
       >
-        <X className="h-4 w-4" />
+        ✕
       </button>
     </div>
   );
@@ -99,9 +114,15 @@ export function ToastProvider({ children }: ToastProviderProps): JSX.Element {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
+      <div style={{
+        position: 'fixed', bottom: 24, right: 24, zIndex: 9999,
+        display: 'flex', flexDirection: 'column', gap: 10,
+        pointerEvents: 'none',
+      }}>
         {toasts.map((t) => (
-          <ToastItem key={t.id} toast={t} onDismiss={dismiss} />
+          <div key={t.id} style={{ pointerEvents: 'all' }}>
+            <ToastItem toast={t} onDismiss={dismiss} />
+          </div>
         ))}
       </div>
     </ToastContext.Provider>

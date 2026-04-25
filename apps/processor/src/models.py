@@ -1,10 +1,17 @@
 """Pydantic models for document processing."""
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
+from pydantic.alias_generators import to_camel
 
 
 class ExtractedCertificateData(BaseModel):
     """Structured data extracted from a death certificate by Claude Vision."""
+
+    # Use camelCase aliases so model_dump(by_alias=True) matches the TypeScript
+    # ExtractedCertificateData interface.  populate_by_name=True lets Pydantic
+    # also accept the snake_case attribute names directly (used when constructing
+    # from Claude tool output and when validating API generation-event payloads).
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
 
     full_name: str = Field(description="Full legal name of the deceased")
     first_name: str | None = Field(None, description="First/given name")
@@ -17,6 +24,10 @@ class ExtractedCertificateData(BaseModel):
     certificate_number: str | None = Field(None, description="Certificate registration number")
     certifier_name: str | None = Field(None, description="Name of certifying physician or official")
     certifier_title: str | None = Field(None, description="Title of certifying official")
+    social_security_number: str | None = Field(
+        None,
+        description="Social Security Number as it appears on the certificate (full or redacted)",
+    )
 
 
 class GenerationRequest(BaseModel):

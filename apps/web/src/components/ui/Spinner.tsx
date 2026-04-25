@@ -1,24 +1,26 @@
 interface SpinnerProps {
   size?: 'sm' | 'md' | 'lg';
-  className?: string;
+  color?: string;
 }
 
-const sizeClasses = {
-  sm: 'h-4 w-4',
-  md: 'h-6 w-6',
-  lg: 'h-10 w-10',
-};
+const sizePx = { sm: 16, md: 24, lg: 40 };
 
-export function Spinner({ size = 'md', className = '' }: SpinnerProps): JSX.Element {
+export function Spinner({ size = 'md', color = 'var(--gold)' }: SpinnerProps): JSX.Element {
+  const px = sizePx[size];
   return (
     <span
       role="status"
-      className={[
-        'inline-block animate-spin rounded-full border-2 border-brand-200 border-t-brand-600',
-        sizeClasses[size],
-        className,
-      ].join(' ')}
       aria-label="Loading"
+      className="animate-spin"
+      style={{
+        display: 'inline-block',
+        width: px,
+        height: px,
+        border: `2px solid ${color}30`,
+        borderTopColor: color,
+        borderRadius: '50%',
+        flexShrink: 0,
+      }}
     />
   );
 }

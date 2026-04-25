@@ -73,6 +73,15 @@ _EXTRACTION_TOOL: dict[str, Any] = {
                 "type": "string",
                 "description": "Title of certifying official (e.g. Medical Examiner)",
             },
+            "social_security_number": {
+                "type": "string",
+                "description": (
+                    "Social Security Number as it appears on the certificate. "
+                    "Preserve the exact format — full (e.g. '123-45-6789') or "
+                    "redacted (e.g. 'XXX-XX-6789', '***-**-6789', or '000-00-6789'). "
+                    "Do not reformat or normalize the value."
+                ),
+            },
         },
         "required": ["full_name", "last_name", "date_of_death", "place_of_death"],
     },

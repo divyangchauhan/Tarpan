@@ -2,8 +2,128 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --cream: oklch(97.2% 0.007 75);
+  --surface: oklch(99.5% 0.003 75);
+  --border: oklch(91% 0.007 75);
+  --border-strong: oklch(83% 0.01 75);
+  --text: oklch(16% 0.01 75);
+  --text-muted: oklch(48% 0.01 75);
+  --text-faint: oklch(70% 0.008 75);
+  --gold: oklch(62% 0.13 68);
+  --gold-light: oklch(94% 0.04 75);
+  --gold-mid: oklch(82% 0.07 72);
+  --sidebar: oklch(13.5% 0.012 265);
+  --sidebar-hover: oklch(18% 0.01 265);
+  --sidebar-text: oklch(83% 0.008 265);
+  --sidebar-muted: oklch(52% 0.008 265);
+  --sidebar-accent: oklch(62% 0.13 68);
+  --sidebar-border: oklch(20% 0.01 265);
+  --success: oklch(58% 0.13 155);
+  --success-bg: oklch(96% 0.04 155);
+  --success-border: oklch(85% 0.07 155);
+  --error: oklch(55% 0.18 25);
+  --error-bg: oklch(97% 0.03 25);
+  --error-border: oklch(85% 0.08 25);
+  --warning: oklch(62% 0.15 55);
+  --warning-bg: oklch(97% 0.04 75);
+  --radius: 10px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 1px 3px oklch(0% 0 0 / 0.05), 0 2px 8px oklch(0% 0 0 / 0.04);
+  --shadow: 0 2px 8px oklch(0% 0 0 / 0.07), 0 8px 32px oklch(0% 0 0 / 0.05);
+  --shadow-lg: 0 8px 24px oklch(0% 0 0 / 0.1), 0 24px 64px oklch(0% 0 0 / 0.07);
+  --transition: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+  --serif: 'Cormorant Garamond', Georgia, serif;
+  --sans: 'DM Sans', system-ui, sans-serif;
+}
+
 @layer base {
-  html {
-    font-family: 'Inter', system-ui, sans-serif;
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html, body, #root {
+    height: 100%;
+    width: 100%;
+  }
+
+  body {
+    font-family: var(--sans);
+    background: var(--cream);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  button {
+    font-family: var(--sans);
+  }
+
+  input, textarea, select {
+    font-family: var(--sans);
+  }
+
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border-radius: 3px;
   }
 }
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(20px) scale(0.96); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@keyframes toastOut {
+  from { opacity: 1; transform: translateX(0) scale(1); }
+  to { opacity: 0; transform: translateX(20px) scale(0.96); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes spin-gold {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes shimmer {
+  from { background-position: -200% center; }
+  to { background-position: 200% center; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.page-enter {
+  animation: fadeInUp 0.35s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.stagger-1 { animation-delay: 60ms; }
+.stagger-2 { animation-delay: 120ms; }
+.stagger-3 { animation-delay: 180ms; }
+.stagger-4 { animation-delay: 240ms; }

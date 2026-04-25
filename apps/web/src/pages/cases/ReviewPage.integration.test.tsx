@@ -2,7 +2,7 @@
  * ReviewPage integration test — uses real ToastProvider,
  * mocks only the cases and documents API.
  */
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { vi } from 'vitest';
@@ -47,6 +47,7 @@ const MOCK_CASE: Case = {
     dateOfBirth: '1942-07-14',
     dateOfDeath: '2024-11-03',
     placeOfDeath: 'Springfield, IL',
+    socialSecurityNumber: '123-45-6789',
   },
   createdAt: new Date().toISOString() as unknown as Date,
   updatedAt: new Date().toISOString() as unknown as Date,
@@ -87,7 +88,6 @@ describe('ReviewPage (integration)', () => {
   // ── Loading ─────────────────────────────────────────────────────────────────
 
   it('shows a spinner while loading', () => {
-    // Keep promise pending to observe the loading state
     mockGetCase.mockReturnValue(new Promise(() => {}));
     mockGetDocuments.mockReturnValue(new Promise(() => {}));
 
@@ -96,7 +96,9 @@ describe('ReviewPage (integration)', () => {
     expect(screen.getByRole('status', { name: /loading/i })).toBeInTheDocument();
   });
 
-  it('renders deceased information and executor form after loading', async () => {
+  // ── Deceased fields ───────────────────────────────────────────────────────────
+
+  it('renders deceased information after loading', async () => {
     mockGetCase.mockResolvedValue(MOCK_CASE);
     mockGetDocuments.mockResolvedValue([PROCESSED_DOC]);
 
@@ -109,42 +111,98 @@ describe('ReviewPage (integration)', () => {
     expect(screen.getByText('James')).toBeInTheDocument();
     expect(screen.getByText('Mitchell')).toBeInTheDocument();
     expect(screen.getByText('Springfield, IL')).toBeInTheDocument();
-
-    // Executor form
-    expect(screen.getByLabelText(/full name/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/relationship to deceased/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/mailing address/i)).toBeInTheDocument();
   });
 
-  // ── Executor form pre-population ─────────────────────────────────────────────
-
-  it('pre-populates the executor form when executorInfo is already set', async () => {
-    const caseWithExecutor: Case = {
-      ...MOCK_CASE,
-      executorInfo: {
-        name: 'Sarah Mitchell',
-        address: '412 Maple Ave, Springfield, IL',
-        relationship: 'Daughter',
-        phone: '217-555-0198',
-        email: 'sarah@example.com',
-      },
-    };
-    mockGetCase.mockResolvedValue(caseWithExecutor);
+  it('shows the uploaded document preview when a processed doc exists', async () => {
+    mockGetCase.mockResolvedValue(MOCK_CASE);
     mockGetDocuments.mockResolvedValue([PROCESSED_DOC]);
 
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByDisplayValue('Sarah Mitchell')).toBeInTheDocument();
+      expect(screen.getByText(/uploaded document/i)).toBeInTheDocument();
     });
 
-    expect(screen.getByDisplayValue('412 Maple Ave, Springfield, IL')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Daughter')).toBeInTheDocument();
+    expect(screen.getByText('death-cert.pdf')).toBeInTheDocument();
   });
 
-  // ── Executor form save ────────────────────────────────────────────────────────
+  // ── SSN reveal ────────────────────────────────────────────────────────────────
 
-  it('saves executor info and shows a success toast', async () => {
+  it('masks SSN by default and reveals it on button click', async () => {
+    const user = userEvent.setup();
+    mockGetCase.mockResolvedValue(MOCK_CASE);
+    mockGetDocuments.mockResolvedValue([PROCESSED_DOC]);
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText(/•••–••–6789/)).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: /reveal/i }));
+
+    expect(screen.getByText('123-45-6789')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /hide/i })).toBeInTheDocument();
+  });
+
+  // ── Inline field editing ──────────────────────────────────────────────────────
+
+  it('allows inline editing of a field', async () => {
+    const user = userEvent.setup();
+    mockGetCase.mockResolvedValue(MOCK_CASE);
+    mockGetDocuments.mockResolvedValue([PROCESSED_DOC]);
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('Springfield, IL')).toBeInTheDocument();
+    });
+
+    // Each field has an Edit button; click the one next to Place of death
+    const editButtons = screen.getAllByRole('button', { name: /^edit$/i });
+    await user.click(editButtons[5]!);
+
+    // Use fireEvent.change to avoid userEvent pointer events landing on the Done
+    // button at JSDOM's universal (0,0) coordinates.
+    const input = await screen.findByDisplayValue('Springfield, IL');
+    fireEvent.change(input, { target: { value: 'Chicago, IL' } });
+
+    await user.click(screen.getByRole('button', { name: /done/i }));
+
+    expect(screen.getByText('Chicago, IL')).toBeInTheDocument();
+  });
+
+  // ── Navigation / continue ─────────────────────────────────────────────────────
+
+  it('shows "Confirm & Continue" button when deceased data exists', async () => {
+    mockGetCase.mockResolvedValue(MOCK_CASE);
+    mockGetDocuments.mockResolvedValue([PROCESSED_DOC]);
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /confirm & continue/i })).toBeInTheDocument();
+    });
+  });
+
+  it('navigates directly to institutions when there are no edits', async () => {
+    const user = userEvent.setup();
+    mockGetCase.mockResolvedValue(MOCK_CASE);
+    mockGetDocuments.mockResolvedValue([PROCESSED_DOC]);
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /confirm & continue/i })).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: /confirm & continue/i }));
+
+    expect(mockNavigate).toHaveBeenCalledWith(`/cases/${CASE_ID}/institutions`);
+    expect(mockUpdateCase).not.toHaveBeenCalled();
+  });
+
+  it('saves field edits via updateCase before navigating', async () => {
     const user = userEvent.setup();
     mockGetCase.mockResolvedValue(MOCK_CASE);
     mockGetDocuments.mockResolvedValue([PROCESSED_DOC]);
@@ -153,54 +211,30 @@ describe('ReviewPage (integration)', () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByLabelText(/full name/i)).toBeInTheDocument();
+      expect(screen.getByText('Springfield, IL')).toBeInTheDocument();
     });
 
-    await user.type(screen.getByLabelText(/full name/i), 'Sarah Mitchell');
-    await user.type(screen.getByLabelText(/relationship to deceased/i), 'Daughter');
-    await user.type(screen.getByLabelText(/mailing address/i), '412 Maple Ave');
+    const editButtons = screen.getAllByRole('button', { name: /^edit$/i });
+    await user.click(editButtons[5]!);
 
-    await user.click(screen.getByRole('button', { name: /save executor/i }));
+    const input = await screen.findByDisplayValue('Springfield, IL');
+    fireEvent.change(input, { target: { value: 'Chicago, IL' } });
+
+    await user.click(screen.getByRole('button', { name: /confirm & continue/i }));
 
     await waitFor(() => {
       expect(mockUpdateCase).toHaveBeenCalledWith(
         CASE_ID,
         expect.objectContaining({
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-          executorInfo: expect.objectContaining({
-            name: 'Sarah Mitchell',
-            relationship: 'Daughter',
-          }),
+          deceasedInfo: expect.objectContaining({ placeOfDeath: 'Chicago, IL' }) as unknown,
         }),
       );
     });
 
-    await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent(/executor information saved/i);
-    });
+    expect(mockNavigate).toHaveBeenCalledWith(`/cases/${CASE_ID}/institutions`);
   });
 
-  it('shows a validation error when required executor fields are empty', async () => {
-    const user = userEvent.setup();
-    mockGetCase.mockResolvedValue(MOCK_CASE);
-    mockGetDocuments.mockResolvedValue([PROCESSED_DOC]);
-
-    renderPage();
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /save executor/i })).toBeInTheDocument();
-    });
-
-    await user.click(screen.getByRole('button', { name: /save executor/i }));
-
-    await waitFor(() => {
-      expect(screen.getByText(/name is required/i)).toBeInTheDocument();
-    });
-
-    expect(mockUpdateCase).not.toHaveBeenCalled();
-  });
-
-  it('shows an error toast when saving executor info fails', async () => {
+  it('shows an error toast and stays on page when saving edits fails', async () => {
     const user = userEvent.setup();
     mockGetCase.mockResolvedValue(MOCK_CASE);
     mockGetDocuments.mockResolvedValue([PROCESSED_DOC]);
@@ -209,60 +243,38 @@ describe('ReviewPage (integration)', () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByLabelText(/full name/i)).toBeInTheDocument();
+      expect(screen.getByText('Springfield, IL')).toBeInTheDocument();
     });
 
-    await user.type(screen.getByLabelText(/full name/i), 'Sarah');
-    await user.type(screen.getByLabelText(/relationship to deceased/i), 'Daughter');
-    await user.type(screen.getByLabelText(/mailing address/i), '123 Main St');
-    await user.click(screen.getByRole('button', { name: /save executor/i }));
+    const editButtons = screen.getAllByRole('button', { name: /^edit$/i });
+    await user.click(editButtons[5]!);
+    const input = await screen.findByDisplayValue('Springfield, IL');
+    fireEvent.change(input, { target: { value: 'Chicago, IL' } });
+
+    await user.click(screen.getByRole('button', { name: /confirm & continue/i }));
 
     await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent(/failed to save executor/i);
+      expect(screen.getByRole('alert')).toHaveTextContent(/failed to save field edits/i);
     });
+
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 
-  // ── Navigation ────────────────────────────────────────────────────────────────
+  // ── Empty state ───────────────────────────────────────────────────────────────
 
-  it('shows "Continue to institutions" button when a processed doc exists', async () => {
-    mockGetCase.mockResolvedValue(MOCK_CASE);
-    mockGetDocuments.mockResolvedValue([PROCESSED_DOC]);
+  it('shows "Upload death certificate" button when no deceased data exists', async () => {
+    const caseWithoutDeceased: Case = { ...MOCK_CASE, deceasedInfo: null };
+    mockGetCase.mockResolvedValue(caseWithoutDeceased);
+    mockGetDocuments.mockResolvedValue([]);
 
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /continue to institutions/i })).toBeInTheDocument();
+      expect(screen.getAllByRole('button', { name: /upload death certificate/i })).toHaveLength(2);
     });
   });
 
-  it('navigates to institutions page when "Continue to institutions" is clicked', async () => {
-    const user = userEvent.setup();
-    mockGetCase.mockResolvedValue(MOCK_CASE);
-    mockGetDocuments.mockResolvedValue([PROCESSED_DOC]);
-
-    renderPage();
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /continue to institutions/i })).toBeInTheDocument();
-    });
-
-    await user.click(screen.getByRole('button', { name: /continue to institutions/i }));
-
-    expect(mockNavigate).toHaveBeenCalledWith(`/cases/${CASE_ID}/institutions`);
-  });
-
-  it('shows "Upload death certificate" button when no processed doc exists', async () => {
-    mockGetCase.mockResolvedValue(MOCK_CASE);
-    mockGetDocuments.mockResolvedValue([]); // no documents
-
-    renderPage();
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /upload death certificate/i })).toBeInTheDocument();
-    });
-  });
-
-  it('shows an error toast and "not found" message when case load fails', async () => {
+  it('shows an error toast when case load fails', async () => {
     mockGetCase.mockRejectedValue(new Error('404'));
     mockGetDocuments.mockRejectedValue(new Error('404'));
 

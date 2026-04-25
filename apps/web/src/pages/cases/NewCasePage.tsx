@@ -2,25 +2,19 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
 import { createCase } from '@/api/cases';
 import { useToast } from '@/hooks/useToast';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
+import { ProgressBar } from '@/components/ui/ProgressBar';
 
 const schema = z.object({
-  firstName: z.string().min(1, 'First name is required'),
-  middleName: z.string().optional(),
-  lastName: z.string().min(1, 'Last name is required'),
-  dateOfBirth: z.string().min(1, 'Date of birth is required'),
-  dateOfDeath: z.string().min(1, 'Date of death is required'),
-  placeOfDeath: z.string().min(1, 'Place of death is required'),
-  socialSecurityNumber: z
-    .string()
-    .regex(/^\d{3}-\d{2}-\d{4}$/, 'Format: 123-45-6789')
-    .optional()
-    .or(z.literal('')),
+  name: z.string().min(1, 'Full name is required'),
+  address: z.string().min(1, 'Mailing address is required'),
+  relationship: z.string().min(1, 'Relationship is required'),
+  phone: z.string().optional(),
+  email: z.string().email('Invalid email address').optional().or(z.literal('')),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -37,16 +31,14 @@ export function NewCasePage(): JSX.Element {
 
   async function onSubmit(data: FormData): Promise<void> {
     try {
-      const deceasedInfo = {
-        firstName: data.firstName,
-        lastName: data.lastName,
-        dateOfBirth: data.dateOfBirth,
-        dateOfDeath: data.dateOfDeath,
-        placeOfDeath: data.placeOfDeath,
-        ...(data.middleName ? { middleName: data.middleName } : {}),
-        ...(data.socialSecurityNumber ? { socialSecurityNumber: data.socialSecurityNumber } : {}),
+      const executorInfo = {
+        name: data.name,
+        address: data.address,
+        relationship: data.relationship,
+        ...(data.phone ? { phone: data.phone } : {}),
+        ...(data.email ? { email: data.email } : {}),
       };
-      const newCase = await createCase({ deceasedInfo });
+      const newCase = await createCase({ executorInfo });
       toast('Case created successfully', 'success');
       void navigate(`/cases/${newCase.id}/upload`);
     } catch {
@@ -55,120 +47,130 @@ export function NewCasePage(): JSX.Element {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-6 py-8">
-      <button
-        onClick={() => void navigate('/cases')}
-        className="mb-6 flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to cases
-      </button>
+    <div style={{ padding: '56px 64px', maxWidth: 720 }}>
+      <ProgressBar stage="info" />
 
-      <div className="mb-8">
-        <div className="mb-2 flex items-center gap-2 text-sm font-medium text-brand-600">
-          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-600 text-xs text-white">
-            1
-          </span>
-          Step 1 of 3 — Deceased&apos;s information
-        </div>
-        <h1 className="text-2xl font-bold text-gray-900">Enter deceased&apos;s information</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          This information will be used to generate official correspondence.
-        </p>
-      </div>
+      <h1 style={{
+        fontFamily: 'var(--serif)', fontSize: 40, fontWeight: 300,
+        marginBottom: 8, color: 'var(--text)',
+        animation: 'fadeInUp 0.35s both',
+      }}>
+        Your information
+      </h1>
+      <p style={{
+        fontSize: 15, color: 'var(--text-muted)', marginBottom: 40,
+        lineHeight: 1.6, animation: 'fadeInUp 0.35s 60ms both',
+      }}>
+        As the executor, we need a few details about you.<br />
+        This information will appear on every letter we generate.
+      </p>
 
-      <div className="rounded-xl bg-white p-6 shadow-sm border border-gray-200 sm:p-8">
-        <form onSubmit={(e) => void handleSubmit(onSubmit)(e)} className="space-y-5" noValidate>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div style={{
+        background: 'var(--surface)', border: '1px solid var(--border)',
+        borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-sm)',
+        padding: '36px 40px', animation: 'fadeInUp 0.35s 100ms both',
+      }}>
+        <form onSubmit={(e) => void handleSubmit(onSubmit)(e)} noValidate>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
             <div>
-              <Label htmlFor="firstName" required>
-                First name
-              </Label>
+              <Label htmlFor="name">Your full legal name</Label>
               <Input
-                id="firstName"
+                id="name"
                 type="text"
-                error={errors.firstName?.message}
-                {...register('firstName')}
+                autoComplete="name"
+                placeholder="Jane Smith"
+                error={errors.name?.message}
+                {...register('name')}
               />
             </div>
+
             <div>
-              <Label htmlFor="middleName">Middle name</Label>
+              <Label htmlFor="address">Your mailing address</Label>
               <Input
-                id="middleName"
+                id="address"
                 type="text"
-                error={errors.middleName?.message}
-                {...register('middleName')}
+                placeholder="123 Main St, City, State, ZIP"
+                autoComplete="street-address"
+                error={errors.address?.message}
+                {...register('address')}
               />
+              <p style={{ marginTop: 4, fontSize: 12, color: 'var(--text-faint)' }}>
+                This will appear on all generated correspondence.
+              </p>
             </div>
-          </div>
 
-          <div>
-            <Label htmlFor="lastName" required>
-              Last name
-            </Label>
-            <Input
-              id="lastName"
-              type="text"
-              error={errors.lastName?.message}
-              {...register('lastName')}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <Label htmlFor="dateOfBirth" required>
-                Date of birth
-              </Label>
-              <Input
-                id="dateOfBirth"
-                type="date"
-                error={errors.dateOfBirth?.message}
-                {...register('dateOfBirth')}
-              />
+              <Label htmlFor="relationship">Relationship to the deceased</Label>
+              <select
+                id="relationship"
+                style={{
+                  width: '100%', padding: '10px 14px', fontSize: 14,
+                  border: `1px solid ${errors.relationship ? 'var(--error)' : 'var(--border-strong)'}`,
+                  borderRadius: 8, background: 'var(--surface)',
+                  color: 'var(--text)', outline: 'none', fontFamily: 'var(--sans)',
+                  transition: 'all var(--transition)',
+                }}
+                {...register('relationship')}
+              >
+                <option value="">Select relationship…</option>
+                {['Spouse', 'Child', 'Parent', 'Sibling', 'Grandchild', 'Trustee', 'Other'].map(
+                  (r) => (
+                    <option key={r} value={r}>
+                      {r}
+                    </option>
+                  ),
+                )}
+              </select>
+              {errors.relationship && (
+                <p style={{ marginTop: 4, fontSize: 12, color: 'var(--error)' }}>
+                  {errors.relationship.message}
+                </p>
+              )}
             </div>
-            <div>
-              <Label htmlFor="dateOfDeath" required>
-                Date of death
-              </Label>
-              <Input
-                id="dateOfDeath"
-                type="date"
-                error={errors.dateOfDeath?.message}
-                {...register('dateOfDeath')}
-              />
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+              <div>
+                <Label htmlFor="phone">Phone (optional)</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="(555) 000-0000"
+                  autoComplete="tel"
+                  error={errors.phone?.message}
+                  {...register('phone')}
+                />
+              </div>
+              <div>
+                <Label htmlFor="email">Email (optional)</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  autoComplete="email"
+                  error={errors.email?.message}
+                  {...register('email')}
+                />
+              </div>
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="placeOfDeath" required>
-              Place of death
-            </Label>
-            <Input
-              id="placeOfDeath"
-              type="text"
-              placeholder="City, State"
-              error={errors.placeOfDeath?.message}
-              {...register('placeOfDeath')}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="socialSecurityNumber">Social Security Number (optional)</Label>
-            <Input
-              id="socialSecurityNumber"
-              type="text"
-              placeholder="123-45-6789"
-              error={errors.socialSecurityNumber?.message}
-              {...register('socialSecurityNumber')}
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              Stored encrypted. Used only for official documents.
-            </p>
-          </div>
-
-          <div className="flex justify-end pt-2">
-            <Button type="submit" loading={isSubmitting} size="lg">
-              Continue to upload
+          <div style={{ marginTop: 32, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <button
+              type="button"
+              onClick={() => void navigate('/cases')}
+              style={{
+                fontSize: 13.5, color: 'var(--text-muted)',
+                background: 'none', border: 'none',
+                cursor: 'pointer', fontFamily: 'var(--sans)',
+                transition: 'color var(--transition)',
+              }}
+              onMouseEnter={(e) => ((e.target as HTMLElement).style.color = 'var(--text)')}
+              onMouseLeave={(e) => ((e.target as HTMLElement).style.color = 'var(--text-muted)')}
+            >
+              ← Back to cases
+            </button>
+            <Button type="submit" size="lg" loading={isSubmitting}>
+              Continue to Upload →
             </Button>
           </div>
         </form>
