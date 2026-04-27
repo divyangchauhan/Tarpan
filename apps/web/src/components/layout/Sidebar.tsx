@@ -6,6 +6,7 @@ import { useActiveCase } from '@/context/ActiveCaseContext';
 import { FlameIcon } from '@/components/ui/FlameIcon';
 
 const CASE_STEPS = [
+  { path: 'executor', label: 'Executor' },
   { path: 'upload', label: 'Upload' },
   { path: 'review', label: 'Review' },
   { path: 'institutions', label: 'Institutions' },
@@ -13,10 +14,11 @@ const CASE_STEPS = [
 ];
 
 function getCurrentStepIndex(pathname: string): number {
-  if (pathname.includes('/upload') || pathname.includes('/processing')) return 0;
-  if (pathname.includes('/review')) return 1;
-  if (pathname.includes('/institutions')) return 2;
-  if (pathname.includes('/downloads')) return 3;
+  if (pathname.includes('/executor')) return 0;
+  if (pathname.includes('/upload') || pathname.includes('/processing')) return 1;
+  if (pathname.includes('/review')) return 2;
+  if (pathname.includes('/institutions')) return 3;
+  if (pathname.includes('/downloads')) return 4;
   return -1;
 }
 
@@ -29,7 +31,7 @@ export function Sidebar({ onClose }: SidebarProps): JSX.Element {
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
-  const { activeCaseName } = useActiveCase();
+  const { activeCaseName, docUploaded, docProcessed, hasReadyDocs } = useActiveCase();
 
   const caseMatch = useMatch('/cases/:caseId/*');
   const caseId = caseMatch?.params.caseId;
@@ -103,7 +105,13 @@ export function Sidebar({ onClose }: SidebarProps): JSX.Element {
             {CASE_STEPS.map((step, i) => {
               const done = i < currentStepIndex;
               const active = i === currentStepIndex;
-              const clickable = done || active;
+              // Tier-based access: each flag unlocks all tiers up to its level.
+              // Executor (0): always. Upload (1): doc uploaded+. Review/Institutions (2-3): doc processed+. Downloads (4): pdfs generated.
+              const clickable =
+                i === 0 ||
+                (i === 1 && (docUploaded || docProcessed || hasReadyDocs)) ||
+                (i <= 3 && (docProcessed || hasReadyDocs)) ||
+                (i === 4 && hasReadyDocs);
               return (
                 <button
                   key={step.path}
@@ -131,7 +139,7 @@ export function Sidebar({ onClose }: SidebarProps): JSX.Element {
                     border: active ? '1.5px solid oklch(45% 0.015 265)' : 'none',
                     color: done ? 'var(--sidebar)' : active ? 'white' : 'oklch(38% 0.008 265)',
                   }}>
-                    {done ? '✓' : i + 2}
+                    {done ? '✓' : i + 1}
                   </span>
                   {step.label}
                 </button>

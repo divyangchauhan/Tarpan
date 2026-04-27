@@ -28,6 +28,7 @@ export function App(): JSX.Element {
             <Route element={<AppShell />}>
               <Route path="/cases" element={<CasesPage />} />
               <Route path="/cases/new" element={<NewCasePage />} />
+              <Route path="/cases/:caseId/executor" element={<NewCasePage />} />
               <Route path="/cases/:caseId/upload" element={<UploadPage />} />
               <Route path="/cases/:caseId/processing" element={<ProcessingPage />} />
               <Route path="/cases/:caseId/review" element={<ReviewPage />} />

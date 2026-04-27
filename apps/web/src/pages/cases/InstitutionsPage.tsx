@@ -4,6 +4,7 @@ import { DocumentStatus, InstitutionType } from '@afterlight/shared';
 import { getDocuments } from '@/api/documents';
 import { createGeneratedDocument } from '@/api/generated-documents';
 import { useToast } from '@/hooks/useToast';
+import { useActiveCase } from '@/context/ActiveCaseContext';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
 import { ProgressBar } from '@/components/ui/ProgressBar';
@@ -64,6 +65,7 @@ export function InstitutionsPage(): JSX.Element {
   const { caseId } = useParams<{ caseId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { setDocProcessed } = useActiveCase();
 
   const [selected, setSelected] = useState<Set<InstitutionType>>(new Set());
   const [documentId, setDocumentId] = useState<string | null>(null);
@@ -77,6 +79,7 @@ export function InstitutionsPage(): JSX.Element {
         const processed = docs.find((d) => d.status === DocumentStatus.PROCESSED);
         if (processed) {
           setDocumentId(processed.id);
+          setDocProcessed(true);
         } else {
           toast('No processed death certificate found for this case. Please upload one first.', 'error');
         }
