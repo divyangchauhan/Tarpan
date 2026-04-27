@@ -5,6 +5,7 @@ import type { WsDocumentEvent } from '@afterlight/shared';
 import { getDocument } from '@/api/documents';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { useToast } from '@/hooks/useToast';
+import { useActiveCase } from '@/context/ActiveCaseContext';
 import { Button } from '@/components/ui/Button';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Spinner } from '@/components/ui/Spinner';
@@ -27,6 +28,11 @@ export function ProcessingPage(): JSX.Element {
   const documentId = searchParams.get('documentId') ?? '';
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { setDocUploaded } = useActiveCase();
+
+  useEffect(() => {
+    setDocUploaded(true);
+  }, [setDocUploaded]);
 
   const [status, setStatus] = useState<DocumentStatus>(DocumentStatus.PENDING);
   const [stepIdx, setStepIdx] = useState(0);

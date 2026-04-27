@@ -5,6 +5,7 @@ import type { GeneratedDocument } from '@afterlight/shared';
 import { GeneratedDocumentStatus, InstitutionType } from '@afterlight/shared';
 import { getGeneratedDocuments } from '@/api/generated-documents';
 import { useToast } from '@/hooks/useToast';
+import { useActiveCase } from '@/context/ActiveCaseContext';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -46,6 +47,7 @@ export function DownloadsPage(): JSX.Element {
   const { caseId } = useParams<{ caseId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { setHasReadyDocs } = useActiveCase();
 
   const [documents, setDocuments] = useState<GeneratedDocument[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,6 +60,9 @@ export function DownloadsPage(): JSX.Element {
       .then((docs) => {
         setDocuments(docs);
         setLoading(false);
+        if (docs.some((d) => d.status === GeneratedDocumentStatus.READY)) {
+          setHasReadyDocs(true);
+        }
         const allDone = docs.every(
           (d) =>
             d.status === GeneratedDocumentStatus.READY ||

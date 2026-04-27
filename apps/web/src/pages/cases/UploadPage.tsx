@@ -13,7 +13,6 @@ export function UploadPage(): JSX.Element {
   const { caseId } = useParams<{ caseId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-
   const [file, setFile] = useState<File | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploading, setUploading] = useState(false);

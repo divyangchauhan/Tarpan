@@ -25,7 +25,7 @@ export function ReviewPage(): JSX.Element {
   const { caseId } = useParams<{ caseId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { setActiveCaseName } = useActiveCase();
+  const { setActiveCaseName, setDocProcessed } = useActiveCase();
 
   const [caseData, setCaseData] = useState<Case | null>(null);
   const [processedDoc, setProcessedDoc] = useState<Document | null>(null);
@@ -42,6 +42,7 @@ export function ReviewPage(): JSX.Element {
         setCaseData(c);
         const processed = docs.find((d) => d.status === DocumentStatus.PROCESSED) ?? null;
         setProcessedDoc(processed);
+        if (processed) setDocProcessed(true);
         const deceased = c.deceasedInfo;
         if (deceased) {
           const name = [deceased.firstName, deceased.middleName, deceased.lastName]
