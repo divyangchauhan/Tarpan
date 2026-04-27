@@ -1,8 +1,9 @@
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useNavigate } from 'react-router-dom';
-import { createCase } from '@/api/cases';
+import { useNavigate, useParams } from 'react-router-dom';
+import { createCase, getCase, updateCase } from '@/api/cases';
 import { useToast } from '@/hooks/useToast';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -22,12 +23,32 @@ type FormData = z.infer<typeof schema>;
 export function NewCasePage(): JSX.Element {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { caseId } = useParams<{ caseId: string }>();
+  const isEdit = Boolean(caseId);
 
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({ resolver: zodResolver(schema) });
+
+  useEffect(() => {
+    if (!caseId) return;
+    getCase(caseId)
+      .then((c) => {
+        if (c.executorInfo) {
+          reset({
+            name: c.executorInfo.name ?? '',
+            address: c.executorInfo.address ?? '',
+            relationship: c.executorInfo.relationship ?? '',
+            phone: c.executorInfo.phone ?? '',
+            email: c.executorInfo.email ?? '',
+          });
+        }
+      })
+      .catch(() => toast('Failed to load executor info', 'error'));
+  }, [caseId, reset, toast]);
 
   async function onSubmit(data: FormData): Promise<void> {
     try {
@@ -38,17 +59,24 @@ export function NewCasePage(): JSX.Element {
         ...(data.phone ? { phone: data.phone } : {}),
         ...(data.email ? { email: data.email } : {}),
       };
-      const newCase = await createCase({ executorInfo });
-      toast('Case created successfully', 'success');
-      void navigate(`/cases/${newCase.id}/upload`);
+
+      if (isEdit) {
+        await updateCase(caseId!, { executorInfo });
+        toast('Executor info updated', 'success');
+        void navigate(`/cases/${caseId}/upload`);
+      } else {
+        const newCase = await createCase({ executorInfo });
+        toast('Case created successfully', 'success');
+        void navigate(`/cases/${newCase.id}/upload`);
+      }
     } catch {
-      toast('Failed to create case. Please try again.', 'error');
+      toast(isEdit ? 'Failed to update executor info' : 'Failed to create case. Please try again.', 'error');
     }
   }
 
   return (
     <div style={{ padding: '56px 64px', maxWidth: 720 }}>
-      <ProgressBar stage="info" />
+      {!isEdit && <ProgressBar stage="info" />}
 
       <h1 style={{
         fontFamily: 'var(--serif)', fontSize: 40, fontWeight: 300,
@@ -157,7 +185,7 @@ export function NewCasePage(): JSX.Element {
           <div style={{ marginTop: 32, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <button
               type="button"
-              onClick={() => void navigate('/cases')}
+              onClick={() => void navigate(isEdit ? `/cases/${caseId}/upload` : '/cases')}
               style={{
                 fontSize: 13.5, color: 'var(--text-muted)',
                 background: 'none', border: 'none',
@@ -167,10 +195,10 @@ export function NewCasePage(): JSX.Element {
               onMouseEnter={(e) => ((e.target as HTMLElement).style.color = 'var(--text)')}
               onMouseLeave={(e) => ((e.target as HTMLElement).style.color = 'var(--text-muted)')}
             >
-              ← Back to cases
+              {isEdit ? '← Back to upload' : '← Back to cases'}
             </button>
             <Button type="submit" size="lg" loading={isSubmitting}>
-              Continue to Upload →
+              {isEdit ? 'Save changes →' : 'Continue to Upload →'}
             </Button>
           </div>
         </form>
