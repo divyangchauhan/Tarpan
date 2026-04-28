@@ -54,6 +54,7 @@ const mockDocumentRepository = {
 
 const mockCasesService = {
   findOne: jest.fn(),
+  updateDeceasedInfoByCaseId: jest.fn(),
 };
 
 const mockS3Service = {
