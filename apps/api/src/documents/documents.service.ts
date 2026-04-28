@@ -134,6 +134,21 @@ export class DocumentsService {
 
     const updated = await this.documentRepository.save(document);
 
+    if (dto.extractedData !== undefined) {
+      const d = dto.extractedData;
+      const patch: Record<string, string | undefined> = {};
+      if (d.firstName) patch.firstName = d.firstName;
+      if (d.middleName) patch.middleName = d.middleName;
+      if (d.lastName) patch.lastName = d.lastName;
+      if (d.dateOfBirth) patch.dateOfBirth = d.dateOfBirth;
+      if (d.dateOfDeath) patch.dateOfDeath = d.dateOfDeath;
+      if (d.placeOfDeath) patch.placeOfDeath = d.placeOfDeath;
+      if (d.socialSecurityNumber) patch.socialSecurityNumber = d.socialSecurityNumber;
+      if (Object.keys(patch).length > 0) {
+        await this.casesService.updateDeceasedInfoByCaseId(document.caseId, patch);
+      }
+    }
+
     const extra: Parameters<typeof this.eventsGateway.emitDocumentStatus>[3] = {};
     if (dto.extractedData !== undefined) extra.extractedData = dto.extractedData;
     if (dto.errorMessage !== undefined) extra.errorMessage = dto.errorMessage;

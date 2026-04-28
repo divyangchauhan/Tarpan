@@ -78,6 +78,14 @@ export class CasesService {
     return updated;
   }
 
+  async updateDeceasedInfoByCaseId(caseId: string, deceasedInfo: Partial<CaseEntity['deceasedInfo'] & object>): Promise<void> {
+    const caseEntity = await this.caseRepository.findOne({ where: { id: caseId } });
+    if (!caseEntity) return;
+    caseEntity.deceasedInfo = { ...(caseEntity.deceasedInfo ?? {}), ...deceasedInfo } as CaseEntity['deceasedInfo'];
+    await this.caseRepository.save(caseEntity);
+    this.logger.log(`Updated deceasedInfo for case ${caseId} from document callback`);
+  }
+
   async remove(userId: string, caseId: string): Promise<void> {
     const caseEntity = await this.findOne(userId, caseId);
     await this.caseRepository.remove(caseEntity);
