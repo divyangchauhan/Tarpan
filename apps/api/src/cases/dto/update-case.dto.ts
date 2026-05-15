@@ -7,7 +7,7 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { CaseStatus } from '@afterlight/shared';
+import { CaseStatus } from '@tarpan/shared';
 
 export class UpdateDeceasedInfoDto {
   @IsOptional()

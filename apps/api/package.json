@@ -1,5 +1,5 @@
 {
-  "name": "@afterlight/api",
+  "name": "@tarpan/api",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -19,7 +19,7 @@
     "seed": "ts-node -r tsconfig-paths/register src/database/seed.ts"
   },
   "dependencies": {
-    "@afterlight/shared": "workspace:*",
+    "@tarpan/shared": "workspace:*",
     "@aws-sdk/client-s3": "^3.600.0",
     "@aws-sdk/client-sqs": "^3.600.0",
     "@aws-sdk/s3-request-presigner": "^3.600.0",
@@ -89,7 +89,7 @@
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
     "moduleNameMapper": {
-      "^@afterlight/shared(.*)$": "<rootDir>/../../../packages/shared/src$1",
+      "^@tarpan/shared(.*)$": "<rootDir>/../../../packages/shared/src$1",
       "^@api/(.*)$": "<rootDir>/$1"
     }
   }

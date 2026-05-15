@@ -27,7 +27,7 @@ import {
   GeneratedDocumentStatus,
   InstitutionType,
   UserRole,
-} from '@afterlight/shared';
+} from '@tarpan/shared';
 
 const DEMO_EMAIL = 'demo@afterlight.app';
 const DEMO_PASSWORD = 'AfterLight2024!';

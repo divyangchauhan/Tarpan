@@ -7,7 +7,7 @@
     "^.+\\.(t|j)s$": "ts-jest"
   },
   "moduleNameMapper": {
-    "^@afterlight/shared(.*)$": "<rootDir>/../../../packages/shared/src$1",
+    "^@tarpan/shared(.*)$": "<rootDir>/../../../packages/shared/src$1",
     "^@api/(.*)$": "<rootDir>/../src/$1"
   },
   "globalSetup": "<rootDir>/global-setup.ts",

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { Case } from '@afterlight/shared';
-import { CaseStatus, GeneratedDocumentStatus } from '@afterlight/shared';
+import type { Case } from '@tarpan/shared';
+import { CaseStatus, GeneratedDocumentStatus } from '@tarpan/shared';
 import { getCases, updateCase } from '@/api/cases';
 import { useToast } from '@/hooks/useToast';
 import { Button } from '@/components/ui/Button';

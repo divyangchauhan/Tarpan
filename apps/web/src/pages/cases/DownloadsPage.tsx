@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Download, FileText } from 'lucide-react';
-import type { GeneratedDocument } from '@afterlight/shared';
-import { GeneratedDocumentStatus, InstitutionType } from '@afterlight/shared';
+import type { GeneratedDocument } from '@tarpan/shared';
+import { GeneratedDocumentStatus, InstitutionType } from '@tarpan/shared';
 import { getGeneratedDocuments } from '@/api/generated-documents';
 import { useToast } from '@/hooks/useToast';
 import { useActiveCase } from '@/context/ActiveCaseContext';

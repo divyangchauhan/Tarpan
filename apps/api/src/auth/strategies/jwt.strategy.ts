@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
-import { JwtPayload, UserRole } from '@afterlight/shared';
+import { JwtPayload, UserRole } from '@tarpan/shared';
 
 export interface JwtValidatedUser {
   userId: string;

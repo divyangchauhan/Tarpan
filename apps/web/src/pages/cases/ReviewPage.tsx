@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import type { Case, Document } from '@afterlight/shared';
-import { DocumentStatus } from '@afterlight/shared';
+import type { Case, Document } from '@tarpan/shared';
+import { DocumentStatus } from '@tarpan/shared';
 import { getCase, updateCase } from '@/api/cases';
 import { getDocuments } from '@/api/documents';
 import { useToast } from '@/hooks/useToast';

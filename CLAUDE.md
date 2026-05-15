@@ -107,7 +107,7 @@ Build orchestration: **Turborepo**.
 
 ### packages/shared
 
-`@afterlight/shared` is the canonical source of truth for all TypeScript types (`Case`, `Document`, `GeneratedDocument`, `ExtractedCertificateData`, `WsEvent`, enums). Both `apps/api` and `apps/web` import from it. When changing a shared type, update it here first, then fix downstream compilation errors.
+`@tarpan/shared` is the canonical source of truth for all TypeScript types (`Case`, `Document`, `GeneratedDocument`, `ExtractedCertificateData`, `WsEvent`, enums). Both `apps/api` and `apps/web` import from it. When changing a shared type, update it here first, then fix downstream compilation errors.
 
 ---
 
@@ -298,14 +298,14 @@ cd apps/processor && poetry run pytest tests/test_extractor.py
 cd apps/processor && poetry run pytest -k "test_parse_dates"
 
 # Type check all TypeScript packages (excludes processor — Python only)
-pnpm turbo run typecheck --filter=!@afterlight/processor
+pnpm turbo run typecheck --filter=!@tarpan/processor
 
 # Lint all packages (excludes processor from TypeScript turbo run)
-pnpm turbo run lint --filter=!@afterlight/processor
+pnpm turbo run lint --filter=!@tarpan/processor
 cd apps/processor && poetry run ruff check src tests   # Python lint separately
 
 # Run all tests (excludes processor — run Python tests separately above)
-pnpm turbo run test --filter=!@afterlight/processor
+pnpm turbo run test --filter=!@tarpan/processor
 
 # Run a single NestJS test file
 pnpm --filter api test -- --testPathPattern=cases.service

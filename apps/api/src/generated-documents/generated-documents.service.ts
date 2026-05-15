@@ -8,7 +8,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
-import { DocumentGenerationJob, DocumentStatus, GeneratedDocumentStatus } from '@afterlight/shared';
+import { DocumentGenerationJob, DocumentStatus, GeneratedDocumentStatus } from '@tarpan/shared';
 import { GeneratedDocumentEntity } from '../entities/generated-document.entity';
 import { CasesService } from '../cases/cases.service';
 import { DocumentsService } from '../documents/documents.service';

@@ -7,7 +7,7 @@ import {
   DocumentStatus,
   GeneratedDocumentStatus,
   InstitutionType,
-} from '@afterlight/shared';
+} from '@tarpan/shared';
 import { CaseEntity } from '../entities/case.entity';
 import { DocumentEntity } from '../entities/document.entity';
 import { GeneratedDocumentEntity } from '../entities/generated-document.entity';
@@ -50,14 +50,14 @@ const mockCase: CaseEntity = {
 const mockDocument: DocumentEntity = {
   id: 'doc-id',
   caseId: 'case-id',
-  type: 'DEATH_CERTIFICATE' as import('@afterlight/shared').DocumentType,
+  type: 'DEATH_CERTIFICATE' as import('@tarpan/shared').DocumentType,
   status: DocumentStatus.PROCESSED,
   s3Key: 'cases/case-id/documents/doc-id.pdf',
   extractedData: {
     full_name: 'Jane Smith',
     date_of_death: '2024-11-20',
     place_of_death: 'Springfield, IL',
-  } as unknown as import('@afterlight/shared').ExtractedCertificateData,
+  } as unknown as import('@tarpan/shared').ExtractedCertificateData,
   errorMessage: null,
   createdAt: new Date(),
   updatedAt: new Date(),

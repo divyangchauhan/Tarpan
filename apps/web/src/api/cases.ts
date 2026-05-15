@@ -1,4 +1,4 @@
-import type { Case, DeceasedInfo, ExecutorInfo } from '@afterlight/shared';
+import type { Case, DeceasedInfo, ExecutorInfo } from '@tarpan/shared';
 import { apiClient } from './client';
 
 export interface CreateCaseRequest {

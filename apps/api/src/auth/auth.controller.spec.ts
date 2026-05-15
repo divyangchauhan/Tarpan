@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { UserRole, type AuthTokens } from '@afterlight/shared';
+import { UserRole, type AuthTokens } from '@tarpan/shared';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import type { RegisterDto } from './dto/register.dto';

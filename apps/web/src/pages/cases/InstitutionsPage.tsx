@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { DocumentStatus, InstitutionType } from '@afterlight/shared';
+import { DocumentStatus, InstitutionType } from '@tarpan/shared';
 import { getDocuments } from '@/api/documents';
 import { createGeneratedDocument } from '@/api/generated-documents';
 import { useToast } from '@/hooks/useToast';

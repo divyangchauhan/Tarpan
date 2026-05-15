@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { CaseStatus, UserRole } from '@afterlight/shared';
+import { CaseStatus, UserRole } from '@tarpan/shared';
 import { CaseEntity } from '../entities/case.entity';
 import { CasesController } from './cases.controller';
 import { CasesService } from './cases.service';

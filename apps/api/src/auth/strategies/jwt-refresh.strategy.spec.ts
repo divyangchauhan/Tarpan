@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { JwtRefreshStrategy } from './jwt-refresh.strategy';
 import type { Request } from 'express';
-import { UserRole, type JwtPayload } from '@afterlight/shared';
+import { UserRole, type JwtPayload } from '@tarpan/shared';
 
 // PassportStrategy calls super() which reads the config — mock before module init
 const mockConfigService = {

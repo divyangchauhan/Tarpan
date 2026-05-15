@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InstitutionType, Template } from '@afterlight/shared';
+import { InstitutionType, Template } from '@tarpan/shared';
 
 const TEMPLATES: Template[] = [
   // Government

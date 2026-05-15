@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { InstitutionType } from '@afterlight/shared';
+import { InstitutionType } from '@tarpan/shared';
 import { TemplatesController } from './templates.controller';
 import { TemplatesService } from './templates.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';

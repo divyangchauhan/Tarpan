@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { io, type Socket } from 'socket.io-client';
-import type { WsEvent } from '@afterlight/shared';
+import type { WsEvent } from '@tarpan/shared';
 
 // In production, CloudFront proxies /socket.io/* to the ALB — connect to current origin.
 // In local dev, set VITE_WS_URL=http://localhost:3001 in .env.
