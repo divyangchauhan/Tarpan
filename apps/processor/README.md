@@ -1,4 +1,4 @@
-# AfterLight Processor
+# Tarpan Processor
 
 Python Lambda function for processing death certificates and generating legal documents.
 

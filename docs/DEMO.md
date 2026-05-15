@@ -1,4 +1,4 @@
-# AfterLight — Investor Demo Script
+# Tarpan — Investor Demo Script
 
 ## Overview
 
@@ -8,7 +8,7 @@
 
 **Core narrative:**
 
-> "When someone dies, their family faces 500+ hours of administrative work — notifying banks, government agencies, insurance companies, utilities. AfterLight eliminates 80% of that burden in under 10 minutes."
+> "When someone dies, their family faces 500+ hours of administrative work — notifying banks, government agencies, insurance companies, utilities. Tarpan eliminates 80% of that burden in under 10 minutes."
 
 ---
 
@@ -31,7 +31,7 @@
 
 Open the landing page / login screen. Don't log in yet.
 
-> "We built AfterLight to automate all of it. You upload one document — the death certificate — and we generate every legal letter in under a minute."
+> "We built Tarpan to automate all of it. You upload one document — the death certificate — and we generate every legal letter in under a minute."
 
 ---
 

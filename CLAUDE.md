@@ -70,7 +70,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 ## Project Summary
 
-AfterLight automates the administrative burden families face after a death:
+Tarpan automates the administrative burden families face after a death:
 
 - Parses death certificates via AI (Claude API)
 - Generates institution-specific legal letters and forms

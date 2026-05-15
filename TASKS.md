@@ -1,4 +1,4 @@
-# AfterLight — Project Task Tracker
+# Tarpan — Project Task Tracker
 
 > Tasks are organized by phase and priority. Each task includes an ID for reference in PRs and commits.
 

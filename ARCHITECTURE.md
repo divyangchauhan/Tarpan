@@ -2,7 +2,7 @@
 
 ## Overview
 
-AfterLight is a document-centric platform with three distinct processing concerns:
+Tarpan is a document-centric platform with three distinct processing concerns:
 
 1. **User interaction** — a fast, guided UI for uploading documents and reviewing/downloading outputs.
 2. **API orchestration** — a typed, testable backend that manages users, cases, documents, and workflows.

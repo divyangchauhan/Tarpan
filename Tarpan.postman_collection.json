@@ -1,8 +1,8 @@
 {
   "info": {
-    "name": "AfterLight API",
+    "name": "Tarpan API",
     "_postman_id": "afterlight-api-collection-v1",
-    "description": "AfterLight API — all endpoints for local development.\n\nBase URL: http://localhost:3001\n\n## Quick Start\n1. Run `docker compose up -d` (Postgres + LocalStack)\n2. Run `pnpm --filter api dev`\n3. Call **Auth / Register** or **Auth / Login** — the collection auto-saves `access_token` and `refresh_token` to variables.\n4. All protected routes use `{{access_token}}` automatically.",
+    "description": "Tarpan API — all endpoints for local development.\n\nBase URL: http://localhost:3001\n\n## Quick Start\n1. Run `docker compose up -d` (Postgres + LocalStack)\n2. Run `pnpm --filter api dev`\n3. Call **Auth / Register** or **Auth / Login** — the collection auto-saves `access_token` and `refresh_token` to variables.\n4. All protected routes use `{{access_token}}` automatically.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
