@@ -76,7 +76,7 @@ Tarpan automates the administrative burden families face after a death:
 - Generates institution-specific legal letters and forms
 - Provides a guided dashboard to track notifications
 
-**POC status**: Complete — investor-grade demo shipped across Phases 0–5.
+**Status**: Core functionality complete across Phases 0–5.
 
 **Active roadmap**:
 
@@ -98,8 +98,7 @@ Tarpan/
 │   └── processor/    # Python Lambda (document parsing + PDF generation)
 ├── packages/
 │   └── shared/       # Shared TypeScript types and constants
-├── infra/            # AWS CDK (TypeScript)
-└── docs/             # Investor demo script and supporting documentation
+└── infra/            # AWS CDK (TypeScript)
 ```
 
 Package manager: **pnpm** with workspaces.

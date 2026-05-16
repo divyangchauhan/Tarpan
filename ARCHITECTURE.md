@@ -70,7 +70,7 @@ This separation drives every architectural decision below.
 
 **Alternatives considered:**
 
-- Next.js — rejected for POC because SSR/SSG adds complexity without investor-demo benefit; can migrate later if SEO or auth flows require it.
+- Next.js — rejected because SSR/SSG adds complexity without benefit at this stage; can migrate later if SEO or auth flows require it.
 - Styled Components — rejected; runtime CSS-in-JS has perf overhead and Tailwind is faster to iterate with.
 
 ---
@@ -90,7 +90,7 @@ This separation drives every architectural decision below.
 
 **Why not tRPC:**
 
-- tRPC is excellent but ties frontend and backend more tightly. For a POC that may need a mobile app or third-party integrations later, a REST API is more portable.
+- tRPC is excellent but ties frontend and backend more tightly. For a project that may need a mobile app or third-party integrations later, a REST API is more portable.
 
 ---
 
@@ -112,7 +112,7 @@ This separation drives every architectural decision below.
 **Why not a dedicated Python microservice:**
 
 - A long-running service (ECS / EC2) costs money 24/7 even when idle.
-- Lambda is operationally simpler for a POC; migration to ECS is straightforward if workloads grow.
+- Lambda is operationally simpler at this scale; migration to ECS is straightforward if workloads grow.
 
 **Why not process in NestJS directly:**
 
@@ -153,7 +153,7 @@ The Lambda handler routes messages by inspecting the body: presence of `generate
 **Why SQS over RabbitMQ / Redis Streams:**
 
 - SQS is managed, serverless, and integrates natively with Lambda triggers — zero ops overhead.
-- For POC scale, SQS standard queues are sufficient. Can add FIFO queues later if ordering matters.
+- At the current scale, SQS standard queues are sufficient. Can add FIFO queues later if ordering matters.
 
 ---
 
@@ -192,7 +192,7 @@ The Lambda handler routes messages by inspecting the body: presence of `generate
 ### Infrastructure: AWS CDK (TypeScript)
 
 - Infrastructure-as-code prevents configuration drift between environments.
-- CDK in TypeScript means the same language as the backend — engineers don't need to learn HCL/Terraform for a POC.
+- CDK in TypeScript means the same language as the backend — engineers don't need to learn HCL/Terraform.
 - Can define Lambda, SQS, S3, RDS in one place with type safety.
 
 ---
@@ -267,16 +267,16 @@ The Lambda handler routes messages by inspecting the body: presence of `generate
 - **PII handling**: Death certificates contain highly sensitive PII. S3 buckets are private; all access via pre-signed URLs with short TTLs (15 min).
 - **Encryption at rest**: S3 SSE-S3 and RDS encryption are enabled. Application-layer encryption for SSNs before storage in `Document.extractedData` is tracked as production-readiness task `P6-09`.
 - **Auth**: JWT with short expiry + refresh tokens. All API routes behind auth guard.
-- **HIPAA posture**: Not HIPAA-covered for POC, but architecture is compatible with HIPAA-compliant AWS services when required.
+- **HIPAA posture**: Not HIPAA-covered currently, but architecture is compatible with HIPAA-compliant AWS services when required.
 - **No logging of PII**: Lambda and NestJS structured logs must not include document content or extracted fields.
 
 ---
 
 ## Scalability Path
 
-The POC architecture scales to production with minimal changes:
+The current architecture scales to production with minimal changes:
 
-| Concern    | POC                                 | Production                           |
+| Concern    | Current                             | Production                           |
 | ---------- | ----------------------------------- | ------------------------------------ |
 | API        | Single NestJS instance              | ECS Fargate behind ALB               |
 | DB         | Docker Compose PostgreSQL + TypeORM | RDS Multi-AZ                         |
@@ -286,7 +286,7 @@ The POC architecture scales to production with minimal changes:
 
 ---
 
-## Post-POC Roadmap
+## Roadmap
 
 ### Phase 6 — Production Readiness
 
