@@ -17,7 +17,7 @@
 - [ ] App is live and reachable (CloudFront URL or localhost)
 - [ ] Full stack running: `docker compose up -d && pnpm dev` (Turborepo starts the API, web app, and processor worker together)
 - [ ] Demo account seeded: `pnpm --filter api seed` — waits for real PDFs to be generated (~30s); requires the stack above to be up first
-- [ ] Demo account credentials ready: `demo@afterlight.app` / `AfterLight2024!` (hardcoded in `seed.ts`)
+- [ ] Demo account credentials ready: `demo@tarpan.app` / `Tarpan2024!` (hardcoded in `seed.ts`)
 - [ ] Backup PDF prepared and saved to `docs/sample-death-certificate.pdf` (not committed — use any synthetic death certificate scan; needed only if live upload fails)
 - [ ] Second browser tab open on the downloads page for instant "wow" moment
 
@@ -37,7 +37,7 @@ Open the landing page / login screen. Don't log in yet.
 
 ### 2. Create a New Case (2 min)
 
-Log in as `demo@afterlight.app`.
+Log in as `demo@tarpan.app`.
 
 Click **New Case**.
 

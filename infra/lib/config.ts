@@ -1,6 +1,6 @@
 /** Shared environment/naming config referenced by all stacks. */
-export const APP_NAME = 'afterlight';
-export const APP_PREFIX = 'Afterlight';
+export const APP_NAME = 'tarpan';
+export const APP_PREFIX = 'Tarpan';
 
 /** Resource name helper — kebab-case for AWS resource names. */
 export function resourceName(suffix: string): string {

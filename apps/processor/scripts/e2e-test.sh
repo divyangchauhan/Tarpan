@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# AfterLight Processor — End-to-End Test Script
+# Tarpan Processor — End-to-End Test Script
 #
 # Usage (from apps/processor/):
 #   ./scripts/e2e-test.sh                                       # prompts for credentials
@@ -42,8 +42,8 @@ export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:-test}"
 export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-us-east-1}"
 
 AWS_LOCAL="aws --endpoint-url=http://localhost:4566 --region us-east-1"
-UPLOADS_BUCKET="afterlight-uploads"
-GENERATED_DOCS_BUCKET="afterlight-generated-docs"
+UPLOADS_BUCKET="tarpan-uploads"
+GENERATED_DOCS_BUCKET="tarpan-generated-docs"
 FIXTURES_DIR="$PROCESSOR_DIR/tests/fixtures"
 API_BASE="http://localhost:3001/api/v1"
 
@@ -234,7 +234,7 @@ ok "S3 bucket ready: $UPLOADS_BUCKET"
 $AWS_LOCAL s3 mb "s3://$GENERATED_DOCS_BUCKET" 2>/dev/null || true
 ok "S3 bucket ready: $GENERATED_DOCS_BUCKET"
 
-for SQS_QUEUE_NAME in "afterlight-document-processing" "afterlight-document-generation"; do
+for SQS_QUEUE_NAME in "tarpan-document-processing" "tarpan-document-generation"; do
   SQS_QUEUE_URL="http://localhost:4566/000000000000/$SQS_QUEUE_NAME"
   $AWS_LOCAL sqs create-queue --queue-name "$SQS_QUEUE_NAME" 2>/dev/null || true
   $AWS_LOCAL sqs purge-queue --queue-url "$SQS_QUEUE_URL" 2>/dev/null || true

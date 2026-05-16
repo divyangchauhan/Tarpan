@@ -9,18 +9,18 @@ echo "Initializing LocalStack resources..."
 AWS_CMD="aws --endpoint-url=http://localhost:4566 --region us-east-1"
 
 # S3 buckets
-$AWS_CMD s3 mb s3://afterlight-uploads
-$AWS_CMD s3 mb s3://afterlight-generated-docs
+$AWS_CMD s3 mb s3://tarpan-uploads
+$AWS_CMD s3 mb s3://tarpan-generated-docs
 
 # Enable versioning on uploads bucket
 $AWS_CMD s3api put-bucket-versioning \
-  --bucket afterlight-uploads \
+  --bucket tarpan-uploads \
   --versioning-configuration Status=Enabled
 
 # CORS for uploads bucket — allows the React dev server (localhost:5173) to PUT
 # directly to pre-signed URLs from the browser
 $AWS_CMD s3api put-bucket-cors \
-  --bucket afterlight-uploads \
+  --bucket tarpan-uploads \
   --cors-configuration '{
     "CORSRules": [{
       "AllowedHeaders": ["*"],
@@ -32,9 +32,9 @@ $AWS_CMD s3api put-bucket-cors \
   }'
 
 # SQS queues
-$AWS_CMD sqs create-queue --queue-name afterlight-document-processing
-$AWS_CMD sqs create-queue --queue-name afterlight-document-processing-dlq
-$AWS_CMD sqs create-queue --queue-name afterlight-document-generation
-$AWS_CMD sqs create-queue --queue-name afterlight-document-generation-dlq
+$AWS_CMD sqs create-queue --queue-name tarpan-document-processing
+$AWS_CMD sqs create-queue --queue-name tarpan-document-processing-dlq
+$AWS_CMD sqs create-queue --queue-name tarpan-document-generation
+$AWS_CMD sqs create-queue --queue-name tarpan-document-generation-dlq
 
 echo "LocalStack resources initialized."

@@ -9,7 +9,7 @@ import { Construct } from 'constructs';
  * the first deployment via AWS Console or CLI:
  *
  *   aws secretsmanager put-secret-value \
- *     --secret-id afterlight/anthropic-api-key \
+ *     --secret-id tarpan/anthropic-api-key \
  *     --secret-string '{"value":"sk-ant-..."}'
  *
  * P4-08
@@ -24,7 +24,7 @@ export class SecretsStack extends cdk.Stack {
     super(scope, id, props);
 
     this.jwtSecret = new secretsmanager.Secret(this, 'JwtSecret', {
-      secretName: 'afterlight/jwt-secret',
+      secretName: 'tarpan/jwt-secret',
       description: 'JWT signing secret for access tokens',
       generateSecretString: {
         passwordLength: 64,
@@ -33,7 +33,7 @@ export class SecretsStack extends cdk.Stack {
     });
 
     this.jwtRefreshSecret = new secretsmanager.Secret(this, 'JwtRefreshSecret', {
-      secretName: 'afterlight/jwt-refresh-secret',
+      secretName: 'tarpan/jwt-refresh-secret',
       description: 'JWT signing secret for refresh tokens',
       generateSecretString: {
         passwordLength: 64,
@@ -43,13 +43,13 @@ export class SecretsStack extends cdk.Stack {
 
     // Anthropic API key — must be updated manually post-deploy
     this.anthropicApiKey = new secretsmanager.Secret(this, 'AnthropicApiKey', {
-      secretName: 'afterlight/anthropic-api-key',
+      secretName: 'tarpan/anthropic-api-key',
       description: 'Anthropic API key for Claude document processing',
       secretStringValue: cdk.SecretValue.unsafePlainText('REPLACE_ME'),
     });
 
     this.internalApiSecret = new secretsmanager.Secret(this, 'InternalApiSecret', {
-      secretName: 'afterlight/internal-api-secret',
+      secretName: 'tarpan/internal-api-secret',
       description: 'Shared secret for Lambda to API callback authentication',
       generateSecretString: {
         passwordLength: 48,

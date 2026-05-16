@@ -33,12 +33,12 @@ export class DatabaseStack extends cdk.Stack {
 
     // RDS auto-rotated credentials stored in Secrets Manager
     this.credentials = new rds.DatabaseSecret(this, 'DbCredentials', {
-      secretName: 'afterlight/db-credentials',
-      username: 'afterlight',
+      secretName: 'tarpan/db-credentials',
+      username: 'tarpan',
     });
 
     const subnetGroup = new rds.SubnetGroup(this, 'DbSubnetGroup', {
-      description: 'Afterlight RDS subnet group - private subnets',
+      description: 'Tarpan RDS subnet group - private subnets',
       vpc,
       vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
       subnetGroupName: resourceName('db-subnet-group'),
@@ -54,7 +54,7 @@ export class DatabaseStack extends cdk.Stack {
       subnetGroup,
       securityGroups: [rdsSg],
       credentials: rds.Credentials.fromSecret(this.credentials),
-      databaseName: 'afterlight',
+      databaseName: 'tarpan',
       instanceIdentifier: resourceName('postgres'),
       multiAz: config.dbMultiAz,
       storageEncrypted: true,

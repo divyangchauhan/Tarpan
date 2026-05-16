@@ -91,7 +91,7 @@ Tarpan automates the administrative burden families face after a death:
 ## Monorepo Structure
 
 ```
-AfterLight/
+Tarpan/
 ├── apps/
 │   ├── api/          # NestJS backend (TypeScript)
 │   ├── web/          # React 18 + Vite + Tailwind frontend
@@ -150,7 +150,7 @@ Build orchestration: **Turborepo**.
 ```
 PORT=3001
 NODE_ENV=development
-DATABASE_URL=postgresql://afterlight:afterlight@localhost:5432/afterlight
+DATABASE_URL=postgresql://tarpan:tarpan@localhost:5432/tarpan
 JWT_SECRET=...
 JWT_EXPIRES_IN=15m
 JWT_REFRESH_SECRET=...
@@ -159,10 +159,10 @@ AWS_REGION=us-east-1
 AWS_ACCESS_KEY_ID=test
 AWS_SECRET_ACCESS_KEY=test
 AWS_ENDPOINT_URL=http://localhost:4566   # LocalStack — omit in production
-S3_UPLOADS_BUCKET=afterlight-uploads
-S3_GENERATED_DOCS_BUCKET=afterlight-generated-docs
-SQS_DOCUMENT_PROCESSING_QUEUE_URL=http://localhost:4566/000000000000/afterlight-document-processing
-SQS_DOCUMENT_GENERATION_QUEUE_URL=http://localhost:4566/000000000000/afterlight-document-generation
+S3_UPLOADS_BUCKET=tarpan-uploads
+S3_GENERATED_DOCS_BUCKET=tarpan-generated-docs
+SQS_DOCUMENT_PROCESSING_QUEUE_URL=http://localhost:4566/000000000000/tarpan-document-processing
+SQS_DOCUMENT_GENERATION_QUEUE_URL=http://localhost:4566/000000000000/tarpan-document-generation
 INTERNAL_API_SECRET=...
 ANTHROPIC_API_KEY=...                    # Not read by the API at runtime — only by the Lambda processor. Included here for completeness when running the full local stack.
 CORS_ORIGIN=http://localhost:5173
@@ -175,10 +175,10 @@ AWS_REGION=us-east-1
 AWS_ACCESS_KEY_ID=test
 AWS_SECRET_ACCESS_KEY=test
 AWS_ENDPOINT_URL=http://localhost:4566   # LocalStack — omit in production
-S3_UPLOADS_BUCKET=afterlight-uploads
-S3_GENERATED_DOCS_BUCKET=afterlight-generated-docs
-SQS_DOCUMENT_PROCESSING_QUEUE_URL=http://localhost:4566/000000000000/afterlight-document-processing
-SQS_DOCUMENT_GENERATION_QUEUE_URL=http://localhost:4566/000000000000/afterlight-document-generation
+S3_UPLOADS_BUCKET=tarpan-uploads
+S3_GENERATED_DOCS_BUCKET=tarpan-generated-docs
+SQS_DOCUMENT_PROCESSING_QUEUE_URL=http://localhost:4566/000000000000/tarpan-document-processing
+SQS_DOCUMENT_GENERATION_QUEUE_URL=http://localhost:4566/000000000000/tarpan-document-generation
 ANTHROPIC_API_KEY=...
 API_CALLBACK_URL=http://localhost:3001
 INTERNAL_API_SECRET=...
@@ -209,14 +209,14 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md) for full rationale. Summary:
 User uploads death certificate
   → API: POST /documents  (presigned URL returned)
   → Client: PUT directly to S3
-  → API: PATCH /documents/:id/confirm  →  SQS (afterlight-document-processing)
+  → API: PATCH /documents/:id/confirm  →  SQS (tarpan-document-processing)
   → Lambda: downloads from S3, calls Claude Vision API, POSTs result to API
   → API: PATCH /documents/:id/callback  (InternalSecretGuard)
   → API: emits WebSocket event (document.processing.complete | failed) to user's room
   → Client: navigates to ReviewPage on success
 
 User requests PDF generation
-  → API: POST /generated-documents  →  SQS (afterlight-document-generation)
+  → API: POST /generated-documents  →  SQS (tarpan-document-generation)
   → Lambda: direct invocation renders Jinja2 HTML template → WeasyPrint PDF → S3
   → Lambda: POSTs result to API callback
   → API: emits generation.complete WebSocket event

@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Tarpan API",
-    "_postman_id": "afterlight-api-collection-v1",
+    "_postman_id": "tarpan-api-collection-v1",
     "description": "Tarpan API — all endpoints for local development.\n\nBase URL: http://localhost:3001\n\n## Quick Start\n1. Run `docker compose up -d` (Postgres + LocalStack)\n2. Run `pnpm --filter api dev`\n3. Call **Auth / Register** or **Auth / Login** — the collection auto-saves `access_token` and `refresh_token` to variables.\n4. All protected routes use `{{access_token}}` automatically.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
@@ -629,7 +629,7 @@
               },
               "status": "Created",
               "code": 201,
-              "body": "{\n  \"documentId\": \"d1e2f3a4-b5c6-7890-abcd-ef1234567890\",\n  \"uploadUrl\": \"https://afterlight-uploads.s3.amazonaws.com/cases/a1b2c3d4/death-certificate.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256&...\",\n  \"expiresIn\": 900\n}"
+              "body": "{\n  \"documentId\": \"d1e2f3a4-b5c6-7890-abcd-ef1234567890\",\n  \"uploadUrl\": \"https://tarpan-uploads.s3.amazonaws.com/cases/a1b2c3d4/death-certificate.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256&...\",\n  \"expiresIn\": 900\n}"
             }
           ]
         },
@@ -662,8 +662,8 @@
               "originalRequest": {
                 "method": "PUT",
                 "url": {
-                  "raw": "https://afterlight-uploads.s3.amazonaws.com/...",
-                  "host": ["afterlight-uploads.s3.amazonaws.com"]
+                  "raw": "https://tarpan-uploads.s3.amazonaws.com/...",
+                  "host": ["tarpan-uploads.s3.amazonaws.com"]
                 }
               },
               "status": "OK",

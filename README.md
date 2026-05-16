@@ -34,7 +34,7 @@ Full rationale in [ARCHITECTURE.md](./ARCHITECTURE.md).
 ## Repository Structure
 
 ```
-AfterLight/
+Tarpan/
 ├── apps/
 │   ├── api/          # NestJS backend
 │   ├── web/          # React frontend
@@ -64,8 +64,8 @@ AfterLight/
 
 ```bash
 # Clone the repository
-git clone git@github.com:divyangchauhan/AfterLight.git
-cd AfterLight
+git clone git@github.com:divyangchauhan/Tarpan.git
+cd Tarpan
 
 # Install dependencies
 pnpm install
@@ -115,14 +115,14 @@ Stacks deploy in dependency order automatically:
 
 | Stack                 | What it creates                                |
 | --------------------- | ---------------------------------------------- |
-| `AfterLightNetwork`   | VPC, subnets, NAT Gateway, security groups     |
-| `AfterLightStorage`   | S3 buckets for uploads and generated PDFs      |
-| `AfterLightMessaging` | SQS queues (processing + generation) with DLQs |
-| `AfterLightSecrets`   | Secrets Manager entries for all app secrets    |
-| `AfterLightDatabase`  | RDS PostgreSQL 16 (db.t3.micro)                |
-| `AfterLightLambda`    | Python processor Lambda with SQS triggers      |
-| `AfterLightApi`       | ECS Fargate + ALB for the NestJS API           |
-| `AfterLightFrontend`  | CloudFront + S3 for the React app              |
+| `TarpanNetwork`   | VPC, subnets, NAT Gateway, security groups     |
+| `TarpanStorage`   | S3 buckets for uploads and generated PDFs      |
+| `TarpanMessaging` | SQS queues (processing + generation) with DLQs |
+| `TarpanSecrets`   | Secrets Manager entries for all app secrets    |
+| `TarpanDatabase`  | RDS PostgreSQL 16 (db.t3.micro)                |
+| `TarpanLambda`    | Python processor Lambda with SQS triggers      |
+| `TarpanApi`       | ECS Fargate + ALB for the NestJS API           |
+| `TarpanFrontend`  | CloudFront + S3 for the React app              |
 
 ### Post-deploy steps
 
@@ -130,7 +130,7 @@ Stacks deploy in dependency order automatically:
 
 ```bash
 aws secretsmanager put-secret-value \
-  --secret-id afterlight/anthropic-api-key \
+  --secret-id tarpan/anthropic-api-key \
   --secret-string '{"value":"sk-ant-api03-..."}'
 ```
 
@@ -139,7 +139,7 @@ aws secretsmanager put-secret-value \
 ```bash
 # Get the DB connection string from Secrets Manager
 DB_URL=$(aws secretsmanager get-secret-value \
-  --secret-id afterlight/db-credentials \
+  --secret-id tarpan/db-credentials \
   --query SecretString --output text | \
   python3 -c "import sys,json; s=json.load(sys.stdin); print(f\"postgresql://{s['username']}:{s['password']}@{s['host']}:5432/{s['dbname']}\")")
 
@@ -151,7 +151,7 @@ DATABASE_URL=$DB_URL pnpm --filter api migration:run
 ```bash
 # Get the API URL from CDK outputs
 API_URL=$(aws cloudformation describe-stacks \
-  --stack-name AfterLightApi \
+  --stack-name TarpanApi \
   --query "Stacks[0].Outputs[?OutputKey=='ApiUrl'].OutputValue" \
   --output text)
 
@@ -160,7 +160,7 @@ VITE_API_URL=$API_URL VITE_WS_URL=$API_URL pnpm --filter web build
 
 # Sync to S3
 BUCKET=$(aws cloudformation describe-stacks \
-  --stack-name AfterLightFrontend \
+  --stack-name TarpanFrontend \
   --query "Stacks[0].Outputs[?OutputKey=='WebsiteBucketName'].OutputValue" \
   --output text)
 
@@ -168,7 +168,7 @@ aws s3 sync apps/web/dist/ s3://$BUCKET --delete
 
 # Invalidate CloudFront cache
 DIST_ID=$(aws cloudformation describe-stacks \
-  --stack-name AfterLightFrontend \
+  --stack-name TarpanFrontend \
   --query "Stacks[0].Outputs[?OutputKey=='DistributionId'].OutputValue" \
   --output text)
 
@@ -179,7 +179,7 @@ aws cloudfront create-invalidation --distribution-id $DIST_ID --paths "/*"
 
 ```bash
 aws cloudformation describe-stacks \
-  --stack-name AfterLightFrontend \
+  --stack-name TarpanFrontend \
   --query "Stacks[0].Outputs[?OutputKey=='DistributionUrl'].OutputValue" \
   --output text
 ```

@@ -20,10 +20,10 @@ COPY packages/shared/ ./packages/shared/
 COPY apps/api/ ./apps/api/
 
 # Build shared package first
-RUN pnpm --filter @afterlight/shared build
+RUN pnpm --filter @tarpan/shared build
 
 # Build NestJS API
-RUN pnpm --filter @afterlight/api build
+RUN pnpm --filter @tarpan/api build
 
 # ── Production stage ───────────────────────────────────────────────────────────
 FROM node:20-alpine AS production
@@ -50,8 +50,8 @@ COPY apps/api/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Non-root user for security
-RUN addgroup -S afterlight && adduser -S afterlight -G afterlight
-USER afterlight
+RUN addgroup -S tarpan && adduser -S tarpan -G tarpan
+USER tarpan
 
 WORKDIR /app/apps/api
 

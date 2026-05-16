@@ -142,7 +142,7 @@ describe('GeneratedDocumentsService', () => {
       mockGeneratedDocRepository.create.mockReturnValue(mockGeneratedDoc);
       mockGeneratedDocRepository.save.mockResolvedValue(mockGeneratedDoc);
       mockConfigService.getOrThrow.mockReturnValue(
-        'http://sqs.us-east-1.amazonaws.com/123456789/afterlight-document-generation',
+        'http://sqs.us-east-1.amazonaws.com/123456789/tarpan-document-generation',
       );
       mockSqsService.sendMessage.mockResolvedValue(undefined);
     });
@@ -287,13 +287,13 @@ describe('GeneratedDocumentsService', () => {
       };
       mockCasesService.findOne.mockResolvedValue(mockCase);
       mockGeneratedDocRepository.find.mockResolvedValue([readyDoc]);
-      mockConfigService.getOrThrow.mockReturnValue('afterlight-generated-docs');
+      mockConfigService.getOrThrow.mockReturnValue('tarpan-generated-docs');
       mockS3Service.generateDownloadUrl.mockResolvedValue('https://s3.example.com/signed-url');
 
       const result = await service.findAll('user-id', 'case-id');
 
       expect(mockS3Service.generateDownloadUrl).toHaveBeenCalledWith(
-        'afterlight-generated-docs',
+        'tarpan-generated-docs',
         readyDoc.s3Key,
         900,
       );
