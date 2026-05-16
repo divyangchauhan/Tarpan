@@ -122,7 +122,7 @@
 | P5-02 | Synthetic accuracy report: test parser against generated certificates | ⬜     | Uses synthetic certificate fixtures only; real death certificates are not yet tested |
 | P5-03 | Loading performance: add per-stage timing logs to Lambda handler | ✅     | PR #10 — per-stage and total duration_ms logged for processing and generation |
 | P5-04 | Mobile responsiveness audit                                      | ✅     | PR #10 — sidebar drawer, responsive form grids, card overflow fix             |
-| P5-05 | Investor demo script and walkthrough notes                       | ✅     | PR #10 — docs/DEMO.md                                                         |
+| P5-05 | Investor demo script and walkthrough notes                       | ✅     | PR #10 (removed before open-sourcing)                                         |
 
 ---
 
