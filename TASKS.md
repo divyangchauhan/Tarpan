@@ -107,7 +107,7 @@
 | P4-03 | SQS queue stack (two queues: processing + generation)               | ✅     | PR #8                     |
 | P4-04 | Lambda stack (processor Lambda + both SQS triggers)                 | ✅     | PR #8                     |
 | P4-05 | RDS PostgreSQL stack                                                | ✅     | PR #8                     |
-| P4-06 | ECS / EC2 stack for NestJS API (or Elastic Beanstalk for POC speed) | ✅     | PR #8 — ECS Fargate + ALB |
+| P4-06 | ECS / EC2 stack for NestJS API                                     | ✅     | PR #8 — ECS Fargate + ALB |
 | P4-07 | CloudFront + S3 for React app hosting                               | ✅     | PR #8                     |
 | P4-08 | Secrets Manager for API keys                                        | ✅     | PR #8                     |
 | P4-09 | IAM roles and least-privilege policies                              | ✅     | PR #8                     |
@@ -122,7 +122,7 @@
 | P5-02 | Synthetic accuracy report: test parser against generated certificates | ⬜     | Uses synthetic certificate fixtures only; real death certificates are not yet tested |
 | P5-03 | Loading performance: add per-stage timing logs to Lambda handler | ✅     | PR #10 — per-stage and total duration_ms logged for processing and generation |
 | P5-04 | Mobile responsiveness audit                                      | ✅     | PR #10 — sidebar drawer, responsive form grids, card overflow fix             |
-| P5-05 | Investor demo script and walkthrough notes                       | ✅     | PR #10 — docs/DEMO.md                                                         |
+| P5-05 | Demo script and walkthrough notes                                | ✅     | PR #10 (removed before open-sourcing)                                         |
 
 ---
 

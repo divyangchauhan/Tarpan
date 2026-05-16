@@ -2,6 +2,13 @@
   "name": "@tarpan/infra",
   "version": "0.0.1",
   "private": true,
+  "author": "Divyang Chauhan",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/divyangchauhan/Tarpan.git",
+    "directory": "infra"
+  },
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",

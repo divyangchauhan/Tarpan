@@ -42,7 +42,6 @@ Tarpan/
 ├── packages/
 │   └── shared/       # Shared TypeScript types / constants
 ├── infra/            # AWS CDK infrastructure code
-├── docs/             # Additional documentation
 ├── ARCHITECTURE.md   # System design & decisions
 ├── TASKS.md          # Project task tracker
 └── CLAUDE.md         # AI agent context file
@@ -194,7 +193,7 @@ cd infra && cdk destroy --all
 
 ---
 
-## Key Features (POC — Complete)
+## Key Features
 
 - [x] Death certificate upload and parsing (AI-powered OCR)
 - [x] Extracted data review and correction UI

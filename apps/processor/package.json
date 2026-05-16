@@ -2,6 +2,13 @@
   "name": "@tarpan/processor",
   "version": "0.0.1",
   "private": true,
+  "author": "Divyang Chauhan",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/divyangchauhan/Tarpan.git",
+    "directory": "apps/processor"
+  },
   "scripts": {
     "dev": "./start_worker.sh",
     "test": "poetry run pytest",
