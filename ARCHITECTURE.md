@@ -2,7 +2,7 @@
 
 ## Overview
 
-AfterLight is a document-centric platform with three distinct processing concerns:
+Tarpan is a document-centric platform with three distinct processing concerns:
 
 1. **User interaction** — a fast, guided UI for uploading documents and reviewing/downloading outputs.
 2. **API orchestration** — a typed, testable backend that manages users, cases, documents, and workflows.
@@ -127,8 +127,8 @@ Two SQS queues are used — one per workload type — both consumed by the same 
 
 | Queue                            | Purpose                                                          |
 | -------------------------------- | ---------------------------------------------------------------- |
-| `afterlight-document-processing` | Death certificate parse jobs (`{ documentId, caseId, s3Key }`)   |
-| `afterlight-document-generation` | PDF generation jobs (`{ generatedDocumentId, templateId, ... }`) |
+| `tarpan-document-processing` | Death certificate parse jobs (`{ documentId, caseId, s3Key }`)   |
+| `tarpan-document-generation` | PDF generation jobs (`{ generatedDocumentId, templateId, ... }`) |
 
 The Lambda handler routes messages by inspecting the body: presence of `generatedDocumentId` identifies a generation job; otherwise it is a processing job.
 

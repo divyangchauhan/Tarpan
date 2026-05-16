@@ -1,5 +1,5 @@
 import { Controller, Get, UseGuards, Version } from '@nestjs/common';
-import { Template } from '@afterlight/shared';
+import { Template } from '@tarpan/shared';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TemplatesService } from './templates.service';
 

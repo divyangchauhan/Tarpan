@@ -8,7 +8,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { CaseStatus, DeceasedInfo, ExecutorInfo } from '@afterlight/shared';
+import { CaseStatus, DeceasedInfo, ExecutorInfo } from '@tarpan/shared';
 import { UserEntity } from './user.entity';
 import { DocumentEntity } from './document.entity';
 import { GeneratedDocumentEntity } from './generated-document.entity';

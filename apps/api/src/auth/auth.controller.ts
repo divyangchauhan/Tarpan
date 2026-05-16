@@ -9,7 +9,7 @@ import {
   Version,
 } from '@nestjs/common';
 import { Request as ExpressRequest } from 'express';
-import { AuthTokens } from '@afterlight/shared';
+import { AuthTokens } from '@tarpan/shared';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';

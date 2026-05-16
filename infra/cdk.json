@@ -1,5 +1,5 @@
 {
-  "app": "npx ts-node -P tsconfig.json --prefer-ts-exts bin/afterlight.ts",
+  "app": "npx ts-node -P tsconfig.json --prefer-ts-exts bin/tarpan.ts",
   "watch": {
     "include": ["**"],
     "exclude": [

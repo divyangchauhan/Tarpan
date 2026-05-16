@@ -67,7 +67,7 @@ export function Sidebar({ onClose }: SidebarProps): JSX.Element {
             fontFamily: 'var(--serif)', fontSize: 20, fontWeight: 500,
             color: 'white', letterSpacing: '0.01em',
           }}>
-            AfterLight
+            Tarpan
           </span>
         </div>
         <p style={{ fontSize: 11.5, color: 'var(--sidebar-muted)', marginTop: 6, lineHeight: 1.5 }}>

@@ -53,10 +53,10 @@ _ENV_DEFAULTS = {
     "AWS_ENDPOINT_URL": "",
     "API_CALLBACK_URL": "http://localhost:3001",
     "INTERNAL_API_SECRET": "test-secret",
-    "S3_UPLOADS_BUCKET": "afterlight-uploads",
-    "S3_GENERATED_DOCS_BUCKET": "afterlight-generated-docs",
-    "SQS_DOCUMENT_PROCESSING_QUEUE_URL": "http://localhost:4566/000000000000/afterlight-document-processing",
-    "SQS_DOCUMENT_GENERATION_QUEUE_URL": "http://localhost:4566/000000000000/afterlight-document-generation",
+    "S3_UPLOADS_BUCKET": "tarpan-uploads",
+    "S3_GENERATED_DOCS_BUCKET": "tarpan-generated-docs",
+    "SQS_DOCUMENT_PROCESSING_QUEUE_URL": "http://localhost:4566/000000000000/tarpan-document-processing",
+    "SQS_DOCUMENT_GENERATION_QUEUE_URL": "http://localhost:4566/000000000000/tarpan-document-generation",
 }
 for _k, _v in _ENV_DEFAULTS.items():
     os.environ.setdefault(_k, _v)
@@ -309,7 +309,7 @@ def _print_report(results: list[CertResult]) -> None:
     errors = [r for r in results if r.error]
 
     print(f"\n{'=' * 70}")
-    print(f"  AfterLight P5-02 Accuracy Report — {total} certificates")
+    print(f"  Tarpan P5-02 Accuracy Report — {total} certificates")
     print(f"{'=' * 70}")
 
     if errors:

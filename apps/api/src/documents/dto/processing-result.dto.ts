@@ -1,5 +1,5 @@
 import { IsEnum, IsObject, IsOptional, IsString, IsUUID } from 'class-validator';
-import { DocumentStatus, ExtractedCertificateData } from '@afterlight/shared';
+import { DocumentStatus, ExtractedCertificateData } from '@tarpan/shared';
 
 // Allowed statuses for processing callback
 const ALLOWED_STATUSES = [DocumentStatus.PROCESSED, DocumentStatus.FAILED] as const;

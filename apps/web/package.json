@@ -1,5 +1,5 @@
 {
-  "name": "@afterlight/web",
+  "name": "@tarpan/web",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -14,7 +14,7 @@
     "test:cov": "vitest run --coverage"
   },
   "dependencies": {
-    "@afterlight/shared": "workspace:*",
+    "@tarpan/shared": "workspace:*",
     "@hookform/resolvers": "^5.2.2",
     "axios": "^1.14.0",
     "lucide-react": "^1.7.0",

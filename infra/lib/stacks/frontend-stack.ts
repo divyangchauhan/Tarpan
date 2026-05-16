@@ -61,11 +61,11 @@ export class FrontendStack extends cdk.Stack {
     // ── CloudFront distribution ────────────────────────────────────────────
 
     const oac = new cloudfront.S3OriginAccessControl(this, 'WebOAC', {
-      description: 'Afterlight web OAC',
+      description: 'Tarpan web OAC',
     });
 
     this.distribution = new cloudfront.Distribution(this, 'Distribution', {
-      comment: 'AfterLight React SPA',
+      comment: 'Tarpan React SPA',
       defaultBehavior: {
         origin: cloudfront_origins.S3BucketOrigin.withOriginAccessControl(this.websiteBucket, {
           originAccessControl: oac,

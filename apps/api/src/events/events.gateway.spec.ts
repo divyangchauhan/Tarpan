@@ -3,7 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import type { Socket } from 'socket.io';
-import { DocumentStatus, WsEvent } from '@afterlight/shared';
+import { DocumentStatus, WsEvent } from '@tarpan/shared';
 import { EventsGateway } from './events.gateway';
 
 interface MockSocket {
@@ -136,7 +136,7 @@ describe('EventsGateway', () => {
     it('should emit DOCUMENT_PROCESSING_COMPLETE for PROCESSED status', () => {
       const extractedData = {
         full_name: 'Jane Smith',
-      } as unknown as import('@afterlight/shared').ExtractedCertificateData;
+      } as unknown as import('@tarpan/shared').ExtractedCertificateData;
 
       gateway.emitDocumentStatus('case-id', 'doc-id', DocumentStatus.PROCESSED, {
         extractedData,

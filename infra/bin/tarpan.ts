@@ -42,17 +42,17 @@ const stackProps: cdk.StackProps = { env };
 
 // ── Foundation (no inter-stack dependencies) ──────────────────────────────
 
-const network = new NetworkStack(app, 'AfterLightNetwork', { ...stackProps, config });
+const network = new NetworkStack(app, 'TarpanNetwork', { ...stackProps, config });
 
-const storage = new StorageStack(app, 'AfterLightStorage', { ...stackProps, config });
+const storage = new StorageStack(app, 'TarpanStorage', { ...stackProps, config });
 
-const messaging = new MessagingStack(app, 'AfterLightMessaging', stackProps);
+const messaging = new MessagingStack(app, 'TarpanMessaging', stackProps);
 
-const secrets = new SecretsStack(app, 'AfterLightSecrets', stackProps);
+const secrets = new SecretsStack(app, 'TarpanSecrets', stackProps);
 
 // ── Data layer ────────────────────────────────────────────────────────────
 
-const database = new DatabaseStack(app, 'AfterLightDatabase', {
+const database = new DatabaseStack(app, 'TarpanDatabase', {
   ...stackProps,
   config,
   network,
@@ -61,7 +61,7 @@ const database = new DatabaseStack(app, 'AfterLightDatabase', {
 // ── Compute ───────────────────────────────────────────────────────────────
 
 // API must be deployed before Lambda so we know the API callback URL
-const api = new ApiStack(app, 'AfterLightApi', {
+const api = new ApiStack(app, 'TarpanApi', {
   ...stackProps,
   config,
   network,
@@ -71,7 +71,7 @@ const api = new ApiStack(app, 'AfterLightApi', {
   database,
 });
 
-new LambdaStack(app, 'AfterLightLambda', {
+new LambdaStack(app, 'TarpanLambda', {
   ...stackProps,
   config,
   network,
@@ -84,7 +84,7 @@ new LambdaStack(app, 'AfterLightLambda', {
 
 // ── Frontend ──────────────────────────────────────────────────────────────
 
-new FrontendStack(app, 'AfterLightFrontend', {
+new FrontendStack(app, 'TarpanFrontend', {
   ...stackProps,
   config,
   albDnsName: api.loadBalancerDnsName,

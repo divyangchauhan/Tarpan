@@ -12,7 +12,7 @@
  */
 import request from 'supertest';
 import { INestApplication } from '@nestjs/common';
-import { DocumentStatus, GeneratedDocumentStatus, InstitutionType } from '@afterlight/shared';
+import { DocumentStatus, GeneratedDocumentStatus, InstitutionType } from '@tarpan/shared';
 import { cleanupUser, createTestApp, mockS3, mockSqs } from './helpers/create-test-app';
 
 const EMAIL = `docs-e2e-${Date.now()}@test.local`;

@@ -1,4 +1,4 @@
-# AfterLight Processor
+# Tarpan Processor
 
 Python Lambda function for processing death certificates and generating legal documents.
 
@@ -55,7 +55,7 @@ Required variables:
 **Option 2: Using pnpm (from monorepo root)**
 
 ```bash
-pnpm --filter @afterlight/processor dev
+pnpm --filter @tarpan/processor dev
 ```
 
 **Option 3: Using poetry directly**

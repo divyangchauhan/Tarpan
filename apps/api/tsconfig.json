@@ -5,7 +5,7 @@
     "outDir": "./dist",
     "baseUrl": "./",
     "paths": {
-      "@afterlight/shared": ["../../packages/shared/src"],
+      "@tarpan/shared": ["../../packages/shared/src"],
       "@api/*": ["./src/*"]
     },
     "emitDecoratorMetadata": true,

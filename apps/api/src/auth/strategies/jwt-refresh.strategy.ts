@@ -3,7 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
-import { JwtPayload } from '@afterlight/shared';
+import { JwtPayload } from '@tarpan/shared';
 
 export interface JwtRefreshValidatedUser {
   userId: string;

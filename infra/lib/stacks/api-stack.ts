@@ -52,7 +52,7 @@ export class ApiStack extends cdk.Stack {
     // ── CloudWatch log group (explicit retention — prevents unbounded accumulation) ──
 
     const apiLogGroup = new logs.LogGroup(this, 'ApiLogGroup', {
-      logGroupName: '/ecs/afterlight-api',
+      logGroupName: '/ecs/tarpan-api',
       retention: config.logRetentionDays,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
@@ -60,7 +60,7 @@ export class ApiStack extends cdk.Stack {
     // ── ECS Cluster ────────────────────────────────────────────────────────
 
     const cluster = new ecs.Cluster(this, 'Cluster', {
-      clusterName: 'afterlight',
+      clusterName: 'tarpan',
       vpc: network.vpc,
       containerInsightsV2: config.ecsContainerInsights,
     });
@@ -69,7 +69,7 @@ export class ApiStack extends cdk.Stack {
 
     const service = new ecs_patterns.ApplicationLoadBalancedFargateService(this, 'ApiService', {
       cluster,
-      serviceName: 'afterlight-api',
+      serviceName: 'tarpan-api',
       cpu: config.fargateCpu,
       memoryLimitMiB: config.fargateMemoryMiB,
       desiredCount: config.fargateDesiredCount,
@@ -102,7 +102,7 @@ export class ApiStack extends cdk.Stack {
           DB_NAME: ecs.Secret.fromSecretsManager(database.credentials, 'dbname'),
         },
         logDriver: ecs.LogDrivers.awsLogs({
-          streamPrefix: 'afterlight-api',
+          streamPrefix: 'tarpan-api',
           logGroup: apiLogGroup,
         }),
       },
@@ -112,7 +112,7 @@ export class ApiStack extends cdk.Stack {
           ? ec2.SubnetType.PUBLIC
           : ec2.SubnetType.PRIVATE_WITH_EGRESS,
       },
-      loadBalancerName: 'afterlight-alb',
+      loadBalancerName: 'tarpan-alb',
       publicLoadBalancer: true,
       listenerPort: 80, // Add HTTPS + ACM cert for production
       healthCheckGracePeriod: cdk.Duration.seconds(60),

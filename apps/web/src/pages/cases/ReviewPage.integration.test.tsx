@@ -6,8 +6,8 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { vi } from 'vitest';
-import { CaseStatus, DocumentStatus, DocumentType } from '@afterlight/shared';
-import type { Case, Document } from '@afterlight/shared';
+import { CaseStatus, DocumentStatus, DocumentType } from '@tarpan/shared';
+import type { Case, Document } from '@tarpan/shared';
 import { ReviewPage } from './ReviewPage';
 import { ToastProvider } from '@/context/ToastContext';
 

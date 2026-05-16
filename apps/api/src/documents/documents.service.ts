@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { v4 as uuidv4 } from 'uuid';
-import { DocumentStatus, DocumentType, DocumentProcessingJob } from '@afterlight/shared';
+import { DocumentStatus, DocumentType, DocumentProcessingJob } from '@tarpan/shared';
 import { DocumentEntity } from '../entities/document.entity';
 import { CasesService } from '../cases/cases.service';
 import { S3Service } from '../aws/s3.service';

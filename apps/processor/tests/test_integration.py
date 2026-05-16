@@ -27,8 +27,8 @@ from src.models import ExtractedCertificateData
 # Shared test data
 # ---------------------------------------------------------------------------
 
-_UPLOADS_BUCKET = "afterlight-uploads"
-_GENERATED_BUCKET = "afterlight-generated-docs"
+_UPLOADS_BUCKET = "tarpan-uploads"
+_GENERATED_BUCKET = "tarpan-generated-docs"
 
 _EXTRACTED = ExtractedCertificateData(
     full_name="Jane Smith",
@@ -64,8 +64,8 @@ def aws(monkeypatch: pytest.MonkeyPatch) -> Any:
         s3.create_bucket(Bucket=_GENERATED_BUCKET)
 
         sqs = boto3.client("sqs", region_name="us-east-1")
-        proc_q = sqs.create_queue(QueueName="afterlight-document-processing")
-        gen_q = sqs.create_queue(QueueName="afterlight-document-generation")
+        proc_q = sqs.create_queue(QueueName="tarpan-document-processing")
+        gen_q = sqs.create_queue(QueueName="tarpan-document-generation")
 
         yield {
             "s3": s3,

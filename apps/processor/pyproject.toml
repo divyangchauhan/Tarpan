@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "afterlight-processor"
+name = "tarpan-processor"
 version = "0.0.1"
-description = "AfterLight document processing Lambda — parses death certificates and generates legal documents"
+description = "Tarpan document processing Lambda — parses death certificates and generates legal documents"
 authors = []
 package-mode = false
 
