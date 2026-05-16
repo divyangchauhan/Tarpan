@@ -2,6 +2,13 @@
   "name": "@tarpan/api",
   "version": "0.0.1",
   "private": true,
+  "author": "Divyang Chauhan",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/divyangchauhan/Tarpan.git",
+    "directory": "apps/api"
+  },
   "scripts": {
     "dev": "ts-node -r tsconfig-paths/register src/main.ts",
     "build": "nest build",
