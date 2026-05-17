@@ -138,7 +138,7 @@
 | P6-06 | Rate limiting: NestJS throttler guard on auth + upload endpoints         | ⬜     |       |
 | P6-07 | Health check endpoints + ALB health check hardening                      | ⬜     |       |
 | P6-08 | CDK environment promotion: staging → production pipeline                 | ⬜     |       |
-| P6-09 | Encrypt SSNs before storing extracted certificate data in the database   | ⬜     | Planned PR #11 — add application-layer encryption for SSN fields in `Document.extractedData`, migration/backfill for existing rows, tests for encryption/decryption boundaries, and update `CLAUDE.md` sensitive-data guidance |
+| P6-09 | Encrypt SSNs before storing extracted certificate data in the database   | ✅     | PR #11 — AES-256-GCM JSONB column transformer encrypts `socialSecurityNumber` in both `documents.extractedData` and `cases.deceasedInfo`; idempotent backfill migration; 16 tests; `SSN_ENCRYPTION_KEY` env + `CLAUDE.md` guidance synced |
 
 ---
 
