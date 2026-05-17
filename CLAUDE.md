@@ -82,7 +82,7 @@ Tarpan automates the administrative burden families face after a death:
 
 - Phase 6 — Production readiness (monitoring, alerting, secrets rotation, rate limiting)
 - Phase 7 — Auth hardening (email verification, password reset, MFA, OAuth2)
-- Phase 8 — Billing & payments (Stripe subscriptions, pricing tiers, entitlement guards)
+- Phase 8 — Billing & payments (Razorpay subscriptions, pricing tiers, entitlement guards)
 - Phase 9 — Additional institution templates + escalation workflow (brokerage, mortgage, insurance, probate; escalation letters; notification status lifecycle; 30-day SES reminders)
 - Phase 10 — Mobile app, Android + iOS _(not yet decided)_
 
