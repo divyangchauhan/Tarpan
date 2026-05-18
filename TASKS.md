@@ -39,7 +39,7 @@
 | P1-07 | Documents module: PATCH endpoint for Lambda to report results                 | ✅     | PR #3                                                                                               |
 | P1-08 | WebSocket gateway: push processing status updates to client                   | ✅     | PR #3                                                                                               |
 | P1-09 | Templates module: list available institution templates                        | ✅     | feat/p1-09-templates-module — GET /v1/templates; TemplatesService owns template↔institution mapping |
-| P1-10 | Generation module: trigger Lambda for PDF generation, return download URL     | ✅     | PR #5 — SQS-based via tarpan-document-generation queue                                          |
+| P1-10 | Generation module: trigger Lambda for PDF generation, return download URL     | ✅     | PR #5 — SQS-based via tarpan-document-generation queue                                              |
 | P1-11 | API unit tests (Jest) — target 80% coverage                                   | ✅     | PR #9 — 88% statement coverage, 72 tests                                                            |
 | P1-12 | API e2e tests (Supertest)                                                     | ✅     | PR #9 — auth (13 tests), cases (13 tests), documents + generated-documents (23 tests)               |
 
@@ -100,44 +100,44 @@
 
 ## Phase 4 — Infrastructure (AWS CDK)
 
-| ID    | Task                                                                | Status | Notes                     |
-| ----- | ------------------------------------------------------------------- | ------ | ------------------------- |
-| P4-01 | CDK project scaffold                                                | ✅     | PR #8                     |
-| P4-02 | S3 bucket stack (uploads + generated docs)                          | ✅     | PR #8                     |
-| P4-03 | SQS queue stack (two queues: processing + generation)               | ✅     | PR #8                     |
-| P4-04 | Lambda stack (processor Lambda + both SQS triggers)                 | ✅     | PR #8                     |
-| P4-05 | RDS PostgreSQL stack                                                | ✅     | PR #8                     |
-| P4-06 | ECS / EC2 stack for NestJS API                                     | ✅     | PR #8 — ECS Fargate + ALB |
-| P4-07 | CloudFront + S3 for React app hosting                               | ✅     | PR #8                     |
-| P4-08 | Secrets Manager for API keys                                        | ✅     | PR #8                     |
-| P4-09 | IAM roles and least-privilege policies                              | ✅     | PR #8                     |
+| ID    | Task                                                  | Status | Notes                     |
+| ----- | ----------------------------------------------------- | ------ | ------------------------- |
+| P4-01 | CDK project scaffold                                  | ✅     | PR #8                     |
+| P4-02 | S3 bucket stack (uploads + generated docs)            | ✅     | PR #8                     |
+| P4-03 | SQS queue stack (two queues: processing + generation) | ✅     | PR #8                     |
+| P4-04 | Lambda stack (processor Lambda + both SQS triggers)   | ✅     | PR #8                     |
+| P4-05 | RDS PostgreSQL stack                                  | ✅     | PR #8                     |
+| P4-06 | ECS / EC2 stack for NestJS API                        | ✅     | PR #8 — ECS Fargate + ALB |
+| P4-07 | CloudFront + S3 for React app hosting                 | ✅     | PR #8                     |
+| P4-08 | Secrets Manager for API keys                          | ✅     | PR #8                     |
+| P4-09 | IAM roles and least-privilege policies                | ✅     | PR #8                     |
 
 ---
 
 ## Phase 5 — Polish & Demo Prep
 
-| ID    | Task                                                             | Status | Notes                                                                         |
-| ----- | ---------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------- |
-| P5-01 | Seed script: demo case with real-looking data                    | ✅     | PR #9 — apps/api/src/database/seed.ts                                         |
+| ID    | Task                                                                  | Status | Notes                                                                                |
+| ----- | --------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------ |
+| P5-01 | Seed script: demo case with real-looking data                         | ✅     | PR #9 — apps/api/src/database/seed.ts                                                |
 | P5-02 | Synthetic accuracy report: test parser against generated certificates | ⬜     | Uses synthetic certificate fixtures only; real death certificates are not yet tested |
-| P5-03 | Loading performance: add per-stage timing logs to Lambda handler | ✅     | PR #10 — per-stage and total duration_ms logged for processing and generation |
-| P5-04 | Mobile responsiveness audit                                      | ✅     | PR #10 — sidebar drawer, responsive form grids, card overflow fix             |
-| P5-05 | Demo script and walkthrough notes                                | ✅     | PR #10 (removed before open-sourcing)                                         |
+| P5-03 | Loading performance: add per-stage timing logs to Lambda handler      | ✅     | PR #10 — per-stage and total duration_ms logged for processing and generation        |
+| P5-04 | Mobile responsiveness audit                                           | ✅     | PR #10 — sidebar drawer, responsive form grids, card overflow fix                    |
+| P5-05 | Demo script and walkthrough notes                                     | ✅     | PR #10 (removed before open-sourcing)                                                |
 
 ---
 
 ## Phase 6 — Production Readiness
 
-| ID    | Task                                                                     | Status | Notes |
-| ----- | ------------------------------------------------------------------------ | ------ | ----- |
-| P6-01 | CloudWatch dashboards: Lambda duration, error rate, SQS queue depth      | ⬜     |       |
-| P6-02 | Structured alerting: SNS alarms for Lambda errors and API 5xx rate       | ⬜     |       |
-| P6-03 | Sentry integration: API (NestJS) + Lambda error tracking                 | ⬜     |       |
-| P6-04 | Secrets rotation: AWS Secrets Manager rotation lambdas for DB + API keys | ⬜     |       |
-| P6-05 | Database backups: automated RDS snapshots + restore runbook              | ⬜     |       |
-| P6-06 | Rate limiting: NestJS throttler guard on auth + upload endpoints         | ⬜     |       |
-| P6-07 | Health check endpoints + ALB health check hardening                      | ⬜     |       |
-| P6-08 | CDK environment promotion: staging → production pipeline                 | ⬜     |       |
+| ID    | Task                                                                     | Status | Notes                                                                                                                                                                                                                                     |
+| ----- | ------------------------------------------------------------------------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P6-01 | CloudWatch dashboards: Lambda duration, error rate, SQS queue depth      | ✅     | PR #12 — `TarpanObservability` CDK stack: 3-row CloudWatch dashboard (Lambda invocations/errors/duration, SQS queue+DLQ depths, ALB request count+5xx) |
+| P6-02 | Structured alerting: SNS alarms for Lambda errors and API 5xx rate       | ✅     | PR #12 — 5 CloudWatch alarms (Lambda errors, Lambda duration p99 >240 s, processing DLQ depth, generation DLQ depth, ALB 5xx ≥5); all alarm to `tarpan-alerts` SNS topic; optional email via `--context alertEmail=`                    |
+| P6-03 | Sentry integration: API (NestJS) + Lambda error tracking                 | ⬜     |                                                                                                                                                                                                                                           |
+| P6-04 | Secrets rotation: AWS Secrets Manager rotation lambdas for DB + API keys | ⬜     |                                                                                                                                                                                                                                           |
+| P6-05 | Database backups: automated RDS snapshots + restore runbook              | ⬜     |                                                                                                                                                                                                                                           |
+| P6-06 | Rate limiting: NestJS throttler guard on auth + upload endpoints         | ⬜     |                                                                                                                                                                                                                                           |
+| P6-07 | Health check endpoints + ALB health check hardening                      | ⬜     |                                                                                                                                                                                                                                           |
+| P6-08 | CDK environment promotion: staging → production pipeline                 | ⬜     |                                                                                                                                                                                                                                           |
 | P6-09 | Encrypt SSNs before storing extracted certificate data in the database   | ✅     | PR #11 — AES-256-GCM JSONB column transformer encrypts `socialSecurityNumber` in both `documents.extractedData` and `cases.deceasedInfo`; idempotent backfill migration; 16 tests; `SSN_ENCRYPTION_KEY` env + `CLAUDE.md` guidance synced |
 
 ---
@@ -157,14 +157,14 @@
 
 ## Phase 8 — Billing & Payments
 
-| ID    | Task                                                                    | Status | Notes |
-| ----- | ----------------------------------------------------------------------- | ------ | ----- |
-| P8-01 | Razorpay integration: customer + subscription creation on register      | ⬜     |       |
-| P8-02 | Pricing plans: free tier (1 case) vs paid (unlimited)                   | ⬜     |       |
-| P8-03 | Razorpay webhook handler: subscription activated / charged / cancelled / halted | ⬜ |   |
-| P8-04 | Entitlement guard: block case creation when over plan limit             | ⬜     |       |
-| P8-05 | Subscription management: Razorpay-hosted subscription update/cancel link in account settings | ⬜ |   |
-| P8-06 | Usage tracking: per-case and per-document metrics for billing analytics | ⬜     |       |
+| ID    | Task                                                                                         | Status | Notes |
+| ----- | -------------------------------------------------------------------------------------------- | ------ | ----- |
+| P8-01 | Razorpay integration: customer + subscription creation on register                           | ⬜     |       |
+| P8-02 | Pricing plans: free tier (1 case) vs paid (unlimited)                                        | ⬜     |       |
+| P8-03 | Razorpay webhook handler: subscription activated / charged / cancelled / halted              | ⬜     |       |
+| P8-04 | Entitlement guard: block case creation when over plan limit                                  | ⬜     |       |
+| P8-05 | Subscription management: Razorpay-hosted subscription update/cancel link in account settings | ⬜     |       |
+| P8-06 | Usage tracking: per-case and per-document metrics for billing analytics                      | ⬜     |       |
 
 ---
 
@@ -227,18 +227,18 @@
 
 ## PR Schedule (Actual)
 
-| PR  | Scope                                                     | Phase Tasks                                       |
-| --- | --------------------------------------------------------- | ------------------------------------------------- |
-| #1  | Project docs (README, ARCHITECTURE, TASKS, CLAUDE.md)     | P0-01                                             |
-| #2  | Monorepo scaffold + CI + shared types                     | P0-02 to P0-06                                    |
-| #3  | NestJS API core (auth, cases, documents, WebSocket)       | P1-01 to P1-08                                    |
-| #4  | Python Lambda: parser + S3 + SQS                          | P2-01 to P2-06                                    |
-| #5  | Document templates (15+ institutions) + generation worker | P2-07 to P2-22                                    |
-| #6  | Bug fixes: upload flow, CORS, SQS queues                  | —                                                 |
-| #7  | React frontend + WebSocket improvements                   | P3-01 to P3-13                                    |
-| #8  | AWS CDK infrastructure                                    | P4-01 to P4-09                                    |
-| #9  | Tests, polish, demo prep                                  | P1-11, P1-12, P2-23, P2-24, P3-14, P5-01          |
-| #10 | Performance logging, mobile responsiveness, demo script   | P5-03, P5-04, P5-05                                |
+| PR  | Scope                                                     | Phase Tasks                              |
+| --- | --------------------------------------------------------- | ---------------------------------------- |
+| #1  | Project docs (README, ARCHITECTURE, TASKS, CLAUDE.md)     | P0-01                                    |
+| #2  | Monorepo scaffold + CI + shared types                     | P0-02 to P0-06                           |
+| #3  | NestJS API core (auth, cases, documents, WebSocket)       | P1-01 to P1-08                           |
+| #4  | Python Lambda: parser + S3 + SQS                          | P2-01 to P2-06                           |
+| #5  | Document templates (15+ institutions) + generation worker | P2-07 to P2-22                           |
+| #6  | Bug fixes: upload flow, CORS, SQS queues                  | —                                        |
+| #7  | React frontend + WebSocket improvements                   | P3-01 to P3-13                           |
+| #8  | AWS CDK infrastructure                                    | P4-01 to P4-09                           |
+| #9  | Tests, polish, demo prep                                  | P1-11, P1-12, P2-23, P2-24, P3-14, P5-01 |
+| #10 | Performance logging, mobile responsiveness, demo script   | P5-03, P5-04, P5-05                      |
 
 ---
 
@@ -249,34 +249,34 @@
 
 ### Phase 6 — Production Readiness
 
-| PR  | Scope                                                                 | Phase Tasks    |
-| --- | --------------------------------------------------------------------- | -------------- |
-| #11 | Security hardening: SSN encryption at rest + `CLAUDE.md` guidance sync | P6-09          |
-| #12 | Observability: CloudWatch dashboards + SNS alarms                     | P6-01, P6-02   |
-| #13 | Sentry error tracking: NestJS API + Lambda processor                  | P6-03          |
-| #14 | Resilience: Secrets Manager rotation + RDS backups & restore runbook  | P6-04, P6-05   |
-| #15 | API hardening: rate limiting + health check endpoints                 | P6-06, P6-07   |
-| #16 | CDK staging → production promotion pipeline                           | P6-08          |
+| PR  | Scope                                                                  | Phase Tasks  |
+| --- | ---------------------------------------------------------------------- | ------------ |
+| #11 | Security hardening: SSN encryption at rest + `CLAUDE.md` guidance sync | P6-09        |
+| #12 | Observability: CloudWatch dashboards + SNS alarms                      | P6-01, P6-02 |
+| #13 | Sentry error tracking: NestJS API + Lambda processor                   | P6-03        |
+| #14 | Resilience: Secrets Manager rotation + RDS backups & restore runbook   | P6-04, P6-05 |
+| #15 | API hardening: rate limiting + health check endpoints                  | P6-06, P6-07 |
+| #16 | CDK staging → production promotion pipeline                            | P6-08        |
 
 ### Phase 7 — Auth Hardening
 
-| PR  | Scope                                                                 | Phase Tasks    |
-| --- | --------------------------------------------------------------------- | -------------- |
-| #17 | Email infrastructure (SES) + email verification on registration       | P7-01          |
-| #18 | Password reset flow (forgot → SES email → reset token)                | P7-02          |
-| #19 | Account lockout after N failed login attempts                         | P7-03          |
-| #20 | MFA support (TOTP via authenticator app)                              | P7-04          |
-| #21 | Session management: active device list + remote logout                | P7-05          |
-| #22 | OAuth2 social login (Google)                                          | P7-06          |
+| PR  | Scope                                                           | Phase Tasks |
+| --- | --------------------------------------------------------------- | ----------- |
+| #17 | Email infrastructure (SES) + email verification on registration | P7-01       |
+| #18 | Password reset flow (forgot → SES email → reset token)          | P7-02       |
+| #19 | Account lockout after N failed login attempts                   | P7-03       |
+| #20 | MFA support (TOTP via authenticator app)                        | P7-04       |
+| #21 | Session management: active device list + remote logout          | P7-05       |
+| #22 | OAuth2 social login (Google)                                    | P7-06       |
 
 ### Phase 8 — Billing & Payments (Razorpay)
 
-| PR  | Scope                                                                 | Phase Tasks    |
-| --- | --------------------------------------------------------------------- | -------------- |
-| #23 | Razorpay integration: customer + subscription creation on register    | P8-01          |
-| #24 | Pricing plans (free vs paid) + entitlement guard on case creation     | P8-02, P8-04   |
-| #25 | Razorpay webhook handler: subscription lifecycle events               | P8-03          |
-| #26 | Subscription management page + usage tracking for billing analytics   | P8-05, P8-06   |
+| PR  | Scope                                                               | Phase Tasks  |
+| --- | ------------------------------------------------------------------- | ------------ |
+| #23 | Razorpay integration: customer + subscription creation on register  | P8-01        |
+| #24 | Pricing plans (free vs paid) + entitlement guard on case creation   | P8-02, P8-04 |
+| #25 | Razorpay webhook handler: subscription lifecycle events             | P8-03        |
+| #26 | Subscription management page + usage tracking for billing analytics | P8-05, P8-06 |
 
 ### Phase 9 — Additional Institution Templates & Escalation
 
