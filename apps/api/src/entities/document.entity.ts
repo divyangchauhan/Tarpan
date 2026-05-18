@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { DocumentStatus, DocumentType, ExtractedCertificateData } from '@tarpan/shared';
 import { CaseEntity } from './case.entity';
+import { ssnJsonbTransformer } from '../common/crypto/ssn-jsonb.transformer';
 
 @Entity('documents')
 export class DocumentEntity {
@@ -34,7 +35,11 @@ export class DocumentEntity {
   @Column()
   s3Key!: string;
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({
+    type: 'jsonb',
+    nullable: true,
+    transformer: ssnJsonbTransformer<ExtractedCertificateData>(),
+  })
   extractedData!: ExtractedCertificateData | null;
 
   @Column({ type: 'varchar', nullable: true })

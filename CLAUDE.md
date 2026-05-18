@@ -82,7 +82,7 @@ Tarpan automates the administrative burden families face after a death:
 
 - Phase 6 — Production readiness (monitoring, alerting, secrets rotation, rate limiting)
 - Phase 7 — Auth hardening (email verification, password reset, MFA, OAuth2)
-- Phase 8 — Billing & payments (Stripe subscriptions, pricing tiers, entitlement guards)
+- Phase 8 — Billing & payments (Razorpay subscriptions, pricing tiers, entitlement guards)
 - Phase 9 — Additional institution templates + escalation workflow (brokerage, mortgage, insurance, probate; escalation letters; notification status lifecycle; 30-day SES reminders)
 - Phase 10 — Mobile app, Android + iOS _(not yet decided)_
 
@@ -163,6 +163,7 @@ S3_GENERATED_DOCS_BUCKET=tarpan-generated-docs
 SQS_DOCUMENT_PROCESSING_QUEUE_URL=http://localhost:4566/000000000000/tarpan-document-processing
 SQS_DOCUMENT_GENERATION_QUEUE_URL=http://localhost:4566/000000000000/tarpan-document-generation
 INTERNAL_API_SECRET=...
+SSN_ENCRYPTION_KEY=...                   # base64-encoded 32-byte AES-256 key; encrypts SSNs at rest (P6-09). Generate: openssl rand -base64 32
 ANTHROPIC_API_KEY=...                    # Not read by the API at runtime — only by the Lambda processor. Included here for completeness when running the full local stack.
 CORS_ORIGIN=http://localhost:5173
 ```
@@ -266,7 +267,7 @@ Two guard types protect different route classes:
 - Death certificates are **highly sensitive PII**. Never log document content.
 - S3 objects must be **private** (no public ACLs).
 - Pre-signed URLs must have **max 15-minute TTL**.
-- Extracted data (names, SSNs, DOBs) must be **encrypted at rest** in the database (use PostgreSQL column encryption or a TypeORM subscriber for SSN specifically).
+- SSNs are **encrypted at rest** (P6-09): a TypeORM JSONB column transformer (`apps/api/src/common/crypto/`) AES-256-GCM-encrypts `socialSecurityNumber` in both `documents.extractedData` and `cases.deceasedInfo`, keyed by `SSN_ENCRYPTION_KEY`. Encryption is transparent to services/repositories — never encrypt/decrypt SSNs by hand; rely on the entity columns. Other extracted PII (names, DOBs) is not yet encrypted at rest.
 - Log only: document IDs, processing status, timing metrics.
 
 ---
