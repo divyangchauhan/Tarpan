@@ -138,7 +138,7 @@
 | P6-06 | Rate limiting: NestJS throttler guard on auth + upload endpoints         | ⬜     |       |
 | P6-07 | Health check endpoints + ALB health check hardening                      | ⬜     |       |
 | P6-08 | CDK environment promotion: staging → production pipeline                 | ⬜     |       |
-| P6-09 | Encrypt SSNs before storing extracted certificate data in the database   | ⬜     | Planned PR #11 — add application-layer encryption for SSN fields in `Document.extractedData`, migration/backfill for existing rows, tests for encryption/decryption boundaries, and update `CLAUDE.md` sensitive-data guidance |
+| P6-09 | Encrypt SSNs before storing extracted certificate data in the database   | ✅     | PR #11 — AES-256-GCM JSONB column transformer encrypts `socialSecurityNumber` in both `documents.extractedData` and `cases.deceasedInfo`; idempotent backfill migration; 16 tests; `SSN_ENCRYPTION_KEY` env + `CLAUDE.md` guidance synced |
 
 ---
 
@@ -159,11 +159,11 @@
 
 | ID    | Task                                                                    | Status | Notes |
 | ----- | ----------------------------------------------------------------------- | ------ | ----- |
-| P8-01 | Stripe integration: customer + subscription creation on register        | ⬜     |       |
+| P8-01 | Razorpay integration: customer + subscription creation on register      | ⬜     |       |
 | P8-02 | Pricing plans: free tier (1 case) vs paid (unlimited)                   | ⬜     |       |
-| P8-03 | Stripe webhook handler: subscription created / cancelled / past due     | ⬜     |       |
+| P8-03 | Razorpay webhook handler: subscription activated / charged / cancelled / halted | ⬜ |   |
 | P8-04 | Entitlement guard: block case creation when over plan limit             | ⬜     |       |
-| P8-05 | Billing portal: Stripe customer portal link in account settings         | ⬜     |       |
+| P8-05 | Subscription management: Razorpay-hosted subscription update/cancel link in account settings | ⬜ |   |
 | P8-06 | Usage tracking: per-case and per-document metrics for billing analytics | ⬜     |       |
 
 ---
@@ -244,6 +244,49 @@
 
 ## PR Schedule (Planned)
 
-| PR  | Scope                                          | Phase Tasks |
-| --- | ---------------------------------------------- | ----------- |
-| #11 | Security hardening: SSN encryption at rest + `CLAUDE.md` guidance sync | P6-09       |
+> Covers Phases 6–9. Phase 10 (mobile app) is excluded — not yet decided.
+> One logical concern per PR; kept reviewable (< 600 lines diff target).
+
+### Phase 6 — Production Readiness
+
+| PR  | Scope                                                                 | Phase Tasks    |
+| --- | --------------------------------------------------------------------- | -------------- |
+| #11 | Security hardening: SSN encryption at rest + `CLAUDE.md` guidance sync | P6-09          |
+| #12 | Observability: CloudWatch dashboards + SNS alarms                     | P6-01, P6-02   |
+| #13 | Sentry error tracking: NestJS API + Lambda processor                  | P6-03          |
+| #14 | Resilience: Secrets Manager rotation + RDS backups & restore runbook  | P6-04, P6-05   |
+| #15 | API hardening: rate limiting + health check endpoints                 | P6-06, P6-07   |
+| #16 | CDK staging → production promotion pipeline                           | P6-08          |
+
+### Phase 7 — Auth Hardening
+
+| PR  | Scope                                                                 | Phase Tasks    |
+| --- | --------------------------------------------------------------------- | -------------- |
+| #17 | Email infrastructure (SES) + email verification on registration       | P7-01          |
+| #18 | Password reset flow (forgot → SES email → reset token)                | P7-02          |
+| #19 | Account lockout after N failed login attempts                         | P7-03          |
+| #20 | MFA support (TOTP via authenticator app)                              | P7-04          |
+| #21 | Session management: active device list + remote logout                | P7-05          |
+| #22 | OAuth2 social login (Google)                                          | P7-06          |
+
+### Phase 8 — Billing & Payments (Razorpay)
+
+| PR  | Scope                                                                 | Phase Tasks    |
+| --- | --------------------------------------------------------------------- | -------------- |
+| #23 | Razorpay integration: customer + subscription creation on register    | P8-01          |
+| #24 | Pricing plans (free vs paid) + entitlement guard on case creation     | P8-02, P8-04   |
+| #25 | Razorpay webhook handler: subscription lifecycle events               | P8-03          |
+| #26 | Subscription management page + usage tracking for billing analytics   | P8-05, P8-06   |
+
+### Phase 9 — Additional Institution Templates & Escalation
+
+| PR  | Scope                                                                          | Phase Tasks         |
+| --- | ------------------------------------------------------------------------------ | ------------------- |
+| #27 | Template batch 1 — financial: brokerage, mortgage, auto loan                   | P9-01, P9-02, P9-03 |
+| #28 | Template batch 2 — insurance & property: health, home/renters, deed/recorder   | P9-04, P9-05, P9-06 |
+| #29 | Template batch 3 — probate & memberships: probate cover, loyalty, alumni       | P9-07, P9-08, P9-09 |
+| #30 | Escalation letter templates (per institution group)                            | P9-10               |
+| #31 | `GeneratedDocument` status lifecycle: backend + API PATCH endpoint + migration | P9-11               |
+| #32 | Downloads page: status badges + sent/resolved/escalate actions                 | P9-12               |
+| #33 | Escalation wizard UI: regulator contacts + complaint portal links              | P9-13               |
+| #34 | 30-day SES reminder for unresolved notifications                               | P9-14               |
