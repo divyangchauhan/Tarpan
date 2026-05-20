@@ -166,6 +166,7 @@ INTERNAL_API_SECRET=...
 SSN_ENCRYPTION_KEY=...                   # base64-encoded 32-byte AES-256 key; encrypts SSNs at rest (P6-09). Generate: openssl rand -base64 32
 ANTHROPIC_API_KEY=...                    # Not read by the API at runtime — only by the Lambda processor. Included here for completeness when running the full local stack.
 CORS_ORIGIN=http://localhost:5173
+SENTRY_DSN=...                           # Sentry DSN (P6-03). Omit or leave empty to disable error tracking.
 ```
 
 ### apps/processor (Lambda env)
@@ -182,6 +183,8 @@ SQS_DOCUMENT_GENERATION_QUEUE_URL=http://localhost:4566/000000000000/tarpan-docu
 ANTHROPIC_API_KEY=...
 API_CALLBACK_URL=http://localhost:3001
 INTERNAL_API_SECRET=...
+SENTRY_DSN=...                           # Sentry DSN (P6-03). Omit or leave empty to disable error tracking.
+SENTRY_ENVIRONMENT=production            # Sentry environment tag (default: production).
 ```
 
 ### apps/web

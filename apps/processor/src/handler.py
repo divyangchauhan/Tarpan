@@ -11,9 +11,24 @@ import logging
 import time
 from typing import Any
 
+import sentry_sdk
+from sentry_sdk.integrations.aws_lambda import AwsLambdaIntegration
+
 from src import api_client, extractor, pdf_processor, s3_client, template_engine
 from src.config import settings
 from src.models import GenerationRequest
+
+# Initialize Sentry at module load time so it wraps the Lambda handler.
+# No-op when SENTRY_DSN is absent or empty.
+if settings.sentry_dsn:
+    sentry_sdk.init(
+        dsn=settings.sentry_dsn,
+        environment=settings.sentry_environment,
+        integrations=[AwsLambdaIntegration()],
+        traces_sample_rate=0.1,
+        # Never capture PII automatically.
+        send_default_pii=False,
+    )
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
