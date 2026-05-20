@@ -10,6 +10,7 @@ import { DatabaseStack } from '../lib/stacks/database-stack';
 import { LambdaStack } from '../lib/stacks/lambda-stack';
 import { ApiStack } from '../lib/stacks/api-stack';
 import { FrontendStack } from '../lib/stacks/frontend-stack';
+import { ObservabilityStack } from '../lib/stacks/observability-stack';
 
 const app = new cdk.App();
 
@@ -71,7 +72,7 @@ const api = new ApiStack(app, 'TarpanApi', {
   database,
 });
 
-new LambdaStack(app, 'TarpanLambda', {
+const lambdaStack = new LambdaStack(app, 'TarpanLambda', {
   ...stackProps,
   config,
   network,
@@ -88,6 +89,22 @@ new FrontendStack(app, 'TarpanFrontend', {
   ...stackProps,
   config,
   albDnsName: api.loadBalancerDnsName,
+});
+
+// ── Observability ─────────────────────────────────────────────────────────
+//
+// Optional alert email:
+//   cdk deploy --all --context env=prod --context alertEmail=ops@example.com
+
+new ObservabilityStack(app, 'TarpanObservability', {
+  ...stackProps,
+  processorFn: lambdaStack.processorFn,
+  processingQueue: messaging.processingQueue,
+  generationQueue: messaging.generationQueue,
+  processingDlq: messaging.processingDlq,
+  generationDlq: messaging.generationDlq,
+  loadBalancer: api.loadBalancer,
+  alertEmail: app.node.tryGetContext('alertEmail') as string | undefined,
 });
 
 app.synth();

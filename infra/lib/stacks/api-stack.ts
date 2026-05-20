@@ -3,6 +3,7 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as ecs_patterns from 'aws-cdk-lib/aws-ecs-patterns';
 import * as ecr_assets from 'aws-cdk-lib/aws-ecr-assets';
+import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as path from 'path';
 import { Construct } from 'constructs';
@@ -35,6 +36,8 @@ interface ApiStackProps extends cdk.StackProps {
 export class ApiStack extends cdk.Stack {
   /** DNS name of the Application Load Balancer (used as API_CALLBACK_URL) */
   public readonly loadBalancerDnsName: string;
+  /** ALB instance — exposed for ObservabilityStack metrics */
+  public readonly loadBalancer: elbv2.ApplicationLoadBalancer;
 
   constructor(scope: Construct, id: string, props: ApiStackProps) {
     super(scope, id, props);
@@ -161,6 +164,7 @@ export class ApiStack extends cdk.Stack {
     // ── Expose DNS name ───────────────────────────────────────────────────
 
     this.loadBalancerDnsName = `http://${service.loadBalancer.loadBalancerDnsName}`;
+    this.loadBalancer = service.loadBalancer;
 
     // ── Outputs ───────────────────────────────────────────────────────────
 
