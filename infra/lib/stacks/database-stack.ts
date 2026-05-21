@@ -1,6 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as rds from 'aws-cdk-lib/aws-rds';
+import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import { Construct } from 'constructs';
 import { resourceName } from '../config';
 import { EnvironmentConfig } from '../environment-config';
@@ -66,6 +67,40 @@ export class DatabaseStack extends cdk.Stack {
       enablePerformanceInsights: config.dbEnablePerformanceInsights,
       cloudwatchLogsExports: ['postgresql'],
     });
+
+    // ── Credential rotation (P6-04) ─────────────────────────────────────────
+    //
+    // AWS-managed single-user rotation Lambda. Single-user rotation briefly
+    // changes the live password, so the API picks up the new value only after
+    // its next task restart — see infra/RESTORE_RUNBOOK.md.
+    //
+    // `instance.addRotationSingleUser()` would add the rotation Lambda's ingress
+    // rule directly onto rdsSg (owned by NetworkStack) and reference the DB's
+    // dynamic port — creating a NetworkStack→DatabaseStack reference on top of
+    // the existing DatabaseStack→NetworkStack one, i.e. a cyclic stack
+    // dependency. Building SecretRotation here, against rdsSg imported by id and
+    // a constant Postgres port, keeps that ingress rule inside DatabaseStack and
+    // breaks the cycle.
+
+    if (config.secretRotationEnabled) {
+      const rotationTarget: ec2.IConnectable = {
+        connections: new ec2.Connections({
+          securityGroups: [
+            ec2.SecurityGroup.fromSecurityGroupId(this, 'RdsSgRef', rdsSg.securityGroupId),
+          ],
+          defaultPort: ec2.Port.tcp(5432),
+        }),
+      };
+
+      new secretsmanager.SecretRotation(this, 'DbCredentialsRotation', {
+        secret: this.instance.secret!,
+        application: secretsmanager.SecretRotationApplication.POSTGRES_ROTATION_SINGLE_USER,
+        vpc,
+        vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
+        target: rotationTarget,
+        automaticallyAfter: cdk.Duration.days(config.secretRotationDays),
+      });
+    }
 
     // ── Outputs ───────────────────────────────────────────────────────────
 
