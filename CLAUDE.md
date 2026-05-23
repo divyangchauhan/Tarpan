@@ -269,6 +269,7 @@ Two guard types protect different route classes:
 - Pre-signed URLs must have **max 15-minute TTL**.
 - SSNs are **encrypted at rest** (P6-09): a TypeORM JSONB column transformer (`apps/api/src/common/crypto/`) AES-256-GCM-encrypts `socialSecurityNumber` in both `documents.extractedData` and `cases.deceasedInfo`, keyed by `SSN_ENCRYPTION_KEY`. Encryption is transparent to services/repositories — never encrypt/decrypt SSNs by hand; rely on the entity columns. Other extracted PII (names, DOBs) is not yet encrypted at rest.
 - Log only: document IDs, processing status, timing metrics.
+- **Secret rotation & backups** (P6-04/P6-05, prod only): DB credentials and the generated app secrets (JWT, refresh, internal API) rotate every 30 days; the Anthropic key is rotated manually. RDS has built-in automated backups plus a daily AWS Backup plan (35-day retention). Secrets are read into env vars at startup, so a rotation only takes effect after the consuming task/function restarts — see [infra/RESTORE_RUNBOOK.md](./infra/RESTORE_RUNBOOK.md) for restore steps and rotation caveats.
 
 ---
 
@@ -322,7 +323,11 @@ pnpm --filter api migration:run
 pnpm --filter api migration:revert
 
 # CDK — deploy infrastructure to AWS
-cd infra && pnpm install && cdk bootstrap && cdk deploy --all
+cd infra && pnpm install && cdk bootstrap && cdk deploy --all   # defaults to --context env=poc
+cd infra && cdk deploy --all --context env=prod                 # HA + secret rotation + AWS Backup
+
+# Run infra unit tests
+cd infra && pnpm test
 ```
 
 ---

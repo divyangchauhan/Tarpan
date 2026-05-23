@@ -11,6 +11,7 @@ import { LambdaStack } from '../lib/stacks/lambda-stack';
 import { ApiStack } from '../lib/stacks/api-stack';
 import { FrontendStack } from '../lib/stacks/frontend-stack';
 import { ObservabilityStack } from '../lib/stacks/observability-stack';
+import { BackupStack } from '../lib/stacks/backup-stack';
 
 const app = new cdk.App();
 
@@ -49,7 +50,7 @@ const storage = new StorageStack(app, 'TarpanStorage', { ...stackProps, config }
 
 const messaging = new MessagingStack(app, 'TarpanMessaging', stackProps);
 
-const secrets = new SecretsStack(app, 'TarpanSecrets', stackProps);
+const secrets = new SecretsStack(app, 'TarpanSecrets', { ...stackProps, config });
 
 // ── Data layer ────────────────────────────────────────────────────────────
 
@@ -58,6 +59,11 @@ const database = new DatabaseStack(app, 'TarpanDatabase', {
   config,
   network,
 });
+
+// AWS Backup vault + plan for the RDS instance (prod only — POC is disposable)
+if (config.backupEnabled) {
+  new BackupStack(app, 'TarpanBackup', { ...stackProps, config, database });
+}
 
 // ── Compute ───────────────────────────────────────────────────────────────
 
