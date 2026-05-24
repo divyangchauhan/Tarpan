@@ -21,6 +21,8 @@ interface LambdaStackProps extends cdk.StackProps {
   secrets: SecretsStack;
   /** ALB DNS or CloudFront domain for the API callback URL */
   apiCallbackUrl: string;
+  /** Sentry ingest DSN. Omit or leave empty to disable error tracking. */
+  sentryDsn?: string;
 }
 
 /**
@@ -41,7 +43,7 @@ export class LambdaStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: LambdaStackProps) {
     super(scope, id, props);
 
-    const { config, network, storage, messaging, secrets, apiCallbackUrl } = props;
+    const { config, network, storage, messaging, secrets, apiCallbackUrl, sentryDsn } = props;
 
     // ── Lambda function ────────────────────────────────────────────────────
 
@@ -80,6 +82,7 @@ export class LambdaStack extends cdk.Stack {
         SQS_DOCUMENT_PROCESSING_QUEUE_URL: messaging.processingQueue.queueUrl,
         SQS_DOCUMENT_GENERATION_QUEUE_URL: messaging.generationQueue.queueUrl,
         API_CALLBACK_URL: apiCallbackUrl,
+        ...(sentryDsn ? { SENTRY_DSN: sentryDsn, SENTRY_ENVIRONMENT: config.deploymentEnv } : {}),
       },
     });
 

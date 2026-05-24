@@ -21,6 +21,8 @@ interface ApiStackProps extends cdk.StackProps {
   messaging: MessagingStack;
   secrets: SecretsStack;
   database: DatabaseStack;
+  /** Sentry ingest DSN. Omit or leave empty to disable error tracking. */
+  sentryDsn?: string;
 }
 
 /**
@@ -42,7 +44,7 @@ export class ApiStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: ApiStackProps) {
     super(scope, id, props);
 
-    const { config, network, storage, messaging, secrets, database } = props;
+    const { config, network, storage, messaging, secrets, database, sentryDsn } = props;
 
     // ── Container image ────────────────────────────────────────────────────
 
@@ -93,6 +95,7 @@ export class ApiStack extends cdk.Stack {
           SQS_DOCUMENT_PROCESSING_QUEUE_URL: messaging.processingQueue.queueUrl,
           SQS_DOCUMENT_GENERATION_QUEUE_URL: messaging.generationQueue.queueUrl,
           CORS_ORIGIN: '*', // Tighten to CloudFront URL after frontend deploy
+          ...(sentryDsn ? { SENTRY_DSN: sentryDsn, SENTRY_ENVIRONMENT: config.deploymentEnv } : {}),
         },
         secrets: {
           // Secrets Manager values injected as env vars at task start
