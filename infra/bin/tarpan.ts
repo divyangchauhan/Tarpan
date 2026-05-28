@@ -30,6 +30,14 @@ if (deploymentEnv !== 'poc' && deploymentEnv !== 'prod') {
 const config = getConfig(deploymentEnv);
 
 /**
+ * Optional Sentry DSN — pass via context to enable error tracking in both the
+ * NestJS API (ECS) and the Lambda processor. Omit or leave empty to disable.
+ *
+ *   cdk deploy --all --context env=prod --context sentryDsn=https://public@o0.ingest.sentry.io/0
+ */
+const sentryDsn = app.node.tryGetContext('sentryDsn') as string | undefined;
+
+/**
  * Target AWS account/region — override via CDK_DEFAULT_ACCOUNT/REGION or
  * explicit --context flags at deploy time.
  *
@@ -76,6 +84,7 @@ const api = new ApiStack(app, 'TarpanApi', {
   messaging,
   secrets,
   database,
+  sentryDsn,
 });
 
 const lambdaStack = new LambdaStack(app, 'TarpanLambda', {
@@ -87,6 +96,7 @@ const lambdaStack = new LambdaStack(app, 'TarpanLambda', {
   secrets,
   // Use the ALB URL as the API callback target
   apiCallbackUrl: api.loadBalancerDnsName,
+  sentryDsn,
 });
 
 // ── Frontend ──────────────────────────────────────────────────────────────

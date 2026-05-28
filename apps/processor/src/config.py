@@ -68,5 +68,9 @@ class Settings(BaseSettings):
     # Processing thresholds
     extraction_confidence_threshold: float = 0.85
 
+    # Sentry (optional — omit or leave empty to disable error tracking)
+    sentry_dsn: str | None = None
+    sentry_environment: str = "production"
+
 
 settings = Settings()  # type: ignore[call-arg]
