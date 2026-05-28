@@ -11,7 +11,7 @@ async function bootstrap(): Promise<void> {
   });
 
   // Sentry global filter — captures unhandled exceptions and reports to Sentry
-  app.useGlobalFilters(new SentryGlobalFilter());
+  app.useGlobalFilters(new SentryGlobalFilter(app.getHttpAdapter()));
 
   // Global validation pipe — validates all incoming DTOs
   app.useGlobalPipes(
