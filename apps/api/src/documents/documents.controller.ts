@@ -13,6 +13,7 @@ import {
   Version,
 } from '@nestjs/common';
 import { Request as ExpressRequest } from 'express';
+import { SkipThrottle, Throttle } from '@nestjs/throttler';
 import { DocumentEntity } from '../entities/document.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { JwtValidatedUser } from '../auth/strategies/jwt.strategy';
@@ -40,6 +41,7 @@ export class DocumentsController {
   }
 
   @Version('1')
+  @Throttle({ default: { ttl: 60_000, limit: 20 } })
   @UseGuards(JwtAuthGuard)
   @Post('cases/:caseId/documents/initiate-upload')
   initiateUpload(
@@ -74,6 +76,7 @@ export class DocumentsController {
   }
 
   @Version('1')
+  @SkipThrottle()
   @UseGuards(InternalSecretGuard)
   @Patch('documents/:id/processing-result')
   @HttpCode(HttpStatus.OK)

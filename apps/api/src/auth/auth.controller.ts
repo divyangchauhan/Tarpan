@@ -9,6 +9,7 @@ import {
   Version,
 } from '@nestjs/common';
 import { Request as ExpressRequest } from 'express';
+import { Throttle } from '@nestjs/throttler';
 import { AuthTokens } from '@tarpan/shared';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
@@ -31,12 +32,14 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Version('1')
+  @Throttle({ default: { ttl: 60_000, limit: 5 } })
   @Post('register')
   register(@Body() dto: RegisterDto): Promise<AuthTokens> {
     return this.authService.register(dto);
   }
 
   @Version('1')
+  @Throttle({ default: { ttl: 60_000, limit: 10 } })
   @Post('login')
   @HttpCode(HttpStatus.OK)
   login(@Body() dto: LoginDto): Promise<AuthTokens> {
@@ -44,6 +47,7 @@ export class AuthController {
   }
 
   @Version('1')
+  @Throttle({ default: { ttl: 60_000, limit: 20 } })
   @UseGuards(JwtRefreshGuard)
   @Post('refresh')
   @HttpCode(HttpStatus.OK)

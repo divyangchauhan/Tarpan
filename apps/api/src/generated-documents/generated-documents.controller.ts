@@ -13,6 +13,7 @@ import {
   Version,
 } from '@nestjs/common';
 import { Request as ExpressRequest } from 'express';
+import { SkipThrottle, Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { JwtValidatedUser } from '../auth/strategies/jwt.strategy';
 import { InternalSecretGuard } from '../common/guards/internal-secret.guard';
@@ -30,6 +31,7 @@ export class GeneratedDocumentsController {
   constructor(private readonly generatedDocumentsService: GeneratedDocumentsService) {}
 
   @Version('1')
+  @Throttle({ default: { ttl: 60_000, limit: 20 } })
   @UseGuards(JwtAuthGuard)
   @Post('cases/:caseId/generated-documents')
   @HttpCode(HttpStatus.ACCEPTED)
@@ -52,6 +54,7 @@ export class GeneratedDocumentsController {
   }
 
   @Version('1')
+  @SkipThrottle()
   @UseGuards(InternalSecretGuard)
   @Patch('generated-documents/:id/result')
   @HttpCode(HttpStatus.OK)

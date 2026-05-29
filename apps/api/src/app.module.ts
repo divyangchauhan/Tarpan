@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { TerminusModule } from '@nestjs/terminus';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
@@ -17,6 +19,9 @@ import { TemplatesModule } from './templates/templates.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    // Default throttler — overridden per-route with @Throttle()
+    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
+    TerminusModule,
     DatabaseModule,
     AwsModule,
     AuthModule,

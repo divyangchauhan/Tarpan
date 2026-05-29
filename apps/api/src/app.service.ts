@@ -1,11 +1,5 @@
+// AppService is intentionally empty — health logic lives in AppController via @nestjs/terminus.
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
-export class AppService {
-  getHealth(): { status: string; timestamp: string } {
-    return {
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-    };
-  }
-}
+export class AppService {}
