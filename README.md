@@ -97,6 +97,9 @@ cd Tarpan
 
 pnpm install
 
+# Install Python dependencies for the processor (required before pnpm dev)
+cd apps/processor && poetry install && cd ../..
+
 # Copy and fill in env files
 cp apps/api/.env.example apps/api/.env
 cp apps/web/.env.example apps/web/.env
@@ -109,15 +112,16 @@ docker compose up -d
 # Run database migrations
 pnpm --filter api migration:run
 
-# Start all services in dev mode
+# Start all services in dev mode (API :3001, web :5173, Python SQS worker)
 pnpm dev
 ```
 
-`pnpm dev` starts the NestJS API on `:3001` and the React app on `:5173`. To run the Python processor locally:
+`pnpm dev` starts the NestJS API on `:3001`, the React app on `:5173`, and the Python SQS worker via Turborepo. The Python worker requires `poetry install` to have run first — turbo will exit with an error if it hasn't.
+
+To start the Python worker standalone (without `pnpm dev`):
 
 ```bash
 cd apps/processor
-poetry install
 ./start_worker.sh    # polls the local SQS queue via LocalStack
 ```
 
