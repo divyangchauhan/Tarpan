@@ -268,18 +268,11 @@ Tarpan/
 
 ---
 
-## Roadmap
+## Possible extensions
 
-| Phase   | Scope                                                                             | Status      |
-|---------|-----------------------------------------------------------------------------------|-------------|
-| 0–5     | Foundation, API, Lambda processor, frontend, CDK infra, demo polish               | Complete    |
-| 6       | Production readiness — monitoring, alerting, Sentry, secrets rotation, rate limiting | Mostly done |
-| 7       | Auth hardening — email verification, password reset, MFA, OAuth2                 | Not started |
-| 8       | Billing — Razorpay subscriptions, pricing tiers, entitlement guards               | Not started |
-| 9       | Additional templates + escalation workflow (brokerage, mortgage, insurance, probate) | Not started |
-| 10      | Mobile app (Android + iOS) — not yet decided                                     | Not started |
-
-See [TASKS.md](./TASKS.md) for the full task breakdown.
+- **Auth hardening** — email verification, password reset, MFA, OAuth2 social login
+- **Additional institution templates + escalation workflow** — brokerage accounts, mortgage lenders, health/property insurance, probate court filings, escalation letters with regulator contacts, 30-day SES reminders
+- **Mobile app** — not yet decided
 
 ---
 
