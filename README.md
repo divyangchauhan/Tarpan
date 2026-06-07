@@ -1,89 +1,137 @@
-# AfterLight
+# Tarpan
 
-> Automating the 500-hour burden families face after losing a loved one.
-
-## What Is AfterLight?
-
-When someone dies, their family must notify Social Security, Medicare, banks, insurance companies, and dozens of subscription services — all without access to the deceased's passwords, and often while deep in grief. The average family spends **500+ hours** on this administrative work. **3.3 million American families** face this every year, yet no modern tooling exists to help them.
-
-AfterLight is the first AI-powered platform to automate this process end-to-end:
-
-1. **Upload a death certificate** — our parser (powered by Claude) extracts the key legal data with 95%+ accuracy.
-2. **Generate institution-specific legal documents** — 15+ pre-built templates for Social Security, Medicare, major banks, and subscription services.
-3. **Track and manage notifications** — a guided dashboard that walks families through every step.
+AI-powered platform that automates the administrative burden families face after losing a loved one.
 
 ---
 
-## Tech Stack
+## What It Does
 
-| Layer               | Technology                     |
-| ------------------- | ------------------------------ |
-| Frontend            | React 18 + Vite + Tailwind CSS |
-| Backend API         | NestJS (Node.js / TypeScript)  |
-| Document Processing | Python + AWS Lambda            |
-| AI / OCR            | Claude (Anthropic) via API     |
-| Database            | PostgreSQL + TypeORM           |
-| File Storage        | AWS S3                         |
-| Queue               | AWS SQS                        |
-| Infrastructure      | AWS (CDK)                      |
+When someone dies, their family must notify Social Security, Medicare, banks, insurance companies, and dozens of subscription services — without access to the deceased's accounts, and often while in grief. Tarpan cuts through that:
 
-Full rationale in [ARCHITECTURE.md](./ARCHITECTURE.md).
+1. **Parse the death certificate** — upload a scan; Claude Vision extracts the structured legal data (name, DOB, date of death, SSN, cause, certifier) via the Anthropic API.
+2. **Review and correct** — a guided UI surfaces the extracted fields for human confirmation before any documents are produced.
+3. **Generate institution-specific letters** — 16 Jinja2/WeasyPrint PDF templates covering Social Security (SSA-721), Medicare, IRS, DMV, VA, major bank closures, credit cards, life insurance, subscriptions, and more.
+4. **Track notifications** — a dashboard manages per-institution status from generation through resolution.
+
+The project is complete through Phase 6 (production monitoring and alerting). It has no live users yet.
 
 ---
 
-## Repository Structure
+## Architecture
 
 ```
-AfterLight/
-├── apps/
-│   ├── api/          # NestJS backend
-│   ├── web/          # React frontend
-│   └── processor/    # Python Lambda for document processing
-├── packages/
-│   └── shared/       # Shared TypeScript types / constants
-├── infra/            # AWS CDK infrastructure code
-├── docs/             # Additional documentation
-├── ARCHITECTURE.md   # System design & decisions
-├── TASKS.md          # Project task tracker
-└── CLAUDE.md         # AI agent context file
+Browser (React + Vite)
+    │  HTTPS REST + WebSocket
+    ▼
+NestJS API (ECS Fargate)
+    ├─ Auth (JWT)             ├─ Cases / Documents CRUD
+    ├─ S3 pre-signed URLs     ├─ SQS message publishing
+    └─ WebSocket gateway ─────────────────────────────────▶ client push
+    │
+    ├─ PostgreSQL (RDS)
+    │
+    ├─ SQS: tarpan-document-processing ──▶ Lambda
+    └─ SQS: tarpan-document-generation ──▶ Lambda
+                                              │
+                            Python 3.11 processor
+                            ├─ processing path:
+                            │   PDFPlumber/Pillow → Claude Vision API
+                            │   → Pydantic validation → PATCH callback
+                            └─ generation path:
+                                Jinja2 → WeasyPrint → S3 upload → PATCH callback
+                                              │
+                                         AWS S3
+                                  (uploads + generated PDFs)
 ```
+
+### Key design decisions
+
+**NestJS for orchestration, Python Lambda for processing.**
+Node.js PDF/image libraries are materially weaker than Python's. Keeping Claude API calls and PDF rendering in Lambda also means the API stays responsive — a 30-second extraction never blocks an HTTP endpoint. The Lambda routes by message shape: `Records` present → extraction, absent → generation.
+
+**Async via SQS, not direct Lambda invocation from the API.**
+Claude API calls take 5–30 seconds. Synchronous HTTP would require long-polling or client timeouts. SQS decouples the trigger; Lambda scales to zero when idle and bursts automatically. Results are pushed back over WebSocket, so the client experience feels live without polling.
+
+**S3 pre-signed URLs, not API-mediated transfers.**
+Death certificates are sensitive PII. Pre-signed URLs (15-minute TTL) let the browser upload directly to S3 and let the Lambda download directly from S3 — the file bytes never pass through API server memory.
+
+**Two CDK environment profiles: `poc` and `prod`.**
+`poc` uses a single NAT gateway, public Fargate subnets, and `DESTROY` removal policies — cheap to spin up and tear down. `prod` adds Multi-AZ RDS, VPC-isolated Lambda, private Fargate subnets, 35-day backup retention, and 30-day secret rotation. Toggled with `--context env=prod`.
+
+**Shared TypeScript types package.**
+`packages/shared` is the single source of truth for `Case`, `Document`, `GeneratedDocument`, `ExtractedCertificateData`, and WebSocket event shapes. Both `apps/api` and `apps/web` import from it; type drift is a compile error.
 
 ---
 
-## Getting Started (Local Development)
+## Stack
+
+| Layer              | Technology                                            |
+|--------------------|-------------------------------------------------------|
+| Frontend           | React 18, Vite, Tailwind CSS, React Router            |
+| API                | NestJS (TypeScript), TypeORM, Socket.io, JWT auth     |
+| Document processor | Python 3.11, Anthropic SDK, PDFPlumber, Pillow, WeasyPrint, Jinja2 |
+| Database           | PostgreSQL 16 (RDS / local Docker)                    |
+| Queue              | AWS SQS (processing + generation queues, each with DLQ) |
+| Storage            | AWS S3 (uploads bucket + generated-docs bucket)       |
+| Compute            | AWS Lambda (processor), ECS Fargate (API), CloudFront + S3 (frontend) |
+| Infrastructure     | AWS CDK (TypeScript), 10 stacks                       |
+| Observability      | CloudWatch dashboards + SNS alarms, Sentry (API + Lambda) |
+| Local dev          | Docker Compose (PostgreSQL 16, LocalStack 3.5)        |
+| Build              | pnpm workspaces + Turborepo                           |
+
+---
+
+## Local Development
 
 ### Prerequisites
 
-- Node.js 20+
-- Python 3.11+
+- Node.js 20+, pnpm 9+
+- Python 3.11+, Poetry
 - Docker & Docker Compose
-- AWS CLI (configured)
-- pnpm 9+
 
 ### Setup
 
 ```bash
-# Clone the repository
-git clone git@github.com:divyangchauhan/AfterLight.git
-cd AfterLight
+git clone git@github.com:divyangchauhan/Tarpan.git
+cd Tarpan
 
-# Install dependencies
 pnpm install
 
-# Copy environment variables
+# Copy and fill in env files
 cp apps/api/.env.example apps/api/.env
 cp apps/web/.env.example apps/web/.env
 cp apps/processor/.env.example apps/processor/.env
-# Edit apps/processor/.env and set ANTHROPIC_API_KEY — required for document parsing
+# Set ANTHROPIC_API_KEY in apps/processor/.env — required for certificate parsing
 
-# Start local services (PostgreSQL, S3-compatible storage)
+# Start PostgreSQL + LocalStack (S3, SQS, Secrets Manager)
 docker compose up -d
 
 # Run database migrations
 pnpm --filter api migration:run
 
-# Start all apps in development mode
+# Start all services in dev mode
 pnpm dev
+```
+
+`pnpm dev` starts the NestJS API on `:3001` and the React app on `:5173`. To run the Python processor locally:
+
+```bash
+cd apps/processor
+poetry install
+./start_worker.sh    # polls the local SQS queue via LocalStack
+```
+
+### Running tests
+
+```bash
+# TypeScript (API + web + shared)
+pnpm turbo run test --filter=!@tarpan/processor
+
+# Python
+cd apps/processor && poetry run pytest
+
+# Type-check all TS packages
+pnpm turbo run typecheck --filter=!@tarpan/processor
 ```
 
 ---
@@ -92,10 +140,9 @@ pnpm dev
 
 ### Prerequisites
 
-- AWS CLI configured (`aws configure`)
-- AWS CDK CLI: `npm install -g aws-cdk`
-- Docker running (CDK uses it to bundle the Lambda)
-- Node.js 20+
+- AWS CLI configured
+- CDK CLI: `npm install -g aws-cdk`
+- Docker running (CDK bundles the Lambda image)
 
 ### First-time bootstrap
 
@@ -105,41 +152,49 @@ pnpm install
 cdk bootstrap aws://<ACCOUNT_ID>/<REGION>
 ```
 
-### Deploy all stacks
+### Deploy
 
 ```bash
+# POC (single NAT, DESTROY removal policies — easy teardown)
 cdk deploy --all
+
+# Production (Multi-AZ RDS, VPC-isolated Lambda, backup + secret rotation)
+cdk deploy --all --context env=prod
+
+# With CloudWatch alarm email
+cdk deploy --all --context alertEmail=ops@example.com
 ```
 
-Stacks deploy in dependency order automatically:
+Stacks deploy in dependency order:
 
-| Stack                 | What it creates                                |
-| --------------------- | ---------------------------------------------- |
-| `AfterLightNetwork`   | VPC, subnets, NAT Gateway, security groups     |
-| `AfterLightStorage`   | S3 buckets for uploads and generated PDFs      |
-| `AfterLightMessaging` | SQS queues (processing + generation) with DLQs |
-| `AfterLightSecrets`   | Secrets Manager entries for all app secrets    |
-| `AfterLightDatabase`  | RDS PostgreSQL 16 (db.t3.micro)                |
-| `AfterLightLambda`    | Python processor Lambda with SQS triggers      |
-| `AfterLightApi`       | ECS Fargate + ALB for the NestJS API           |
-| `AfterLightFrontend`  | CloudFront + S3 for the React app              |
+| Stack                  | What it provisions                                         |
+|------------------------|------------------------------------------------------------|
+| `TarpanNetwork`        | VPC, subnets, NAT gateway, security groups                 |
+| `TarpanStorage`        | S3 upload and generated-docs buckets                       |
+| `TarpanMessaging`      | SQS processing + generation queues, DLQs                   |
+| `TarpanSecrets`        | Secrets Manager entries for all app secrets                |
+| `TarpanDatabase`       | RDS PostgreSQL 16                                          |
+| `TarpanLambda`         | Python processor Lambda with SQS triggers                  |
+| `TarpanApi`            | ECS Fargate + ALB for the NestJS API                       |
+| `TarpanFrontend`       | CloudFront + S3 for the React app                          |
+| `TarpanObservability`  | CloudWatch dashboard + SNS alarms                          |
+| `TarpanBackup`         | AWS Backup plan (prod: 35-day retention)                   |
 
 ### Post-deploy steps
 
-**1. Set the Anthropic API key** (created as a placeholder):
+**1. Set the Anthropic API key:**
 
 ```bash
 aws secretsmanager put-secret-value \
-  --secret-id afterlight/anthropic-api-key \
+  --secret-id tarpan/anthropic-api-key \
   --secret-string '{"value":"sk-ant-api03-..."}'
 ```
 
 **2. Run database migrations:**
 
 ```bash
-# Get the DB connection string from Secrets Manager
 DB_URL=$(aws secretsmanager get-secret-value \
-  --secret-id afterlight/db-credentials \
+  --secret-id tarpan/db-credentials \
   --query SecretString --output text | \
   python3 -c "import sys,json; s=json.load(sys.stdin); print(f\"postgresql://{s['username']}:{s['password']}@{s['host']}:5432/{s['dbname']}\")")
 
@@ -149,39 +204,26 @@ DATABASE_URL=$DB_URL pnpm --filter api migration:run
 **3. Build and deploy the frontend:**
 
 ```bash
-# Get the API URL from CDK outputs
 API_URL=$(aws cloudformation describe-stacks \
-  --stack-name AfterLightApi \
+  --stack-name TarpanApi \
   --query "Stacks[0].Outputs[?OutputKey=='ApiUrl'].OutputValue" \
   --output text)
 
-# Build with the production API URL
 VITE_API_URL=$API_URL VITE_WS_URL=$API_URL pnpm --filter web build
 
-# Sync to S3
 BUCKET=$(aws cloudformation describe-stacks \
-  --stack-name AfterLightFrontend \
+  --stack-name TarpanFrontend \
   --query "Stacks[0].Outputs[?OutputKey=='WebsiteBucketName'].OutputValue" \
   --output text)
 
 aws s3 sync apps/web/dist/ s3://$BUCKET --delete
 
-# Invalidate CloudFront cache
 DIST_ID=$(aws cloudformation describe-stacks \
-  --stack-name AfterLightFrontend \
+  --stack-name TarpanFrontend \
   --query "Stacks[0].Outputs[?OutputKey=='DistributionId'].OutputValue" \
   --output text)
 
 aws cloudfront create-invalidation --distribution-id $DIST_ID --paths "/*"
-```
-
-**4. Get the app URL:**
-
-```bash
-aws cloudformation describe-stacks \
-  --stack-name AfterLightFrontend \
-  --query "Stacks[0].Outputs[?OutputKey=='DistributionUrl'].OutputValue" \
-  --output text
 ```
 
 ### Tear down
@@ -190,38 +232,42 @@ aws cloudformation describe-stacks \
 cd infra && cdk destroy --all
 ```
 
-> **Note:** The S3 buckets and RDS instance have `removalPolicy: RETAIN` / `SNAPSHOT` to protect legal document data. Delete them manually after confirming data is safe.
+> S3 buckets and RDS use `removalPolicy: RETAIN` / `SNAPSHOT` in prod. Delete them manually after confirming data is safe.
 
 ---
 
-## Key Features (POC — Complete)
+## Repository Layout
 
-- [x] Death certificate upload and parsing (AI-powered OCR)
-- [x] Extracted data review and correction UI
-- [x] Legal document generation (15+ templates)
-- [x] PDF export of generated documents
-- [x] Notification checklist dashboard
+```
+Tarpan/
+├── apps/
+│   ├── api/          # NestJS backend
+│   ├── web/          # React frontend
+│   └── processor/    # Python Lambda (extraction + PDF generation)
+├── packages/
+│   └── shared/       # Canonical TypeScript types shared by api and web
+├── infra/            # AWS CDK (10 stacks)
+├── ARCHITECTURE.md   # Extended design rationale
+└── TASKS.md          # Phase-by-phase task tracker
+```
+
+---
 
 ## Roadmap
 
-| Phase    | Scope                                                                                                                                            | Status |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
-| Phase 6  | Production readiness — monitoring, alerting, secrets rotation, rate limiting, staging pipeline                                                   | ⬜     |
-| Phase 7  | Auth hardening — email verification, password reset, MFA, OAuth2                                                                                 | ⬜     |
-| Phase 8  | Billing & payments — Stripe subscriptions, pricing tiers, entitlement guards                                                                     | ⬜     |
-| Phase 9  | Additional institution templates + escalation tracking — brokerage, mortgage, insurance, probate, escalation letters, 30-day follow-up reminders | ⬜     |
-| Phase 10 | Mobile app (Android + iOS) — _not yet decided_                                                                                                   | ⬜     |
+| Phase   | Scope                                                                             | Status      |
+|---------|-----------------------------------------------------------------------------------|-------------|
+| 0–5     | Foundation, API, Lambda processor, frontend, CDK infra, demo polish               | Complete    |
+| 6       | Production readiness — monitoring, alerting, Sentry, secrets rotation, rate limiting | Mostly done |
+| 7       | Auth hardening — email verification, password reset, MFA, OAuth2                 | Not started |
+| 8       | Billing — Razorpay subscriptions, pricing tiers, entitlement guards               | Not started |
+| 9       | Additional templates + escalation workflow (brokerage, mortgage, insurance, probate) | Not started |
+| 10      | Mobile app (Android + iOS) — not yet decided                                     | Not started |
 
 See [TASKS.md](./TASKS.md) for the full task breakdown.
 
 ---
 
-## Contributing
-
-This is a private repository. See [TASKS.md](./TASKS.md) for the current task breakdown and priorities.
-
----
-
 ## License
 
-Private & Confidential — Shado Ventures © 2026
+MIT
