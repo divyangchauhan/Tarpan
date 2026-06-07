@@ -119,7 +119,7 @@
 | ID    | Task                                                                  | Status | Notes                                                                                |
 | ----- | --------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------ |
 | P5-01 | Seed script: demo case with real-looking data                         | ✅     | PR #9 — apps/api/src/database/seed.ts                                                |
-| P5-02 | Synthetic accuracy report: test parser against generated certificates | ⬜     | Uses synthetic certificate fixtures only; real death certificates are not yet tested |
+| P5-02 | Synthetic accuracy test: parser vs. generated certificates            | ✅     | 97.8% field-level accuracy (176/180 correct) — 9 scored fields × 20 synthetic certificates; 4 misreads on blurry/low-res certs (date digits, certificate number); not tested on real death certificates — see `apps/processor/scripts/run_accuracy_test.py` |
 | P5-03 | Loading performance: add per-stage timing logs to Lambda handler      | ✅     | PR #10 — per-stage and total duration_ms logged for processing and generation        |
 | P5-04 | Mobile responsiveness audit                                           | ✅     | PR #10 — sidebar drawer, responsive form grids, card overflow fix                    |
 | P5-05 | Demo script and walkthrough notes                                     | ✅     | PR #10 (removed before open-sourcing)                                                |
@@ -155,28 +155,28 @@
 
 ---
 
-## Phase 9 — Additional Institution Templates
+## Phase 8 — Additional Institution Templates
 
 | ID    | Task                                                                                                          | Status | Notes                                                                                                         |
 | ----- | ------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------- |
-| P9-01 | Template: brokerage account closure (Fidelity / Schwab / Vanguard generic)                                    | ⬜     |                                                                                                               |
-| P9-02 | Template: mortgage lender / servicer notification                                                             | ⬜     |                                                                                                               |
-| P9-03 | Template: auto loan lender notification                                                                       | ⬜     |                                                                                                               |
-| P9-04 | Template: health insurance cancellation                                                                       | ⬜     |                                                                                                               |
-| P9-05 | Template: homeowners / renters insurance notification                                                         | ⬜     |                                                                                                               |
-| P9-06 | Template: property deed / county recorder notification                                                        | ⬜     |                                                                                                               |
-| P9-07 | Template: state-specific probate court filing cover letter                                                    | ⬜     |                                                                                                               |
-| P9-08 | Template: loyalty / rewards programme cancellation (airlines, hotels)                                         | ⬜     |                                                                                                               |
-| P9-09 | Template: alumni association / professional membership cancellation                                           | ⬜     |                                                                                                               |
-| P9-10 | Escalation letter templates: one per institution group (federal, financial, insurance, utility, subscription) | ⬜     | Second-wave letters referencing original, citing regulator, firmer tone                                       |
-| P9-11 | `GeneratedDocument` status lifecycle: `sent → acknowledged → resolved / escalated` + API PATCH endpoint       | ⬜     | DB migration: add status, sent_at, resolved_at, escalated_at fields                                           |
-| P9-12 | Downloads page: status badges + "Mark as sent / resolved / escalate" action buttons                           | ⬜     |                                                                                                               |
-| P9-13 | Escalation wizard UI: institution-specific guide, regulator contact details, and links to complaint portals   | ⬜     | Covers SSA/OIG, CFPB, state banking regulators, state insurance commissioner, IRS TAS, VA OIG, FTC, state PUC |
-| P9-14 | Email reminder: SES alert after 30 days if a notification is not marked resolved                              | ⬜     | Scheduled Lambda or SQS delayed message                                                                       |
+| P8-01 | Template: brokerage account closure (Fidelity / Schwab / Vanguard generic)                                    | ⬜     |                                                                                                               |
+| P8-02 | Template: mortgage lender / servicer notification                                                             | ⬜     |                                                                                                               |
+| P8-03 | Template: auto loan lender notification                                                                       | ⬜     |                                                                                                               |
+| P8-04 | Template: health insurance cancellation                                                                       | ⬜     |                                                                                                               |
+| P8-05 | Template: homeowners / renters insurance notification                                                         | ⬜     |                                                                                                               |
+| P8-06 | Template: property deed / county recorder notification                                                        | ⬜     |                                                                                                               |
+| P8-07 | Template: state-specific probate court filing cover letter                                                    | ⬜     |                                                                                                               |
+| P8-08 | Template: loyalty / rewards programme cancellation (airlines, hotels)                                         | ⬜     |                                                                                                               |
+| P8-09 | Template: alumni association / professional membership cancellation                                           | ⬜     |                                                                                                               |
+| P8-10 | Escalation letter templates: one per institution group (federal, financial, insurance, utility, subscription) | ⬜     | Second-wave letters referencing original, citing regulator, firmer tone                                       |
+| P8-11 | `GeneratedDocument` status lifecycle: `sent → acknowledged → resolved / escalated` + API PATCH endpoint       | ⬜     | DB migration: add status, sent_at, resolved_at, escalated_at fields                                           |
+| P8-12 | Downloads page: status badges + "Mark as sent / resolved / escalate" action buttons                           | ⬜     |                                                                                                               |
+| P8-13 | Escalation wizard UI: institution-specific guide, regulator contact details, and links to complaint portals   | ⬜     | Covers SSA/OIG, CFPB, state banking regulators, state insurance commissioner, IRS TAS, VA OIG, FTC, state PUC |
+| P8-14 | Email reminder: SES alert after 30 days if a notification is not marked resolved                              | ⬜     | Scheduled Lambda or SQS delayed message                                                                       |
 
 ---
 
-## Phase 10 — Mobile App (Optional — Not Yet Decided)
+## Phase 9 — Mobile App (Optional — Not Yet Decided)
 
 > These tasks are provisional. The decision to build native mobile apps has not been made. Add to PR schedule only once confirmed.
 
@@ -231,7 +231,7 @@
 
 ## PR Schedule (Planned)
 
-> Covers Phases 6, 7, and 9. Phase 10 (mobile app) is excluded — not yet decided.
+> Covers Phases 6, 7, and 8. Phase 9 (mobile app) is excluded — not yet decided.
 > One logical concern per PR; kept reviewable (< 600 lines diff target).
 
 ### Phase 6 — Production Readiness
@@ -256,15 +256,15 @@
 | #21 | Session management: active device list + remote logout          | P7-05       |
 | #22 | OAuth2 social login (Google)                                    | P7-06       |
 
-### Phase 9 — Additional Institution Templates & Escalation
+### Phase 8 — Additional Institution Templates & Escalation
 
 | PR  | Scope                                                                          | Phase Tasks         |
 | --- | ------------------------------------------------------------------------------ | ------------------- |
-| #27 | Template batch 1 — financial: brokerage, mortgage, auto loan                   | P9-01, P9-02, P9-03 |
-| #28 | Template batch 2 — insurance & property: health, home/renters, deed/recorder   | P9-04, P9-05, P9-06 |
-| #29 | Template batch 3 — probate & memberships: probate cover, loyalty, alumni       | P9-07, P9-08, P9-09 |
-| #30 | Escalation letter templates (per institution group)                            | P9-10               |
-| #31 | `GeneratedDocument` status lifecycle: backend + API PATCH endpoint + migration | P9-11               |
-| #32 | Downloads page: status badges + sent/resolved/escalate actions                 | P9-12               |
-| #33 | Escalation wizard UI: regulator contacts + complaint portal links              | P9-13               |
-| #34 | 30-day SES reminder for unresolved notifications                               | P9-14               |
+| #23 | Template batch 1 — financial: brokerage, mortgage, auto loan                   | P8-01, P8-02, P8-03 |
+| #24 | Template batch 2 — insurance & property: health, home/renters, deed/recorder   | P8-04, P8-05, P8-06 |
+| #25 | Template batch 3 — probate & memberships: probate cover, loyalty, alumni       | P8-07, P8-08, P8-09 |
+| #26 | Escalation letter templates (per institution group)                            | P8-10               |
+| #27 | `GeneratedDocument` status lifecycle: backend + API PATCH endpoint + migration | P8-11               |
+| #28 | Downloads page: status badges + sent/resolved/escalate actions                 | P8-12               |
+| #29 | Escalation wizard UI: regulator contacts + complaint portal links              | P8-13               |
+| #30 | 30-day SES reminder for unresolved notifications                               | P8-14               |

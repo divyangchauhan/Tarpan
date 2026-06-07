@@ -65,7 +65,7 @@ This separation drives every architectural decision below.
 **Why Tailwind CSS:**
 
 - Utility-first approach keeps styles co-located with components.
-- No CSS naming conventions to enforce on a small team.
+- No CSS naming conventions to maintain.
 - Excellent design system (spacing scale, color palette) out of the box.
 
 **Alternatives considered:**
@@ -79,14 +79,14 @@ This separation drives every architectural decision below.
 
 **Why NestJS:**
 
-- Opinionated, module-based structure enforces clean separation of concerns from day one — critical for a codebase that will be handed to a team.
+- Opinionated, module-based structure enforces clean separation of concerns from day one — critical for a codebase meant to stay navigable as it grows.
 - First-class TypeScript: end-to-end type safety from DB (TypeORM entities) through API to frontend (shared types package).
 - Built-in support for guards, interceptors, pipes — auth, validation, and logging are solved problems.
 - Decorator-based routing is familiar to developers coming from Spring / .NET, which broadens hiring options.
 
 **Why not Express / Fastify directly:**
 
-- Raw frameworks require re-inventing structure. NestJS gives us that structure and still compiles to Node.js, so performance is equivalent.
+- Raw frameworks require re-inventing structure. NestJS gives that structure and still compiles to Node.js, so performance is equivalent.
 
 **Why not tRPC:**
 
@@ -106,7 +106,7 @@ This separation drives every architectural decision below.
 
 - Death certificate parsing involves calling the Claude API (network I/O) and generating PDFs (CPU burst). This workload is bursty — idle between uploads, then potentially concurrent.
 - Lambda scales to zero (no cost when idle) and bursts horizontally automatically.
-- No container management overhead for a 3-person early-stage company.
+- No container management overhead.
 - Cold start latency (~1-2s) is acceptable for async document processing.
 
 **Why not a dedicated Python microservice:**
@@ -161,7 +161,7 @@ The Lambda handler routes messages by inspecting the body: presence of `generate
 
 **Why PostgreSQL:**
 
-- Relational model fits our data well: Users → Cases → Documents → GeneratedDocuments.
+- Relational model fits the data well: Users → Cases → Documents → GeneratedDocuments.
 - JSONB columns let us store flexible extracted data (death certificate fields vary by state) without a schema migration on every edge case.
 - Strong ACID guarantees for legal document management.
 
@@ -170,7 +170,7 @@ The Lambda handler routes messages by inspecting the body: presence of `generate
 - First-class NestJS integration via `@nestjs/typeorm` — entities, repositories, and data sources wire in as injectable providers.
 - Decorator-based entity definitions keep schema co-located with domain models.
 - Migration system (`typeorm migration:generate` / `migration:run`) gives full control over schema evolution.
-- Active Record and Data Mapper patterns both supported; we use **Data Mapper** (repository pattern) for testability.
+- Active Record and Data Mapper patterns both supported; the project uses **Data Mapper** (repository pattern) for testability.
 - No separate schema language to learn — entities are plain TypeScript classes.
 
 **Why TypeORM over alternatives (Prisma, Knex):**
@@ -296,7 +296,7 @@ CloudWatch dashboards and SNS alarms for Lambda error rate and SQS queue depth. 
 
 Email verification via SES on registration, forgot-password flow, account lockout after repeated failures, TOTP-based MFA, active session management with remote logout, and Google OAuth2 social login.
 
-### Phase 9 — Additional Institution Templates + Escalation
+### Phase 8 — Additional Institution Templates + Escalation
 
 New institution templates: brokerage accounts, mortgage lenders, auto loan lenders, health insurance, homeowners/renters insurance, county recorder/property deed, state probate court filing cover letters, loyalty/rewards programme cancellations, and professional membership cancellations.
 
@@ -307,6 +307,6 @@ New institution templates: brokerage accounts, mortgage lenders, auto loan lende
 - Escalation wizard UI: institution-specific step-by-step guide with regulator contact details and direct links to complaint portals (CFPB, SSA OIG, IRS Taxpayer Advocate Service, VA OIG, FTC, state insurance commissioner, state PUC, etc.).
 - SES-triggered 30-day reminder email if a notification is not marked resolved.
 
-### Phase 10 — Mobile App _(not yet decided)_
+### Phase 9 — Mobile App _(not yet decided)_
 
 React Native or Flutter apps for Android (FCM push notifications, Play Store pipeline) and iOS (APNs push notifications, App Store + Fastlane pipeline). Full feature parity with the web app: camera capture, real-time WebSocket status, inline field editing, in-app PDF viewer.
