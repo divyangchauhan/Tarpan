@@ -1,7 +1,14 @@
 {
-  "name": "@afterlight/infra",
+  "name": "@tarpan/infra",
   "version": "0.0.1",
   "private": true,
+  "author": "Divyang Chauhan",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/divyangchauhan/Tarpan.git",
+    "directory": "infra"
+  },
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
@@ -15,11 +22,15 @@
     "destroy:prod": "cdk destroy --all --context env=prod",
     "destroy": "pnpm run destroy:poc",
     "lint": "eslint lib bin",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "jest"
   },
   "devDependencies": {
+    "@types/jest": "^29.5.14",
     "@types/node": "^20.0.0",
     "aws-cdk": "^2.170.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.4.6",
     "typescript": "^5.5.0"
   },
   "dependencies": {

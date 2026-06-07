@@ -11,8 +11,8 @@ import {
   DocumentType,
   GeneratedDocumentStatus,
   InstitutionType,
-} from '@afterlight/shared';
-import type { Document, GeneratedDocument } from '@afterlight/shared';
+} from '@tarpan/shared';
+import type { Document, GeneratedDocument } from '@tarpan/shared';
 import { InstitutionsPage } from './InstitutionsPage';
 import { ToastProvider } from '@/context/ToastContext';
 

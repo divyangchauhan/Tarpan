@@ -10,6 +10,8 @@ import { DatabaseStack } from '../lib/stacks/database-stack';
 import { LambdaStack } from '../lib/stacks/lambda-stack';
 import { ApiStack } from '../lib/stacks/api-stack';
 import { FrontendStack } from '../lib/stacks/frontend-stack';
+import { ObservabilityStack } from '../lib/stacks/observability-stack';
+import { BackupStack } from '../lib/stacks/backup-stack';
 
 const app = new cdk.App();
 
@@ -28,6 +30,14 @@ if (deploymentEnv !== 'poc' && deploymentEnv !== 'prod') {
 const config = getConfig(deploymentEnv);
 
 /**
+ * Optional Sentry DSN — pass via context to enable error tracking in both the
+ * NestJS API (ECS) and the Lambda processor. Omit or leave empty to disable.
+ *
+ *   cdk deploy --all --context env=prod --context sentryDsn=https://public@o0.ingest.sentry.io/0
+ */
+const sentryDsn = app.node.tryGetContext('sentryDsn') as string | undefined;
+
+/**
  * Target AWS account/region — override via CDK_DEFAULT_ACCOUNT/REGION or
  * explicit --context flags at deploy time.
  *
@@ -42,26 +52,31 @@ const stackProps: cdk.StackProps = { env };
 
 // ── Foundation (no inter-stack dependencies) ──────────────────────────────
 
-const network = new NetworkStack(app, 'AfterLightNetwork', { ...stackProps, config });
+const network = new NetworkStack(app, 'TarpanNetwork', { ...stackProps, config });
 
-const storage = new StorageStack(app, 'AfterLightStorage', { ...stackProps, config });
+const storage = new StorageStack(app, 'TarpanStorage', { ...stackProps, config });
 
-const messaging = new MessagingStack(app, 'AfterLightMessaging', stackProps);
+const messaging = new MessagingStack(app, 'TarpanMessaging', stackProps);
 
-const secrets = new SecretsStack(app, 'AfterLightSecrets', stackProps);
+const secrets = new SecretsStack(app, 'TarpanSecrets', { ...stackProps, config });
 
 // ── Data layer ────────────────────────────────────────────────────────────
 
-const database = new DatabaseStack(app, 'AfterLightDatabase', {
+const database = new DatabaseStack(app, 'TarpanDatabase', {
   ...stackProps,
   config,
   network,
 });
 
+// AWS Backup vault + plan for the RDS instance (prod only — POC is disposable)
+if (config.backupEnabled) {
+  new BackupStack(app, 'TarpanBackup', { ...stackProps, config, database });
+}
+
 // ── Compute ───────────────────────────────────────────────────────────────
 
 // API must be deployed before Lambda so we know the API callback URL
-const api = new ApiStack(app, 'AfterLightApi', {
+const api = new ApiStack(app, 'TarpanApi', {
   ...stackProps,
   config,
   network,
@@ -69,9 +84,10 @@ const api = new ApiStack(app, 'AfterLightApi', {
   messaging,
   secrets,
   database,
+  sentryDsn,
 });
 
-new LambdaStack(app, 'AfterLightLambda', {
+const lambdaStack = new LambdaStack(app, 'TarpanLambda', {
   ...stackProps,
   config,
   network,
@@ -80,14 +96,31 @@ new LambdaStack(app, 'AfterLightLambda', {
   secrets,
   // Use the ALB URL as the API callback target
   apiCallbackUrl: api.loadBalancerDnsName,
+  sentryDsn,
 });
 
 // ── Frontend ──────────────────────────────────────────────────────────────
 
-new FrontendStack(app, 'AfterLightFrontend', {
+new FrontendStack(app, 'TarpanFrontend', {
   ...stackProps,
   config,
   albDnsName: api.loadBalancerDnsName,
+});
+
+// ── Observability ─────────────────────────────────────────────────────────
+//
+// Optional alert email:
+//   cdk deploy --all --context env=prod --context alertEmail=ops@example.com
+
+new ObservabilityStack(app, 'TarpanObservability', {
+  ...stackProps,
+  processorFn: lambdaStack.processorFn,
+  processingQueue: messaging.processingQueue,
+  generationQueue: messaging.generationQueue,
+  processingDlq: messaging.processingDlq,
+  generationDlq: messaging.generationDlq,
+  loadBalancer: api.loadBalancer,
+  alertEmail: app.node.tryGetContext('alertEmail') as string | undefined,
 });
 
 app.synth();

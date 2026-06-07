@@ -9,7 +9,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { DocumentStatus, ExtractedCertificateData, WsEvent } from '@afterlight/shared';
+import { DocumentStatus, ExtractedCertificateData, WsEvent } from '@tarpan/shared';
 
 export interface DocumentStatusPayload {
   documentId: string;

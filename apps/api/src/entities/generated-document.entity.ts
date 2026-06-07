@@ -7,7 +7,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { GeneratedDocumentStatus, InstitutionType } from '@afterlight/shared';
+import { GeneratedDocumentStatus, InstitutionType } from '@tarpan/shared';
 import { CaseEntity } from './case.entity';
 import { DocumentEntity } from './document.entity';
 

@@ -1,4 +1,4 @@
-import type { Document } from '@afterlight/shared';
+import type { Document } from '@tarpan/shared';
 import { apiClient } from './client';
 
 export interface CreateDocumentRequest {

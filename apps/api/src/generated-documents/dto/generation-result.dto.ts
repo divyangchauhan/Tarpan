@@ -1,5 +1,5 @@
 import { IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
-import { GeneratedDocumentStatus } from '@afterlight/shared';
+import { GeneratedDocumentStatus } from '@tarpan/shared';
 
 const ALLOWED_STATUSES = [GeneratedDocumentStatus.READY, GeneratedDocumentStatus.FAILED] as const;
 type GenerationResultStatus = (typeof ALLOWED_STATUSES)[number];

@@ -70,19 +70,19 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 ## Project Summary
 
-AfterLight automates the administrative burden families face after a death:
+Tarpan automates the administrative burden families face after a death:
 
 - Parses death certificates via AI (Claude API)
 - Generates institution-specific legal letters and forms
 - Provides a guided dashboard to track notifications
 
-**POC status**: Complete — investor-grade demo shipped across Phases 0–5.
+**Status**: Core functionality complete across Phases 0–5.
 
 **Active roadmap**:
 
 - Phase 6 — Production readiness (monitoring, alerting, secrets rotation, rate limiting)
 - Phase 7 — Auth hardening (email verification, password reset, MFA, OAuth2)
-- Phase 8 — Billing & payments (Stripe subscriptions, pricing tiers, entitlement guards)
+- Phase 8 — Billing & payments (Razorpay subscriptions, pricing tiers, entitlement guards)
 - Phase 9 — Additional institution templates + escalation workflow (brokerage, mortgage, insurance, probate; escalation letters; notification status lifecycle; 30-day SES reminders)
 - Phase 10 — Mobile app, Android + iOS _(not yet decided)_
 
@@ -91,15 +91,14 @@ AfterLight automates the administrative burden families face after a death:
 ## Monorepo Structure
 
 ```
-AfterLight/
+Tarpan/
 ├── apps/
 │   ├── api/          # NestJS backend (TypeScript)
 │   ├── web/          # React 18 + Vite + Tailwind frontend
 │   └── processor/    # Python Lambda (document parsing + PDF generation)
 ├── packages/
 │   └── shared/       # Shared TypeScript types and constants
-├── infra/            # AWS CDK (TypeScript)
-└── docs/             # Investor demo script and supporting documentation
+└── infra/            # AWS CDK (TypeScript)
 ```
 
 Package manager: **pnpm** with workspaces.
@@ -107,7 +106,7 @@ Build orchestration: **Turborepo**.
 
 ### packages/shared
 
-`@afterlight/shared` is the canonical source of truth for all TypeScript types (`Case`, `Document`, `GeneratedDocument`, `ExtractedCertificateData`, `WsEvent`, enums). Both `apps/api` and `apps/web` import from it. When changing a shared type, update it here first, then fix downstream compilation errors.
+`@tarpan/shared` is the canonical source of truth for all TypeScript types (`Case`, `Document`, `GeneratedDocument`, `ExtractedCertificateData`, `WsEvent`, enums). Both `apps/api` and `apps/web` import from it. When changing a shared type, update it here first, then fix downstream compilation errors.
 
 ---
 
@@ -150,7 +149,7 @@ Build orchestration: **Turborepo**.
 ```
 PORT=3001
 NODE_ENV=development
-DATABASE_URL=postgresql://afterlight:afterlight@localhost:5432/afterlight
+DATABASE_URL=postgresql://tarpan:tarpan@localhost:5432/tarpan
 JWT_SECRET=...
 JWT_EXPIRES_IN=15m
 JWT_REFRESH_SECRET=...
@@ -159,13 +158,15 @@ AWS_REGION=us-east-1
 AWS_ACCESS_KEY_ID=test
 AWS_SECRET_ACCESS_KEY=test
 AWS_ENDPOINT_URL=http://localhost:4566   # LocalStack — omit in production
-S3_UPLOADS_BUCKET=afterlight-uploads
-S3_GENERATED_DOCS_BUCKET=afterlight-generated-docs
-SQS_DOCUMENT_PROCESSING_QUEUE_URL=http://localhost:4566/000000000000/afterlight-document-processing
-SQS_DOCUMENT_GENERATION_QUEUE_URL=http://localhost:4566/000000000000/afterlight-document-generation
+S3_UPLOADS_BUCKET=tarpan-uploads
+S3_GENERATED_DOCS_BUCKET=tarpan-generated-docs
+SQS_DOCUMENT_PROCESSING_QUEUE_URL=http://localhost:4566/000000000000/tarpan-document-processing
+SQS_DOCUMENT_GENERATION_QUEUE_URL=http://localhost:4566/000000000000/tarpan-document-generation
 INTERNAL_API_SECRET=...
+SSN_ENCRYPTION_KEY=...                   # base64-encoded 32-byte AES-256 key; encrypts SSNs at rest (P6-09). Generate: openssl rand -base64 32
 ANTHROPIC_API_KEY=...                    # Not read by the API at runtime — only by the Lambda processor. Included here for completeness when running the full local stack.
 CORS_ORIGIN=http://localhost:5173
+SENTRY_DSN=...                           # Sentry DSN (P6-03). Omit or leave empty to disable error tracking.
 ```
 
 ### apps/processor (Lambda env)
@@ -175,13 +176,15 @@ AWS_REGION=us-east-1
 AWS_ACCESS_KEY_ID=test
 AWS_SECRET_ACCESS_KEY=test
 AWS_ENDPOINT_URL=http://localhost:4566   # LocalStack — omit in production
-S3_UPLOADS_BUCKET=afterlight-uploads
-S3_GENERATED_DOCS_BUCKET=afterlight-generated-docs
-SQS_DOCUMENT_PROCESSING_QUEUE_URL=http://localhost:4566/000000000000/afterlight-document-processing
-SQS_DOCUMENT_GENERATION_QUEUE_URL=http://localhost:4566/000000000000/afterlight-document-generation
+S3_UPLOADS_BUCKET=tarpan-uploads
+S3_GENERATED_DOCS_BUCKET=tarpan-generated-docs
+SQS_DOCUMENT_PROCESSING_QUEUE_URL=http://localhost:4566/000000000000/tarpan-document-processing
+SQS_DOCUMENT_GENERATION_QUEUE_URL=http://localhost:4566/000000000000/tarpan-document-generation
 ANTHROPIC_API_KEY=...
 API_CALLBACK_URL=http://localhost:3001
 INTERNAL_API_SECRET=...
+SENTRY_DSN=...                           # Sentry DSN (P6-03). Omit or leave empty to disable error tracking.
+SENTRY_ENVIRONMENT=production            # Sentry environment tag (default: production).
 ```
 
 ### apps/web
@@ -209,14 +212,14 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md) for full rationale. Summary:
 User uploads death certificate
   → API: POST /documents  (presigned URL returned)
   → Client: PUT directly to S3
-  → API: PATCH /documents/:id/confirm  →  SQS (afterlight-document-processing)
+  → API: PATCH /documents/:id/confirm  →  SQS (tarpan-document-processing)
   → Lambda: downloads from S3, calls Claude Vision API, POSTs result to API
   → API: PATCH /documents/:id/callback  (InternalSecretGuard)
   → API: emits WebSocket event (document.processing.complete | failed) to user's room
   → Client: navigates to ReviewPage on success
 
 User requests PDF generation
-  → API: POST /generated-documents  →  SQS (afterlight-document-generation)
+  → API: POST /generated-documents  →  SQS (tarpan-document-generation)
   → Lambda: direct invocation renders Jinja2 HTML template → WeasyPrint PDF → S3
   → Lambda: POSTs result to API callback
   → API: emits generation.complete WebSocket event
@@ -267,8 +270,9 @@ Two guard types protect different route classes:
 - Death certificates are **highly sensitive PII**. Never log document content.
 - S3 objects must be **private** (no public ACLs).
 - Pre-signed URLs must have **max 15-minute TTL**.
-- Extracted data (names, SSNs, DOBs) must be **encrypted at rest** in the database (use PostgreSQL column encryption or a TypeORM subscriber for SSN specifically).
+- SSNs are **encrypted at rest** (P6-09): a TypeORM JSONB column transformer (`apps/api/src/common/crypto/`) AES-256-GCM-encrypts `socialSecurityNumber` in both `documents.extractedData` and `cases.deceasedInfo`, keyed by `SSN_ENCRYPTION_KEY`. Encryption is transparent to services/repositories — never encrypt/decrypt SSNs by hand; rely on the entity columns. Other extracted PII (names, DOBs) is not yet encrypted at rest.
 - Log only: document IDs, processing status, timing metrics.
+- **Secret rotation & backups** (P6-04/P6-05, prod only): DB credentials and the generated app secrets (JWT, refresh, internal API) rotate every 30 days; the Anthropic key is rotated manually. RDS has built-in automated backups plus a daily AWS Backup plan (35-day retention). Secrets are read into env vars at startup, so a rotation only takes effect after the consuming task/function restarts — see [infra/RESTORE_RUNBOOK.md](./infra/RESTORE_RUNBOOK.md) for restore steps and rotation caveats.
 
 ---
 
@@ -298,14 +302,14 @@ cd apps/processor && poetry run pytest tests/test_extractor.py
 cd apps/processor && poetry run pytest -k "test_parse_dates"
 
 # Type check all TypeScript packages (excludes processor — Python only)
-pnpm turbo run typecheck --filter=!@afterlight/processor
+pnpm turbo run typecheck --filter=!@tarpan/processor
 
 # Lint all packages (excludes processor from TypeScript turbo run)
-pnpm turbo run lint --filter=!@afterlight/processor
+pnpm turbo run lint --filter=!@tarpan/processor
 cd apps/processor && poetry run ruff check src tests   # Python lint separately
 
 # Run all tests (excludes processor — run Python tests separately above)
-pnpm turbo run test --filter=!@afterlight/processor
+pnpm turbo run test --filter=!@tarpan/processor
 
 # Run a single NestJS test file
 pnpm --filter api test -- --testPathPattern=cases.service
@@ -322,7 +326,11 @@ pnpm --filter api migration:run
 pnpm --filter api migration:revert
 
 # CDK — deploy infrastructure to AWS
-cd infra && pnpm install && cdk bootstrap && cdk deploy --all
+cd infra && pnpm install && cdk bootstrap && cdk deploy --all   # defaults to --context env=poc
+cd infra && cdk deploy --all --context env=prod                 # HA + secret rotation + AWS Backup
+
+# Run infra unit tests
+cd infra && pnpm test
 ```
 
 ---

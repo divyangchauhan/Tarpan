@@ -1,5 +1,5 @@
 /**
- * Demo seed script — populates the database with a realistic AfterLight demo case
+ * Demo seed script — populates the database with a realistic Tarpan demo case
  * and triggers real PDF generation via the SQS pipeline.
  *
  * Usage:
@@ -27,10 +27,10 @@ import {
   GeneratedDocumentStatus,
   InstitutionType,
   UserRole,
-} from '@afterlight/shared';
+} from '@tarpan/shared';
 
-const DEMO_EMAIL = 'demo@afterlight.app';
-const DEMO_PASSWORD = 'AfterLight2024!';
+const DEMO_EMAIL = 'demo@tarpan.app';
+const DEMO_PASSWORD = 'Tarpan2024!';
 
 const GENERATION_TIMEOUT_MS = 120_000; // 2 minutes
 const POLL_INTERVAL_MS = 3_000;

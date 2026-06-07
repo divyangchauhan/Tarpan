@@ -1,7 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { CaseStatus } from '@afterlight/shared';
+import { CaseStatus } from '@tarpan/shared';
 import { CaseEntity } from '../entities/case.entity';
 import { CasesService } from './cases.service';
 import { CreateCaseDto } from './dto/create-case.dto';

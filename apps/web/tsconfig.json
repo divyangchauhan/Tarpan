@@ -8,7 +8,7 @@
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@afterlight/shared": ["../../packages/shared/src"],
+      "@tarpan/shared": ["../../packages/shared/src"],
       "@/*": ["./src/*"]
     },
     "noEmit": true,

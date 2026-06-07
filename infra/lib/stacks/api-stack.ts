@@ -3,6 +3,7 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as ecs_patterns from 'aws-cdk-lib/aws-ecs-patterns';
 import * as ecr_assets from 'aws-cdk-lib/aws-ecr-assets';
+import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as path from 'path';
 import { Construct } from 'constructs';
@@ -20,6 +21,8 @@ interface ApiStackProps extends cdk.StackProps {
   messaging: MessagingStack;
   secrets: SecretsStack;
   database: DatabaseStack;
+  /** Sentry ingest DSN. Omit or leave empty to disable error tracking. */
+  sentryDsn?: string;
 }
 
 /**
@@ -35,11 +38,13 @@ interface ApiStackProps extends cdk.StackProps {
 export class ApiStack extends cdk.Stack {
   /** DNS name of the Application Load Balancer (used as API_CALLBACK_URL) */
   public readonly loadBalancerDnsName: string;
+  /** ALB instance — exposed for ObservabilityStack metrics */
+  public readonly loadBalancer: elbv2.ApplicationLoadBalancer;
 
   constructor(scope: Construct, id: string, props: ApiStackProps) {
     super(scope, id, props);
 
-    const { config, network, storage, messaging, secrets, database } = props;
+    const { config, network, storage, messaging, secrets, database, sentryDsn } = props;
 
     // ── Container image ────────────────────────────────────────────────────
 
@@ -52,7 +57,7 @@ export class ApiStack extends cdk.Stack {
     // ── CloudWatch log group (explicit retention — prevents unbounded accumulation) ──
 
     const apiLogGroup = new logs.LogGroup(this, 'ApiLogGroup', {
-      logGroupName: '/ecs/afterlight-api',
+      logGroupName: '/ecs/tarpan-api',
       retention: config.logRetentionDays,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
@@ -60,7 +65,7 @@ export class ApiStack extends cdk.Stack {
     // ── ECS Cluster ────────────────────────────────────────────────────────
 
     const cluster = new ecs.Cluster(this, 'Cluster', {
-      clusterName: 'afterlight',
+      clusterName: 'tarpan',
       vpc: network.vpc,
       containerInsightsV2: config.ecsContainerInsights,
     });
@@ -69,7 +74,7 @@ export class ApiStack extends cdk.Stack {
 
     const service = new ecs_patterns.ApplicationLoadBalancedFargateService(this, 'ApiService', {
       cluster,
-      serviceName: 'afterlight-api',
+      serviceName: 'tarpan-api',
       cpu: config.fargateCpu,
       memoryLimitMiB: config.fargateMemoryMiB,
       desiredCount: config.fargateDesiredCount,
@@ -90,6 +95,7 @@ export class ApiStack extends cdk.Stack {
           SQS_DOCUMENT_PROCESSING_QUEUE_URL: messaging.processingQueue.queueUrl,
           SQS_DOCUMENT_GENERATION_QUEUE_URL: messaging.generationQueue.queueUrl,
           CORS_ORIGIN: '*', // Tighten to CloudFront URL after frontend deploy
+          ...(sentryDsn ? { SENTRY_DSN: sentryDsn, SENTRY_ENVIRONMENT: config.deploymentEnv } : {}),
         },
         secrets: {
           // Secrets Manager values injected as env vars at task start
@@ -102,7 +108,7 @@ export class ApiStack extends cdk.Stack {
           DB_NAME: ecs.Secret.fromSecretsManager(database.credentials, 'dbname'),
         },
         logDriver: ecs.LogDrivers.awsLogs({
-          streamPrefix: 'afterlight-api',
+          streamPrefix: 'tarpan-api',
           logGroup: apiLogGroup,
         }),
       },
@@ -112,7 +118,7 @@ export class ApiStack extends cdk.Stack {
           ? ec2.SubnetType.PUBLIC
           : ec2.SubnetType.PRIVATE_WITH_EGRESS,
       },
-      loadBalancerName: 'afterlight-alb',
+      loadBalancerName: 'tarpan-alb',
       publicLoadBalancer: true,
       listenerPort: 80, // Add HTTPS + ACM cert for production
       healthCheckGracePeriod: cdk.Duration.seconds(60),
@@ -161,6 +167,7 @@ export class ApiStack extends cdk.Stack {
     // ── Expose DNS name ───────────────────────────────────────────────────
 
     this.loadBalancerDnsName = `http://${service.loadBalancer.loadBalancerDnsName}`;
+    this.loadBalancer = service.loadBalancer;
 
     // ── Outputs ───────────────────────────────────────────────────────────
 

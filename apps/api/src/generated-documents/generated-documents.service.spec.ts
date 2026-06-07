@@ -7,7 +7,7 @@ import {
   DocumentStatus,
   GeneratedDocumentStatus,
   InstitutionType,
-} from '@afterlight/shared';
+} from '@tarpan/shared';
 import { CaseEntity } from '../entities/case.entity';
 import { DocumentEntity } from '../entities/document.entity';
 import { GeneratedDocumentEntity } from '../entities/generated-document.entity';
@@ -50,14 +50,14 @@ const mockCase: CaseEntity = {
 const mockDocument: DocumentEntity = {
   id: 'doc-id',
   caseId: 'case-id',
-  type: 'DEATH_CERTIFICATE' as import('@afterlight/shared').DocumentType,
+  type: 'DEATH_CERTIFICATE' as import('@tarpan/shared').DocumentType,
   status: DocumentStatus.PROCESSED,
   s3Key: 'cases/case-id/documents/doc-id.pdf',
   extractedData: {
     full_name: 'Jane Smith',
     date_of_death: '2024-11-20',
     place_of_death: 'Springfield, IL',
-  } as unknown as import('@afterlight/shared').ExtractedCertificateData,
+  } as unknown as import('@tarpan/shared').ExtractedCertificateData,
   errorMessage: null,
   createdAt: new Date(),
   updatedAt: new Date(),
@@ -142,7 +142,7 @@ describe('GeneratedDocumentsService', () => {
       mockGeneratedDocRepository.create.mockReturnValue(mockGeneratedDoc);
       mockGeneratedDocRepository.save.mockResolvedValue(mockGeneratedDoc);
       mockConfigService.getOrThrow.mockReturnValue(
-        'http://sqs.us-east-1.amazonaws.com/123456789/afterlight-document-generation',
+        'http://sqs.us-east-1.amazonaws.com/123456789/tarpan-document-generation',
       );
       mockSqsService.sendMessage.mockResolvedValue(undefined);
     });
@@ -287,13 +287,13 @@ describe('GeneratedDocumentsService', () => {
       };
       mockCasesService.findOne.mockResolvedValue(mockCase);
       mockGeneratedDocRepository.find.mockResolvedValue([readyDoc]);
-      mockConfigService.getOrThrow.mockReturnValue('afterlight-generated-docs');
+      mockConfigService.getOrThrow.mockReturnValue('tarpan-generated-docs');
       mockS3Service.generateDownloadUrl.mockResolvedValue('https://s3.example.com/signed-url');
 
       const result = await service.findAll('user-id', 'case-id');
 
       expect(mockS3Service.generateDownloadUrl).toHaveBeenCalledWith(
-        'afterlight-generated-docs',
+        'tarpan-generated-docs',
         readyDoc.s3Key,
         900,
       );

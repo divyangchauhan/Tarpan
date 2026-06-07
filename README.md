@@ -100,8 +100,7 @@ pnpm install
 # Install Python dependencies for the processor (required before pnpm dev)
 cd apps/processor && poetry install && cd ../..
 
-# Copy env files (always copy from .env.example — do not reuse old .env files;
-# resource names changed when the project was renamed from Tarpan to AfterLight)
+# Copy env files — always copy from .env.example, do not reuse old .env files
 cp apps/api/.env.example apps/api/.env
 cp apps/web/.env.example apps/web/.env
 cp apps/processor/.env.example apps/processor/.env
@@ -229,6 +228,15 @@ DIST_ID=$(aws cloudformation describe-stacks \
   --output text)
 
 aws cloudfront create-invalidation --distribution-id $DIST_ID --paths "/*"
+```
+
+**4. Get the app URL:**
+
+```bash
+aws cloudformation describe-stacks \
+  --stack-name TarpanFrontend \
+  --query "Stacks[0].Outputs[?OutputKey=='DistributionUrl'].OutputValue" \
+  --output text
 ```
 
 ### Tear down

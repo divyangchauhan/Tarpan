@@ -99,10 +99,10 @@ docker compose logs -f localstack
 
 This automatically creates:
 
-- S3 bucket: `afterlight-uploads`
-- S3 bucket: `afterlight-generated-docs`
-- SQS queue: `afterlight-document-processing`
-- SQS queue: `afterlight-document-generation`
+- S3 bucket: `tarpan-uploads`
+- S3 bucket: `tarpan-generated-docs`
+- SQS queue: `tarpan-document-processing`
+- SQS queue: `tarpan-document-generation`
 
 ---
 
@@ -122,7 +122,7 @@ poetry install
 ```bash
 aws --endpoint-url=http://localhost:4566 --region us-east-1 \
   s3 cp tests/fixtures/sample_death_cert_typed.pdf \
-  s3://afterlight-uploads/documents/test-doc-001.pdf
+  s3://tarpan-uploads/documents/test-doc-001.pdf
 ```
 
 **Scanned / image-only PDF** (exercises the Claude Vision path):
@@ -130,7 +130,7 @@ aws --endpoint-url=http://localhost:4566 --region us-east-1 \
 ```bash
 aws --endpoint-url=http://localhost:4566 --region us-east-1 \
   s3 cp tests/fixtures/sample_death_cert_scanned.pdf \
-  s3://afterlight-uploads/documents/test-doc-002.pdf
+  s3://tarpan-uploads/documents/test-doc-002.pdf
 ```
 
 ---
@@ -140,7 +140,7 @@ aws --endpoint-url=http://localhost:4566 --region us-east-1 \
 ```bash
 aws --endpoint-url=http://localhost:4566 --region us-east-1 \
   sqs send-message \
-  --queue-url http://localhost:4566/000000000000/afterlight-document-processing \
+  --queue-url http://localhost:4566/000000000000/tarpan-document-processing \
   --message-body '{"documentId":"test-doc-001","caseId":"test-case-001","s3Key":"documents/test-doc-001.pdf"}'
 ```
 
@@ -160,8 +160,8 @@ Press `Ctrl+C` to stop.
 #### Expected log output
 
 ```
-INFO worker          Worker started, polling queues: ['http://localhost:4566/.../afterlight-document-processing', 'http://localhost:4566/.../afterlight-document-generation']
-INFO src.s3_client   Downloading object  bucket=afterlight-uploads  key=documents/test-doc-001.pdf
+INFO worker          Worker started, polling queues: ['http://localhost:4566/.../tarpan-document-processing', 'http://localhost:4566/.../tarpan-document-generation']
+INFO src.s3_client   Downloading object  bucket=tarpan-uploads  key=documents/test-doc-001.pdf
 INFO src.pdf_processor Using text extraction for PDF  text_length=2098
 INFO src.extractor   Calling Claude API for extraction  block_count=1
 INFO src.extractor   Extraction complete
@@ -222,7 +222,7 @@ The worker polls both queues. Press `Ctrl+C` to stop.
 ```bash
 aws --endpoint-url=http://localhost:4566 --region us-east-1 \
   sqs send-message \
-  --queue-url http://localhost:4566/000000000000/afterlight-document-generation \
+  --queue-url http://localhost:4566/000000000000/tarpan-document-generation \
   --message-body '{
     "generatedDocumentId": "test-gen-001",
     "templateId": "ssa-721",
@@ -251,7 +251,7 @@ aws --endpoint-url=http://localhost:4566 --region us-east-1 \
 
 ```
 INFO src.handler     Generating document  generated_document_id=test-gen-001  template_id=ssa-721
-INFO src.s3_client   Uploading object  bucket=afterlight-generated-docs  key=generated/test-case-001/ssa-721/test-gen-001.pdf
+INFO src.s3_client   Uploading object  bucket=tarpan-generated-docs  key=generated/test-case-001/ssa-721/test-gen-001.pdf
 INFO src.handler     Document generated successfully  generated_document_id=test-gen-001  s3_key=...
 INFO worker          Message deleted from queue  message_id=...
 ```
@@ -303,14 +303,14 @@ EOF
 
 ```bash
 aws --endpoint-url=http://localhost:4566 --region us-east-1 \
-  s3 ls s3://afterlight-generated-docs/generated/ --recursive
+  s3 ls s3://tarpan-generated-docs/generated/ --recursive
 ```
 
 Download and inspect:
 
 ```bash
 aws --endpoint-url=http://localhost:4566 --region us-east-1 \
-  s3 cp s3://afterlight-generated-docs/generated/test-case-001/ssa-721/test-gen-001.pdf \
+  s3 cp s3://tarpan-generated-docs/generated/test-case-001/ssa-721/test-gen-001.pdf \
   /tmp/test-gen-001.pdf
 
 open /tmp/test-gen-001.pdf   # macOS
@@ -391,9 +391,9 @@ docker compose down
 
 # Remove uploaded test objects
 aws --endpoint-url=http://localhost:4566 --region us-east-1 \
-  s3 rm s3://afterlight-uploads/documents/ --recursive
+  s3 rm s3://tarpan-uploads/documents/ --recursive
 
 # Remove generated PDFs
 aws --endpoint-url=http://localhost:4566 --region us-east-1 \
-  s3 rm s3://afterlight-generated-docs/generated/ --recursive
+  s3 rm s3://tarpan-generated-docs/generated/ --recursive
 ```

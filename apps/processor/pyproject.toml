@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "afterlight-processor"
+name = "tarpan-processor"
 version = "0.0.1"
-description = "AfterLight document processing Lambda — parses death certificates and generates legal documents"
+description = "Tarpan document processing Lambda — parses death certificates and generates legal documents"
 authors = []
 package-mode = false
 
@@ -17,6 +17,7 @@ weasyprint = "^62.3"
 pydyf = "0.11.0"
 Jinja2 = "^3.1.4"
 httpx = "^0.27.0"
+sentry-sdk = {version = ">=2.0.0,<3.0.0", extras = ["aws-lambda"]}
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.0"

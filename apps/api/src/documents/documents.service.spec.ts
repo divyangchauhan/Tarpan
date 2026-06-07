@@ -2,7 +2,7 @@ import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
-import { DocumentStatus, DocumentType, CaseStatus } from '@afterlight/shared';
+import { DocumentStatus, DocumentType, CaseStatus } from '@tarpan/shared';
 import { DocumentEntity } from '../entities/document.entity';
 import { CaseEntity } from '../entities/case.entity';
 import { CasesService } from '../cases/cases.service';
@@ -54,6 +54,7 @@ const mockDocumentRepository = {
 
 const mockCasesService = {
   findOne: jest.fn(),
+  updateDeceasedInfoByCaseId: jest.fn(),
 };
 
 const mockS3Service = {
@@ -218,7 +219,7 @@ describe('DocumentsService', () => {
       const dto: ProcessingResultDto = {
         documentId: 'doc-id',
         status: DocumentStatus.PROCESSED,
-        extractedData: extractedData as import('@afterlight/shared').ExtractedCertificateData,
+        extractedData: extractedData as import('@tarpan/shared').ExtractedCertificateData,
       };
 
       const updatedDocument = {

@@ -47,18 +47,18 @@ class Settings(BaseSettings):
     # AWS
     aws_region: str = "us-east-1"
     aws_endpoint_url: str | None = None  # Set for LocalStack in dev
-    s3_uploads_bucket: str = "afterlight-uploads"
-    s3_generated_docs_bucket: str = "afterlight-generated-docs"
+    s3_uploads_bucket: str = "tarpan-uploads"
+    s3_generated_docs_bucket: str = "tarpan-generated-docs"
 
     # Anthropic
     anthropic_api_key: str
 
     # SQS
     sqs_document_processing_queue_url: str = (
-        "http://localhost:4566/000000000000/afterlight-document-processing"
+        "http://localhost:4566/000000000000/tarpan-document-processing"
     )
     sqs_document_generation_queue_url: str = (
-        "http://localhost:4566/000000000000/afterlight-document-generation"
+        "http://localhost:4566/000000000000/tarpan-document-generation"
     )
 
     # API callback
@@ -67,6 +67,10 @@ class Settings(BaseSettings):
 
     # Processing thresholds
     extraction_confidence_threshold: float = 0.85
+
+    # Sentry (optional — omit or leave empty to disable error tracking)
+    sentry_dsn: str | None = None
+    sentry_environment: str = "production"
 
 
 settings = Settings()  # type: ignore[call-arg]

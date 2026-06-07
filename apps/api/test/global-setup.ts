@@ -1,6 +1,6 @@
 /**
  * Jest globalSetup — runs once before all e2e test suites.
- * Creates the afterlight_test database if it doesn't exist.
+ * Creates the tarpan_test database if it doesn't exist.
  * TypeORM's migrationsRun:true handles schema setup when the app boots.
  */
 import * as dotenv from 'dotenv';
@@ -18,12 +18,12 @@ export default async function globalSetup(): Promise<void> {
   await client.connect();
 
   const { rows } = await client.query<{ exists: boolean }>(
-    `SELECT 1 AS exists FROM pg_database WHERE datname = 'afterlight_test'`,
+    `SELECT 1 AS exists FROM pg_database WHERE datname = 'tarpan_test'`,
   );
 
   if (rows.length === 0) {
-    await client.query('CREATE DATABASE afterlight_test');
-    console.log('[globalSetup] Created database afterlight_test');
+    await client.query('CREATE DATABASE tarpan_test');
+    console.log('[globalSetup] Created database tarpan_test');
   }
 
   await client.end();

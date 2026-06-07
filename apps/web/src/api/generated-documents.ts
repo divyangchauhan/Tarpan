@@ -1,4 +1,4 @@
-import type { GeneratedDocument, InstitutionType } from '@afterlight/shared';
+import type { GeneratedDocument, InstitutionType } from '@tarpan/shared';
 import { apiClient } from './client';
 
 export interface CreateGeneratedDocumentRequest {

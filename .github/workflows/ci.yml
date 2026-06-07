@@ -30,16 +30,16 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build shared package
-        run: pnpm --filter @afterlight/shared build
+        run: pnpm --filter @tarpan/shared build
 
       - name: Lint
-        run: pnpm turbo run lint --filter=!@afterlight/processor
+        run: pnpm turbo run lint --filter=!@tarpan/processor
 
       - name: Type check
-        run: pnpm turbo run typecheck --filter=!@afterlight/processor
+        run: pnpm turbo run typecheck --filter=!@tarpan/processor
 
       - name: Test
-        run: pnpm turbo run test --filter=!@afterlight/processor
+        run: pnpm turbo run test --filter=!@tarpan/processor
 
   # ─── Python: lint, typecheck, test ───────────────────────────────────────────
   python:

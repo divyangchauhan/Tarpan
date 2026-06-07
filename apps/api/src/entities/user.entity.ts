@@ -6,7 +6,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { UserRole } from '@afterlight/shared';
+import { UserRole } from '@tarpan/shared';
 import { CaseEntity } from './case.entity';
 
 @Entity('users')

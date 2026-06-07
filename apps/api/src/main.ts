@@ -1,11 +1,17 @@
+// instrument.ts must be the first import — Sentry requires this for correct instrumentation.
+import './instrument';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
+import { SentryGlobalFilter } from '@sentry/nestjs/setup';
 import { AppModule } from './app.module';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, {
     cors: true,
   });
+
+  // Sentry global filter — captures unhandled exceptions and reports to Sentry
+  app.useGlobalFilters(new SentryGlobalFilter(app.getHttpAdapter()));
 
   // Global validation pipe — validates all incoming DTOs
   app.useGlobalPipes(

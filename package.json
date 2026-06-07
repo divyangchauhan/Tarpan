@@ -1,7 +1,18 @@
 {
-  "name": "afterlight",
+  "name": "tarpan",
   "version": "0.0.1",
   "private": true,
+  "description": "AI-powered platform that automates the administrative burden families face after losing a loved one.",
+  "author": "Divyang Chauhan",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/divyangchauhan/Tarpan.git"
+  },
+  "homepage": "https://github.com/divyangchauhan/Tarpan#readme",
+  "bugs": {
+    "url": "https://github.com/divyangchauhan/Tarpan/issues"
+  },
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",

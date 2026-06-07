@@ -1,7 +1,14 @@
 {
-  "name": "@afterlight/shared",
+  "name": "@tarpan/shared",
   "version": "0.0.1",
   "private": true,
+  "author": "Divyang Chauhan",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/divyangchauhan/Tarpan.git",
+    "directory": "packages/shared"
+  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {

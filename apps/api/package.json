@@ -1,7 +1,14 @@
 {
-  "name": "@afterlight/api",
+  "name": "@tarpan/api",
   "version": "0.0.1",
   "private": true,
+  "author": "Divyang Chauhan",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/divyangchauhan/Tarpan.git",
+    "directory": "apps/api"
+  },
   "scripts": {
     "dev": "ts-node -r tsconfig-paths/register src/main.ts",
     "build": "nest build",
@@ -19,7 +26,6 @@
     "seed": "ts-node -r tsconfig-paths/register src/database/seed.ts"
   },
   "dependencies": {
-    "@afterlight/shared": "workspace:*",
     "@aws-sdk/client-s3": "^3.600.0",
     "@aws-sdk/client-sqs": "^3.600.0",
     "@aws-sdk/s3-request-presigner": "^3.600.0",
@@ -32,6 +38,9 @@
     "@nestjs/platform-socket.io": "^10.4.0",
     "@nestjs/typeorm": "^10.0.2",
     "@nestjs/websockets": "^10.4.0",
+    "@sentry/nestjs": "^10.53.1",
+    "@sentry/profiling-node": "^10.53.1",
+    "@tarpan/shared": "workspace:*",
     "bcrypt": "^5.1.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
@@ -89,7 +98,7 @@
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
     "moduleNameMapper": {
-      "^@afterlight/shared(.*)$": "<rootDir>/../../../packages/shared/src$1",
+      "^@tarpan/shared(.*)$": "<rootDir>/../../../packages/shared/src$1",
       "^@api/(.*)$": "<rootDir>/$1"
     }
   }

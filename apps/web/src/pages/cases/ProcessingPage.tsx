@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { DocumentStatus, WsEvent } from '@afterlight/shared';
-import type { WsDocumentEvent } from '@afterlight/shared';
+import { DocumentStatus, WsEvent } from '@tarpan/shared';
+import type { WsDocumentEvent } from '@tarpan/shared';
 import { getDocument } from '@/api/documents';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { useToast } from '@/hooks/useToast';

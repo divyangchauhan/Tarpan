@@ -69,7 +69,7 @@ export function LoginPage(): JSX.Element {
           <span style={{
             fontFamily: 'var(--serif)', fontSize: 26, fontWeight: 500, color: 'white',
           }}>
-            AfterLight
+            Tarpan
           </span>
         </div>
         <h2 style={{
@@ -79,7 +79,7 @@ export function LoginPage(): JSX.Element {
           Handling the paperwork,<br />so you can grieve.
         </h2>
         <p style={{ fontSize: 14.5, color: 'var(--sidebar-muted)', lineHeight: 1.7, maxWidth: 340 }}>
-          AfterLight reads the death certificate and generates the correct legal letters for every
+          Tarpan reads the death certificate and generates the correct legal letters for every
           institution that needs to be notified — guided, step by step.
         </p>
         <div style={{ marginTop: 48, paddingTop: 48, borderTop: '1px solid var(--sidebar-border)' }}>

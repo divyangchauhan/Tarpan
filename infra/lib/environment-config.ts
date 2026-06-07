@@ -58,6 +58,32 @@ export interface EnvironmentConfig {
 
   // ── Observability ──────────────────────────────────────────────────────────
   readonly logRetentionDays: logs.RetentionDays;
+
+  // ── Resilience: secret rotation (P6-04) ──────────────────────────────────────
+  /**
+   * Enable automatic rotation for DB credentials and generated app secrets.
+   * POC: false — disposable stack, rotation Lambdas add cost/complexity.
+   * Prod: true.
+   *
+   * Caveat: the API/Lambda read secrets into env vars at startup, so a rotation
+   * only takes effect after the next task/function restart, and rotating a JWT
+   * secret invalidates issued tokens. See infra/RESTORE_RUNBOOK.md.
+   */
+  readonly secretRotationEnabled: boolean;
+  /** Rotation interval (days) for both DB credentials and app secrets. */
+  readonly secretRotationDays: number;
+
+  // ── Resilience: AWS Backup (P6-05) ───────────────────────────────────────────
+  /**
+   * Create an AWS Backup vault + plan covering the RDS instance, on top of the
+   * instance's built-in automated backups (dbBackupRetentionDays).
+   * POC: false. Prod: true.
+   */
+  readonly backupEnabled: boolean;
+  /** Retention (days) for recovery points in the AWS Backup vault. */
+  readonly backupRetentionDays: number;
+  /** RETAIN for prod (recovery points are a safety net). DESTROY for poc. */
+  readonly backupVaultRemovalPolicy: cdk.RemovalPolicy;
 }
 
 // ── Presets ────────────────────────────────────────────────────────────────────
@@ -96,6 +122,13 @@ export const POC_CONFIG: EnvironmentConfig = {
   s3AutoDeleteObjects: true,
 
   logRetentionDays: logs.RetentionDays.ONE_MONTH,
+
+  // Disposable stack — skip rotation Lambdas and AWS Backup
+  secretRotationEnabled: false,
+  secretRotationDays: 30,
+  backupEnabled: false,
+  backupRetentionDays: 7,
+  backupVaultRemovalPolicy: cdk.RemovalPolicy.DESTROY,
 };
 
 export const PROD_CONFIG: EnvironmentConfig = {
@@ -130,6 +163,13 @@ export const PROD_CONFIG: EnvironmentConfig = {
   s3AutoDeleteObjects: false,
 
   logRetentionDays: logs.RetentionDays.THREE_MONTHS,
+
+  // Rotate secrets every 30 days; long-retention recovery points via AWS Backup
+  secretRotationEnabled: true,
+  secretRotationDays: 30,
+  backupEnabled: true,
+  backupRetentionDays: 35,
+  backupVaultRemovalPolicy: cdk.RemovalPolicy.RETAIN,
 };
 
 export function getConfig(env: DeploymentEnv): EnvironmentConfig {

@@ -3,25 +3,25 @@ version: "3.9"
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: afterlight_postgres
+    container_name: tarpan_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: afterlight
-      POSTGRES_PASSWORD: afterlight
-      POSTGRES_DB: afterlight
+      POSTGRES_USER: tarpan
+      POSTGRES_PASSWORD: tarpan
+      POSTGRES_DB: tarpan
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U afterlight"]
+      test: ["CMD-SHELL", "pg_isready -U tarpan"]
       interval: 5s
       timeout: 5s
       retries: 5
 
   localstack:
     image: localstack/localstack:3.5
-    container_name: afterlight_localstack
+    container_name: tarpan_localstack
     restart: unless-stopped
     environment:
       SERVICES: s3,sqs,secretsmanager

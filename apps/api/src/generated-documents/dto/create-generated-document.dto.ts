@@ -1,5 +1,5 @@
 import { IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
-import { InstitutionType } from '@afterlight/shared';
+import { InstitutionType } from '@tarpan/shared';
 
 export class CreateGeneratedDocumentDto {
   @IsUUID()

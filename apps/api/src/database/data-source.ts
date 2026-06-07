@@ -6,7 +6,7 @@ import * as path from 'path';
 export const AppDataSource = new DataSource({
   type: 'postgres',
   url:
-    process.env['DATABASE_URL'] ?? 'postgresql://afterlight:afterlight@localhost:5432/afterlight',
+    process.env['DATABASE_URL'] ?? 'postgresql://tarpan:tarpan@localhost:5432/tarpan',
   entities: [path.resolve(__dirname, '../entities/*.{ts,js}')],
   migrations: [path.resolve(__dirname, './migrations/*.{ts,js}')],
   synchronize: false,

@@ -8,7 +8,8 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { CaseStatus, DeceasedInfo, ExecutorInfo } from '@afterlight/shared';
+import { CaseStatus, DeceasedInfo, ExecutorInfo } from '@tarpan/shared';
+import { ssnJsonbTransformer } from '../common/crypto/ssn-jsonb.transformer';
 import { UserEntity } from './user.entity';
 import { DocumentEntity } from './document.entity';
 import { GeneratedDocumentEntity } from './generated-document.entity';
@@ -28,7 +29,11 @@ export class CaseEntity {
   })
   status!: CaseStatus;
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({
+    type: 'jsonb',
+    nullable: true,
+    transformer: ssnJsonbTransformer<DeceasedInfo>(),
+  })
   deceasedInfo!: DeceasedInfo | null;
 
   @Column({ type: 'jsonb', nullable: true })
