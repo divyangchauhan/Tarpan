@@ -100,7 +100,8 @@ pnpm install
 # Install Python dependencies for the processor (required before pnpm dev)
 cd apps/processor && poetry install && cd ../..
 
-# Copy and fill in env files
+# Copy env files (always copy from .env.example — do not reuse old .env files;
+# resource names changed when the project was renamed from Tarpan to AfterLight)
 cp apps/api/.env.example apps/api/.env
 cp apps/web/.env.example apps/web/.env
 cp apps/processor/.env.example apps/processor/.env
