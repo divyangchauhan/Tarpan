@@ -296,10 +296,6 @@ CloudWatch dashboards and SNS alarms for Lambda error rate and SQS queue depth. 
 
 Email verification via SES on registration, forgot-password flow, account lockout after repeated failures, TOTP-based MFA, active session management with remote logout, and Google OAuth2 social login.
 
-### Phase 8 — Billing & Payments
-
-Stripe customer and subscription creation at registration, free tier (1 case - 1 pdf generatetion) vs. paid (unlimited) plan, Stripe webhook handler for lifecycle events, entitlement guard that blocks case creation over the plan limit, Stripe customer portal link in account settings, and per-case/per-document usage metrics.
-
 ### Phase 9 — Additional Institution Templates + Escalation
 
 New institution templates: brokerage accounts, mortgage lenders, auto loan lenders, health insurance, homeowners/renters insurance, county recorder/property deed, state probate court filing cover letters, loyalty/rewards programme cancellations, and professional membership cancellations.

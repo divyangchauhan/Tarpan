@@ -1,19 +1,18 @@
 # Tarpan
 
-AI-powered platform that automates the administrative burden families face after losing a loved one.
+Tarpan automates the administrative work that falls on a family after a death — parsing the death certificate, generating the institution-specific notification letters, and tracking what's been sent.
 
----
+Tarpan (तर्पण) is named for the Hindu rite of offering made to those who have passed.
 
-## What It Does
+> **Status:** Complete, working build. Runs locally and deploys to AWS (instructions below). Not deployed to production and has no live users — built end-to-end as a personal project to work through a full multi-service architecture.
 
-When someone dies, their family must notify Social Security, Medicare, banks, insurance companies, and dozens of subscription services — without access to the deceased's accounts, and often while in grief. Tarpan cuts through that:
+## What it does
 
-1. **Parse the death certificate** — upload a scan; Claude Vision extracts the structured legal data (name, DOB, date of death, SSN, cause, certifier) via the Anthropic API.
-2. **Review and correct** — a guided UI surfaces the extracted fields for human confirmation before any documents are produced.
-3. **Generate institution-specific letters** — 16 Jinja2/WeasyPrint PDF templates covering Social Security (SSA-721), Medicare, IRS, DMV, VA, major bank closures, credit cards, life insurance, subscriptions, and more.
-4. **Track notifications** — a dashboard manages per-institution status from generation through resolution.
+After a death, the next of kin has to notify dozens of institutions — Social Security, Medicare, banks, insurers, subscription services — usually without the deceased's account access. Tarpan reduces that to three steps:
 
-The project is complete through Phase 6 (production monitoring and alerting). It has no live users yet.
+1. **Parse the death certificate.** A Claude-backed parser extracts the key legal fields for review and correction (~98% field-level accuracy on 20 synthetic test certificates — see `apps/processor/scripts/run_accuracy_test.py`).
+2. **Generate notification documents.** 15+ institution-specific letter templates (Social Security, Medicare, major banks, subscription services), exported to PDF.
+3. **Track notifications.** A checklist dashboard covering what's been sent and what's still outstanding.
 
 ---
 
@@ -269,18 +268,11 @@ Tarpan/
 
 ---
 
-## Roadmap
+## Possible extensions
 
-| Phase   | Scope                                                                             | Status      |
-|---------|-----------------------------------------------------------------------------------|-------------|
-| 0–5     | Foundation, API, Lambda processor, frontend, CDK infra, demo polish               | Complete    |
-| 6       | Production readiness — monitoring, alerting, Sentry, secrets rotation, rate limiting | Mostly done |
-| 7       | Auth hardening — email verification, password reset, MFA, OAuth2                 | Not started |
-| 8       | Billing — Razorpay subscriptions, pricing tiers, entitlement guards               | Not started |
-| 9       | Additional templates + escalation workflow (brokerage, mortgage, insurance, probate) | Not started |
-| 10      | Mobile app (Android + iOS) — not yet decided                                     | Not started |
-
-See [TASKS.md](./TASKS.md) for the full task breakdown.
+- **Auth hardening** — email verification, password reset, MFA, OAuth2 social login
+- **Additional institution templates + escalation workflow** — brokerage accounts, mortgage lenders, health/property insurance, probate court filings, escalation letters with regulator contacts, 30-day SES reminders
+- **Mobile app** — not yet decided
 
 ---
 

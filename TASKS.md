@@ -155,19 +155,6 @@
 
 ---
 
-## Phase 8 — Billing & Payments
-
-| ID    | Task                                                                                         | Status | Notes |
-| ----- | -------------------------------------------------------------------------------------------- | ------ | ----- |
-| P8-01 | Razorpay integration: customer + subscription creation on register                           | ⬜     |       |
-| P8-02 | Pricing plans: free tier (1 case) vs paid (unlimited)                                        | ⬜     |       |
-| P8-03 | Razorpay webhook handler: subscription activated / charged / cancelled / halted              | ⬜     |       |
-| P8-04 | Entitlement guard: block case creation when over plan limit                                  | ⬜     |       |
-| P8-05 | Subscription management: Razorpay-hosted subscription update/cancel link in account settings | ⬜     |       |
-| P8-06 | Usage tracking: per-case and per-document metrics for billing analytics                      | ⬜     |       |
-
----
-
 ## Phase 9 — Additional Institution Templates
 
 | ID    | Task                                                                                                          | Status | Notes                                                                                                         |
@@ -244,7 +231,7 @@
 
 ## PR Schedule (Planned)
 
-> Covers Phases 6–9. Phase 10 (mobile app) is excluded — not yet decided.
+> Covers Phases 6, 7, and 9. Phase 10 (mobile app) is excluded — not yet decided.
 > One logical concern per PR; kept reviewable (< 600 lines diff target).
 
 ### Phase 6 — Production Readiness
@@ -268,15 +255,6 @@
 | #20 | MFA support (TOTP via authenticator app)                        | P7-04       |
 | #21 | Session management: active device list + remote logout          | P7-05       |
 | #22 | OAuth2 social login (Google)                                    | P7-06       |
-
-### Phase 8 — Billing & Payments (Razorpay)
-
-| PR  | Scope                                                               | Phase Tasks  |
-| --- | ------------------------------------------------------------------- | ------------ |
-| #23 | Razorpay integration: customer + subscription creation on register  | P8-01        |
-| #24 | Pricing plans (free vs paid) + entitlement guard on case creation   | P8-02, P8-04 |
-| #25 | Razorpay webhook handler: subscription lifecycle events             | P8-03        |
-| #26 | Subscription management page + usage tracking for billing analytics | P8-05, P8-06 |
 
 ### Phase 9 — Additional Institution Templates & Escalation
 

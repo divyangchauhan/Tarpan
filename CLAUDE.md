@@ -68,24 +68,6 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
 
-## Project Summary
-
-Tarpan automates the administrative burden families face after a death:
-
-- Parses death certificates via AI (Claude API)
-- Generates institution-specific legal letters and forms
-- Provides a guided dashboard to track notifications
-
-**Status**: Core functionality complete across Phases 0–5.
-
-**Active roadmap**:
-
-- Phase 6 — Production readiness (monitoring, alerting, secrets rotation, rate limiting)
-- Phase 7 — Auth hardening (email verification, password reset, MFA, OAuth2)
-- Phase 8 — Billing & payments (Razorpay subscriptions, pricing tiers, entitlement guards)
-- Phase 9 — Additional institution templates + escalation workflow (brokerage, mortgage, insurance, probate; escalation letters; notification status lifecycle; 30-day SES reminders)
-- Phase 10 — Mobile app, Android + iOS _(not yet decided)_
-
 ---
 
 ## Monorepo Structure
@@ -102,11 +84,97 @@ Tarpan/
 ```
 
 Package manager: **pnpm** with workspaces.
-Build orchestration: **Turborepo**.
+Build orchestration: **Turborepo** — `pnpm build` must run before migrations or dev so `packages/shared` compiles first.
 
 ### packages/shared
 
-`@tarpan/shared` is the canonical source of truth for all TypeScript types (`Case`, `Document`, `GeneratedDocument`, `ExtractedCertificateData`, `WsEvent`, enums). Both `apps/api` and `apps/web` import from it. When changing a shared type, update it here first, then fix downstream compilation errors.
+`@tarpan/shared` is the canonical source of truth for all TypeScript types (`Case`, `Document`, `GeneratedDocument`, `ExtractedCertificateData`, `WsEvent`, enums) and shared constants:
+
+| Constant | Value | Meaning |
+|---|---|---|
+| `EXTRACTION_CONFIDENCE_THRESHOLD` | 0.85 | Min Claude confidence to auto-accept a field |
+| `S3_PRESIGNED_URL_TTL_SECONDS` | 900 | 15-minute pre-signed URL TTL |
+| `MAX_UPLOAD_SIZE_BYTES` | 20 MB | Upload size limit |
+| `ACCEPTED_UPLOAD_MIME_TYPES` | PDF, JPEG, PNG, TIFF | Allowed death certificate formats |
+
+When changing a shared type, update it here first, then fix downstream compilation errors in `apps/api` and `apps/web`.
+
+---
+
+## Key Architecture Decisions
+
+See [ARCHITECTURE.md](./ARCHITECTURE.md) for full rationale. Summary:
+
+- **NestJS over Express**: enforces module structure; first-class TypeScript; easier to onboard future engineers.
+- **Python Lambda over Node Lambda**: superior PDF/image processing libraries; Claude Python SDK is more mature for doc parsing.
+- **Async via SQS**: Claude API calls can take 5–30s; never block HTTP endpoints.
+- **S3 pre-signed URLs**: sensitive legal documents never pass through API server memory.
+- **PostgreSQL + TypeORM**: relational model fits the data; JSONB columns for flexible extracted fields per state; repository pattern for testability.
+
+### Async Data Flow
+
+```
+User uploads death certificate
+  → API: POST /documents  (presigned URL returned)
+  → Client: PUT directly to S3
+  → API: PATCH /documents/:id/confirm  →  SQS (tarpan-document-processing)
+  → Lambda: downloads from S3, calls Claude Vision API, POSTs result to API
+  → API: PATCH /documents/:id/callback  (InternalSecretGuard)
+  → API: emits WebSocket event (document.processing.complete | failed) to user's room
+  → Client: navigates to ReviewPage on success
+
+User requests PDF generation
+  → API: POST /generated-documents  →  SQS (tarpan-document-generation)
+  → Lambda: direct invocation renders Jinja2 HTML template → WeasyPrint PDF → S3
+  → Lambda: POSTs result to API callback
+  → API: emits generation.complete WebSocket event
+  → Client: shows download link (pre-signed S3 URL)
+```
+
+### Lambda Routing
+
+`apps/processor/src/handler.py` has a single entry point. If `event["Records"]` is non-empty it's an SQS trigger → `_handle_processing`. If the event has no `Records` it's a direct Lambda invocation (generation request) → `_handle_generation`.
+
+**Processor module roles** (`apps/processor/src/`):
+
+| Module | Role |
+|---|---|
+| `handler.py` | Lambda entry point; routes to processing or generation path |
+| `pdf_processor.py` | PDFPlumber / Pillow → base64 image content for Claude |
+| `extractor.py` | Calls Claude Vision API; returns `ExtractedCertificateData` |
+| `template_engine.py` | Jinja2 → WeasyPrint PDF rendering |
+| `s3_client.py` | Download uploaded certs / upload generated PDFs |
+| `api_client.py` | PATCH callbacks to the NestJS API |
+| `config.py` | Pydantic Settings — all env vars in one place |
+| `models.py` | Pydantic data models shared across processor modules |
+
+### API Guards
+
+Two guard types protect different route classes:
+
+- `JwtAuthGuard` — validates the user's Bearer JWT. Applied to all user-facing routes.
+- `InternalSecretGuard` — validates the `x-internal-secret` header against `INTERNAL_API_SECRET`. Used exclusively on Lambda callback endpoints (`/documents/:id/callback`, `/generated-documents/:id/callback`). Never apply this to user-facing routes.
+
+### PDF Templates
+
+15 Jinja2/HTML templates live in `apps/processor/src/templates/`. Each file's stem (e.g. `ssa-721`, `bank-closure`) is the `templateId` referenced in generation requests. WeasyPrint renders them to PDF. The `templates` NestJS module (`apps/api/src/templates/`) serves the template list to the frontend so `InstitutionsPage` knows which documents can be generated.
+
+### Web App Page Flow
+
+The React frontend follows a linear case workflow:
+
+```
+LoginPage / RegisterPage
+  → CasesPage (list all cases)
+    → NewCasePage (create case)
+    → UploadPage (upload death certificate → POST /documents)
+    → ProcessingPage (WebSocket wait for Lambda extraction result)
+    → ReviewPage (review/correct extracted fields → PATCH /documents/:id)
+    → InstitutionsPage (select templates → POST /generated-documents)
+    → DownloadsPage (download generated PDFs via pre-signed S3 URLs)
+```
+
+State is shared across pages via `ActiveCaseContext` (the selected case) and `AuthContext` (JWT + user). WebSocket subscription lives in `useWebSocket` hook and drives the `ProcessingPage` → `ReviewPage` navigation automatically.
 
 ---
 
@@ -163,10 +231,10 @@ S3_GENERATED_DOCS_BUCKET=tarpan-generated-docs
 SQS_DOCUMENT_PROCESSING_QUEUE_URL=http://localhost:4566/000000000000/tarpan-document-processing
 SQS_DOCUMENT_GENERATION_QUEUE_URL=http://localhost:4566/000000000000/tarpan-document-generation
 INTERNAL_API_SECRET=...
-SSN_ENCRYPTION_KEY=...                   # base64-encoded 32-byte AES-256 key; encrypts SSNs at rest (P6-09). Generate: openssl rand -base64 32
+SSN_ENCRYPTION_KEY=...                   # base64-encoded 32-byte AES-256 key; encrypts SSNs at rest. Generate: openssl rand -base64 32
 ANTHROPIC_API_KEY=...                    # Not read by the API at runtime — only by the Lambda processor. Included here for completeness when running the full local stack.
 CORS_ORIGIN=http://localhost:5173
-SENTRY_DSN=...                           # Sentry DSN (P6-03). Omit or leave empty to disable error tracking.
+SENTRY_DSN=...                           # Omit or leave empty to disable error tracking.
 ```
 
 ### apps/processor (Lambda env)
@@ -183,8 +251,8 @@ SQS_DOCUMENT_GENERATION_QUEUE_URL=http://localhost:4566/000000000000/tarpan-docu
 ANTHROPIC_API_KEY=...
 API_CALLBACK_URL=http://localhost:3001
 INTERNAL_API_SECRET=...
-SENTRY_DSN=...                           # Sentry DSN (P6-03). Omit or leave empty to disable error tracking.
-SENTRY_ENVIRONMENT=production            # Sentry environment tag (default: production).
+SENTRY_DSN=...
+SENTRY_ENVIRONMENT=production
 ```
 
 ### apps/web
@@ -193,53 +261,6 @@ SENTRY_ENVIRONMENT=production            # Sentry environment tag (default: prod
 VITE_API_URL=http://localhost:3001
 VITE_WS_URL=http://localhost:3001        # http:// not ws:// — socket.io handles transport
 ```
-
----
-
-## Key Architecture Decisions
-
-See [ARCHITECTURE.md](./ARCHITECTURE.md) for full rationale. Summary:
-
-- **NestJS over Express**: enforces module structure; first-class TypeScript; easier to onboard future engineers.
-- **Python Lambda over Node Lambda**: superior PDF/image processing libraries; Claude Python SDK is more mature for doc parsing.
-- **Async via SQS**: Claude API calls can take 5–30s; never block HTTP endpoints.
-- **S3 pre-signed URLs**: sensitive legal documents never pass through API server memory.
-- **PostgreSQL + TypeORM**: relational model fits the data; JSONB columns for flexible extracted fields per state; repository pattern for testability.
-
-### Async Data Flow
-
-```
-User uploads death certificate
-  → API: POST /documents  (presigned URL returned)
-  → Client: PUT directly to S3
-  → API: PATCH /documents/:id/confirm  →  SQS (tarpan-document-processing)
-  → Lambda: downloads from S3, calls Claude Vision API, POSTs result to API
-  → API: PATCH /documents/:id/callback  (InternalSecretGuard)
-  → API: emits WebSocket event (document.processing.complete | failed) to user's room
-  → Client: navigates to ReviewPage on success
-
-User requests PDF generation
-  → API: POST /generated-documents  →  SQS (tarpan-document-generation)
-  → Lambda: direct invocation renders Jinja2 HTML template → WeasyPrint PDF → S3
-  → Lambda: POSTs result to API callback
-  → API: emits generation.complete WebSocket event
-  → Client: shows download link (pre-signed S3 URL)
-```
-
-### Lambda Routing
-
-`apps/processor/src/handler.py` has a single entry point. If `event["Records"]` is non-empty it's an SQS trigger → `_handle_processing`. If the event has no `Records` it's a direct Lambda invocation (generation request) → `_handle_generation`.
-
-### API Guards
-
-Two guard types protect different route classes:
-
-- `JwtAuthGuard` — validates the user's Bearer JWT. Applied to all user-facing routes.
-- `InternalSecretGuard` — validates the `x-internal-secret` header against `INTERNAL_API_SECRET`. Used exclusively on Lambda callback endpoints (`/documents/:id/callback`, `/generated-documents/:id/callback`). Never apply this to user-facing routes.
-
-### PDF Templates
-
-16 Jinja2/HTML templates live in `apps/processor/src/templates/`. Each file's stem (e.g. `ssa-721`, `bank-closure`) is the `templateId` referenced in generation requests. WeasyPrint renders them to PDF.
 
 ---
 
@@ -256,12 +277,12 @@ Two guard types protect different route classes:
 
 ## Testing Standards
 
-| Layer       | Framework                | Coverage Target    |
-| ----------- | ------------------------ | ------------------ |
-| NestJS unit | Jest                     | 80%                |
-| NestJS e2e  | Supertest + Jest         | Critical paths     |
-| Python unit | pytest                   | 90% (parser logic) |
-| React       | Vitest + Testing Library | Key user flows     |
+| Layer | Framework | Where tests live | Coverage Target |
+|---|---|---|---|
+| NestJS unit | Jest | `*.spec.ts` alongside source files | 80% |
+| NestJS e2e | Supertest + Jest | `apps/api/test/` | Critical paths |
+| Python unit | pytest | `apps/processor/tests/test_*.py` | 80% (processor overall) |
+| React | Vitest + Testing Library | `*.integration.test.tsx` / `*.test.tsx` alongside pages | Key user flows |
 
 ---
 
@@ -269,10 +290,10 @@ Two guard types protect different route classes:
 
 - Death certificates are **highly sensitive PII**. Never log document content.
 - S3 objects must be **private** (no public ACLs).
-- Pre-signed URLs must have **max 15-minute TTL**.
-- SSNs are **encrypted at rest** (P6-09): a TypeORM JSONB column transformer (`apps/api/src/common/crypto/`) AES-256-GCM-encrypts `socialSecurityNumber` in both `documents.extractedData` and `cases.deceasedInfo`, keyed by `SSN_ENCRYPTION_KEY`. Encryption is transparent to services/repositories — never encrypt/decrypt SSNs by hand; rely on the entity columns. Other extracted PII (names, DOBs) is not yet encrypted at rest.
+- Pre-signed URLs must have **max 15-minute TTL** (enforced via `S3_PRESIGNED_URL_TTL_SECONDS` in `@tarpan/shared`).
+- SSNs are **encrypted at rest**: a TypeORM JSONB column transformer (`apps/api/src/common/crypto/`) AES-256-GCM-encrypts `socialSecurityNumber` in both `documents.extractedData` and `cases.deceasedInfo`, keyed by `SSN_ENCRYPTION_KEY`. Encryption is transparent to services/repositories — never encrypt/decrypt SSNs by hand; rely on the entity columns. Other extracted PII (names, DOBs) is not yet encrypted at rest.
 - Log only: document IDs, processing status, timing metrics.
-- **Secret rotation & backups** (P6-04/P6-05, prod only): DB credentials and the generated app secrets (JWT, refresh, internal API) rotate every 30 days; the Anthropic key is rotated manually. RDS has built-in automated backups plus a daily AWS Backup plan (35-day retention). Secrets are read into env vars at startup, so a rotation only takes effect after the consuming task/function restarts — see [infra/RESTORE_RUNBOOK.md](./infra/RESTORE_RUNBOOK.md) for restore steps and rotation caveats.
+- **Secret rotation & backups** (prod only): DB credentials and the generated app secrets (JWT, refresh, internal API) rotate every 30 days; the Anthropic key is rotated manually. RDS has built-in automated backups plus a daily AWS Backup plan (35-day retention). Secrets are read into env vars at startup, so a rotation only takes effect after the consuming task/function restarts — see [infra/RESTORE_RUNBOOK.md](./infra/RESTORE_RUNBOOK.md) for restore steps.
 
 ---
 
@@ -324,6 +345,11 @@ pnpm --filter api seed
 pnpm --filter api migration:generate -- src/database/migrations/MigrationName
 pnpm --filter api migration:run
 pnpm --filter api migration:revert
+
+# Accuracy test for the certificate parser (requires ANTHROPIC_API_KEY)
+cd apps/processor && poetry run python scripts/run_accuracy_test.py \
+  --image-dir scripts/test_certificates \
+  --ground-truth scripts/test_certificates/ground_truth.json
 
 # CDK — deploy infrastructure to AWS
 cd infra && pnpm install && cdk bootstrap && cdk deploy --all   # defaults to --context env=poc
