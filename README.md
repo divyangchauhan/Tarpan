@@ -109,6 +109,9 @@ cp apps/processor/.env.example apps/processor/.env
 # Start PostgreSQL + LocalStack (S3, SQS, Secrets Manager)
 docker compose up -d
 
+# Build shared packages (required before running migrations or dev)
+pnpm build
+
 # Run database migrations
 pnpm --filter api migration:run
 
