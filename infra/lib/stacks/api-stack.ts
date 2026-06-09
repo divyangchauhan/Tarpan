@@ -124,10 +124,9 @@ export class ApiStack extends cdk.Stack {
       healthCheckGracePeriod: cdk.Duration.seconds(60),
     });
 
-    // Health check — NestJS returns 404 on unknown routes, which is fine
     service.targetGroup.configureHealthCheck({
       path: '/api/v1/health',
-      healthyHttpCodes: '200,404',
+      healthyHttpCodes: '200',
       interval: cdk.Duration.seconds(30),
       timeout: cdk.Duration.seconds(5),
       healthyThresholdCount: 2,
