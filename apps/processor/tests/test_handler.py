@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.handler import _content_type_from_key, handler
+from src.handler import _content_type_from_key, _handle_generation, handler
 from src.models import ExtractedCertificateData
 
 _EXTRACTED = ExtractedCertificateData(
@@ -72,22 +72,21 @@ def _make_generation_event(generated_document_id: str = "gen-123") -> dict[str, 
 
 
 class TestHandlerRouting:
-    def test_direct_invocation_routes_to_generation(self) -> None:
-        from unittest.mock import MagicMock
-
+    def test_sqs_invocation_routes_to_generation(self) -> None:
         fake_pdf = b"%PDF-1.4 fake"
         mock_html_instance = MagicMock()
         mock_html_instance.write_pdf.return_value = fake_pdf
 
+        event = _make_sqs_event(_make_generation_event())
         with (
             patch("src.template_engine.HTML", return_value=mock_html_instance),
             patch("src.handler.s3_client.upload_object"),
             patch("src.handler.api_client.report_generation_success"),
         ):
-            result = handler(_make_generation_event(), object())
+            result = handler(event, object())
 
-        assert result["generatedDocumentId"] == "gen-123"
-        assert result["status"] == "COMPLETED"
+        assert result["results"][0]["generatedDocumentId"] == "gen-123"
+        assert result["results"][0]["status"] == "COMPLETED"
 
     def test_sqs_invocation_routes_to_processing(self) -> None:
         event = _make_sqs_event({"documentId": "doc-123", "s3Key": "uploads/doc-123.pdf"})
@@ -187,7 +186,7 @@ class TestHandleGeneration:
 
     def test_successful_generation_returns_completed(self) -> None:
         with self._patch_gen():
-            result = handler(_make_generation_event(), object())
+            result = _handle_generation(_make_generation_event())
         assert result["status"] == "COMPLETED"
         assert result["generatedDocumentId"] == "gen-123"
         assert "s3Key" in result
@@ -195,12 +194,12 @@ class TestHandleGeneration:
     def test_api_callback_failure_still_returns_completed(self) -> None:
         """PDF uploaded to S3 — callback 404 should not fail the generation."""
         with self._patch_gen(success_side_effect=RuntimeError("404 Not Found")):
-            result = handler(_make_generation_event(), object())
+            result = _handle_generation(_make_generation_event())
         assert result["status"] == "COMPLETED"
 
     def test_render_failure_returns_failed(self) -> None:
         with self._patch_gen(render_side_effect=RuntimeError("WeasyPrint crash")):
-            result = handler(_make_generation_event(), object())
+            result = _handle_generation(_make_generation_event())
         assert result["status"] == "FAILED"
 
     def test_render_failure_calls_report_generation_failure(self) -> None:
@@ -214,7 +213,7 @@ class TestHandleGeneration:
             s3_client=MagicMock(upload_object=MagicMock()),
             api_client=mock_api,
         ):
-            handler(_make_generation_event("gen-xyz"), object())
+            _handle_generation(_make_generation_event("gen-xyz"))
         mock_api.report_generation_failure.assert_called_once()
         assert mock_api.report_generation_failure.call_args[0][0] == "gen-xyz"
 
@@ -224,7 +223,7 @@ class TestHandleGeneration:
             render_side_effect=RuntimeError("crash"),
             failure_side_effect=RuntimeError("API also down"),
         ):
-            result = handler(_make_generation_event(), object())
+            result = _handle_generation(_make_generation_event())
         assert result["status"] == "FAILED"
 
 

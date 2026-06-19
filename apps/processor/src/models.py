@@ -31,7 +31,7 @@ class ExtractedCertificateData(BaseModel):
 
 
 class GenerationRequest(BaseModel):
-    """Payload for a direct Lambda invocation requesting PDF generation."""
+    """Payload of an SQS generation job requesting PDF generation."""
 
     generated_document_id: str = Field(description="ID of the GeneratedDocument record in the API")
     template_id: str = Field(description="Template slug, e.g. 'ssa-721' or 'bank-closure'")

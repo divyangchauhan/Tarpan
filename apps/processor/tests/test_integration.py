@@ -214,9 +214,9 @@ class TestGenerationIntegration:
             patch("src.handler.api_client"),
         ):
             mock_tpl.render.return_value = _FAKE_RENDERED_PDF
-            result = handler(event, object())
+            result = handler(_sqs_event(event), object())
 
-        assert result["status"] == "COMPLETED"
+        assert result["results"][0]["status"] == "COMPLETED"
 
         expected_key = "generated/case-abc/ssa-721/gen-001.pdf"
         obj = aws["s3"].get_object(Bucket=_GENERATED_BUCKET, Key=expected_key)
@@ -236,9 +236,9 @@ class TestGenerationIntegration:
             patch("src.handler.api_client"),
         ):
             mock_tpl.render.return_value = _FAKE_RENDERED_PDF
-            result = handler(event, object())
+            result = handler(_sqs_event(event), object())
 
-        assert result["s3Key"] == "generated/case-999/bank-closure/gen-xyz.pdf"
+        assert result["results"][0]["s3Key"] == "generated/case-999/bank-closure/gen-xyz.pdf"
 
     def test_generation_calls_api_success_callback_with_s3_key(self, aws: Any) -> None:
         """On success the handler reports the S3 key back to the API."""
@@ -249,7 +249,7 @@ class TestGenerationIntegration:
             patch("src.handler.api_client") as mock_api,
         ):
             mock_tpl.render.return_value = _FAKE_RENDERED_PDF
-            handler(event, object())
+            handler(_sqs_event(event), object())
 
         mock_api.report_generation_success.assert_called_once_with(
             "gen-cb", "generated/case-cb/ssa-721/gen-cb.pdf"
@@ -264,9 +264,9 @@ class TestGenerationIntegration:
             patch("src.handler.api_client"),
         ):
             mock_tpl.render.side_effect = RuntimeError("WeasyPrint crash")
-            result = handler(event, object())
+            result = handler(_sqs_event(event), object())
 
-        assert result["status"] == "FAILED"
+        assert result["results"][0]["status"] == "FAILED"
         objects = aws["s3"].list_objects_v2(Bucket=_GENERATED_BUCKET)
         assert objects.get("KeyCount", 0) == 0
 
@@ -279,7 +279,7 @@ class TestGenerationIntegration:
             patch("src.handler.api_client") as mock_api,
         ):
             mock_tpl.render.side_effect = RuntimeError("crash")
-            handler(event, object())
+            handler(_sqs_event(event), object())
 
         mock_api.report_generation_failure.assert_called_once()
         assert mock_api.report_generation_failure.call_args[0][0] == "gen-fail2"

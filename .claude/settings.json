@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('\\\\n'.join\\(sorted\\(d.get\\('dependencies',{}\\).keys\\(\\)\\)\\)\\)\")",
+      "Bash(awk '/## Phase [0-9]/{phase=$0} /✅/{done[phase]++} /⬜/{todo[phase]++} END{for\\(p in done\\) print p, \"done:\", done[p], \"todo:\", todo[p]+0}' /home/divyang/claude-code/Tarpan/TASKS.md)",
+      "Bash(gh -C /home/divyang/claude-code/Tarpan pr create --title 'docs: rewrite README with accurate architecture and stack' --body ' *)",
+      "Bash(aws --endpoint-url=http://localhost:4566 --region us-east-1 sqs list-queues)",
+      "Bash(gh repo *)"
+    ]
+  },
+  "enabledPlugins": {
+    "frontend-design@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true
+  }
+}
