@@ -1,9 +1,9 @@
 """
 Lambda entry point.
 
-Two event types are handled:
-  1. SQS trigger  — document processing (parse a death certificate)
-  2. Direct invoke — document generation (render a legal letter template to PDF)
+Both job types arrive as SQS records and are routed by message content:
+  1. Document processing  — parse a death certificate (carries documentId + s3Key)
+  2. Document generation  — render a legal letter template to PDF (carries generatedDocumentId)
 """
 
 import json
@@ -46,10 +46,6 @@ _CONTENT_TYPE_MAP: dict[str, str] = {
 def handler(event: dict[str, Any], context: object) -> dict[str, Any]:
     """Main Lambda handler — routes SQS records to the appropriate processor."""
     records: list[dict[str, Any]] = event.get("Records", [])
-
-    if not records:
-        # Direct invocation (e.g. document generation)
-        return _handle_generation(event)
 
     results = []
     for record in records:

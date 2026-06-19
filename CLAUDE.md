@@ -125,7 +125,7 @@ User uploads death certificate
 
 User requests PDF generation
   → API: POST /generated-documents  →  SQS (tarpan-document-generation)
-  → Lambda: direct invocation renders Jinja2 HTML template → WeasyPrint PDF → S3
+  → Lambda: SQS-triggered, renders Jinja2 HTML template → WeasyPrint PDF → S3
   → Lambda: POSTs result to API callback
   → API: emits generation.complete WebSocket event
   → Client: shows download link (pre-signed S3 URL)
@@ -133,7 +133,7 @@ User requests PDF generation
 
 ### Lambda Routing
 
-`apps/processor/src/handler.py` has a single entry point. If `event["Records"]` is non-empty it's an SQS trigger → `_handle_processing`. If the event has no `Records` it's a direct Lambda invocation (generation request) → `_handle_generation`.
+`apps/processor/src/handler.py` has a single entry point. Both job types arrive as SQS records (the processing and generation queues are both wired as event sources). The handler iterates `event["Records"]` and routes each record by message content: a body carrying `generatedDocumentId` → `_handle_generation`; otherwise → `_handle_processing`.
 
 **Processor module roles** (`apps/processor/src/`):
 
