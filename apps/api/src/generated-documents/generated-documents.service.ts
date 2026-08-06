@@ -122,9 +122,14 @@ export class GeneratedDocumentsService {
       throw new NotFoundException(`GeneratedDocument ${dto.generatedDocumentId} not found`);
     }
 
-    doc.status = dto.status;
-    if (dto.s3Key !== undefined) doc.s3Key = dto.s3Key;
-    if (dto.errorMessage !== undefined) doc.errorMessage = dto.errorMessage;
+    // Callbacks are retried by SQS and may arrive after the API committed the
+    // first result. Keep terminal states terminal so a late failure cannot
+    // undo a successful callback (or vice versa).
+    if (doc.status === GeneratedDocumentStatus.GENERATING) {
+      doc.status = dto.status;
+      if (dto.s3Key !== undefined) doc.s3Key = dto.s3Key;
+      if (dto.errorMessage !== undefined) doc.errorMessage = dto.errorMessage;
+    }
 
     const updated = await this.generatedDocumentRepository.save(doc);
     this.logger.log(`Generation result for ${dto.generatedDocumentId}: status=${dto.status}`);

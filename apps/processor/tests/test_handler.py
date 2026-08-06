@@ -193,10 +193,27 @@ class TestHandleGeneration:
 
     def test_api_callback_failure_raises_for_sqs_retry(self) -> None:
         """A failed callback must retry instead of leaving the DB GENERATING."""
-        with self._patch_gen(success_side_effect=RuntimeError("404 Not Found")), pytest.raises(
-            RuntimeError, match="404 Not Found"
+        s3 = MagicMock(upload_object=MagicMock())
+        with (
+            self._patch_gen(success_side_effect=RuntimeError("timeout")),
+            patch("src.handler.s3_client", s3),
+            pytest.raises(RuntimeError, match="timeout"),
         ):
             _handle_generation(_make_generation_event())
+        s3.delete_object.assert_not_called()
+
+    def test_generation_dlq_record_reports_terminal_failure(self) -> None:
+        event = _make_sqs_event(_make_generation_event("gen-dlq"))
+        event["Records"][0]["eventSourceARN"] = "arn:aws:sqs:us-east-1:123:generation-dlq"
+        with patch("src.handler.settings.generation_dlq_arn", event["Records"][0]["eventSourceARN"]), patch(
+            "src.handler.api_client.report_generation_failure"
+        ) as report_failure:
+            result = handler(event, object())
+
+        report_failure.assert_called_once_with(
+            "gen-dlq", "Generation job exhausted retries before completion"
+        )
+        assert result["results"][0]["status"] == "FAILED"
 
     def test_render_failure_returns_failed(self) -> None:
         with self._patch_gen(render_side_effect=RuntimeError("WeasyPrint crash")):

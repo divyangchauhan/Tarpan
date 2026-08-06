@@ -1,5 +1,13 @@
 import { Type } from 'class-transformer';
-import { IsEnum, IsOptional, IsString, IsUUID, ValidateNested } from 'class-validator';
+import {
+  IsEnum,
+  IsObject,
+  IsOptional,
+  IsString,
+  IsUUID,
+  ValidateIf,
+  ValidateNested,
+} from 'class-validator';
 import { DocumentStatus } from '@tarpan/shared';
 import { ExtractedCertificateDataDto } from './extracted-certificate-data.dto';
 
@@ -14,7 +22,8 @@ export class ProcessingResultDto {
   @IsEnum(ALLOWED_STATUSES)
   status!: ProcessingStatus;
 
-  @IsOptional()
+  @ValidateIf((_, value: unknown) => value !== undefined)
+  @IsObject()
   @ValidateNested()
   @Type(() => ExtractedCertificateDataDto)
   extractedData?: ExtractedCertificateDataDto;

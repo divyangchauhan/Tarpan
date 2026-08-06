@@ -382,5 +382,25 @@ describe('GeneratedDocumentsService', () => {
 
       await expect(service.handleGenerationResult(dto)).rejects.toThrow(NotFoundException);
     });
+
+    it('does not let a late FAILED callback downgrade READY', async () => {
+      const dto: GenerationResultDto = {
+        generatedDocumentId: 'gen-doc-id',
+        status: GeneratedDocumentStatus.FAILED,
+        errorMessage: 'late callback',
+      };
+      const ready = {
+        ...mockGeneratedDoc,
+        status: GeneratedDocumentStatus.READY,
+        s3Key: 'generated/case-id/ssa-721/gen-doc-id.pdf',
+      };
+      mockGeneratedDocRepository.findOne.mockResolvedValue(ready);
+      mockGeneratedDocRepository.save.mockResolvedValue(ready);
+
+      const result = await service.handleGenerationResult(dto);
+
+      expect(result.status).toBe(GeneratedDocumentStatus.READY);
+      expect(mockGeneratedDocRepository.save).toHaveBeenCalledWith(ready);
+    });
   });
 });

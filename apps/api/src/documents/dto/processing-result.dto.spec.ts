@@ -31,4 +31,11 @@ describe('ProcessingResultDto', () => {
     const extractedDataError = errors.find((error) => error.property === 'extractedData');
     expect(extractedDataError?.children?.[0]?.constraints).toBeDefined();
   });
+
+  it.each([null, []])('rejects extractedData=%j', async (extractedData) => {
+    const dto = plainToInstance(ProcessingResultDto, { ...base, extractedData });
+
+    const errors = await validate(dto, { whitelist: true, forbidNonWhitelisted: true });
+    expect(errors.find((error) => error.property === 'extractedData')).toBeDefined();
+  });
 });

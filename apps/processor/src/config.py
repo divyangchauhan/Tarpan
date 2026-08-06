@@ -63,6 +63,7 @@ class Settings(BaseSettings):
 
     # API callback
     api_callback_url: str
+    generation_dlq_arn: str = ""
     internal_api_secret: str
 
     # Processing thresholds

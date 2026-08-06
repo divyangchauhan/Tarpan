@@ -51,6 +51,10 @@ def handler(event: dict[str, Any], context: object) -> dict[str, Any]:
     for record in records:
         try:
             body: dict[str, Any] = json.loads(record["body"])
+            if _is_generation_dlq_record(record):
+                result = _remediate_generation_dlq(body)
+                results.append({"messageId": record["messageId"], "status": "ok", **result})
+                continue
             # Route by message content: generation jobs carry generatedDocumentId,
             # processing jobs carry documentId + s3Key.
             if "generatedDocumentId" in body:
@@ -67,6 +71,28 @@ def handler(event: dict[str, Any], context: object) -> dict[str, Any]:
             raise
 
     return {"batchItemFailures": [], "results": results}
+
+
+def _is_generation_dlq_record(record: dict[str, Any]) -> bool:
+    """Identify records delivered by the generation DLQ event source."""
+    dlq_arn = settings.generation_dlq_arn
+    return bool(dlq_arn and record.get("eventSourceARN") == dlq_arn)
+
+
+def _remediate_generation_dlq(event: dict[str, Any]) -> dict[str, Any]:
+    """Move an exhausted generation job out of GENERATING.
+
+    The DLQ event source retries this record until the API accepts the
+    terminal FAILED callback. No S3 cleanup is attempted here: the artifact
+    may have been committed by an ambiguous READY callback and lifecycle or
+    explicit case cleanup owns orphan removal.
+    """
+    generated_document_id = event["generatedDocumentId"]
+    api_client.report_generation_failure(
+        generated_document_id,
+        "Generation job exhausted retries before completion",
+    )
+    return {"generatedDocumentId": generated_document_id, "status": "FAILED"}
 
 
 def _handle_processing(body: dict[str, Any]) -> dict[str, Any]:
@@ -205,7 +231,9 @@ def _handle_generation(event: dict[str, Any]) -> dict[str, Any]:
             "status": "FAILED",
         }
 
-    # PDF rendered and uploaded to S3 — notify API (best-effort; log warning on failure)
+    # PDF rendered and uploaded to S3 — notify API. Keep the artifact when the
+    # response is ambiguous: the API may have committed READY before the
+    # network failure. The retried callback is idempotent.
     try:
         api_client.report_generation_success(request.generated_document_id, s3_key)
     except Exception:
@@ -216,15 +244,6 @@ def _handle_generation(event: dict[str, Any]) -> dict[str, Any]:
                 "s3_key": s3_key,
             },
         )
-        # Delete the artifact before retrying so a transient callback failure
-        # cannot leave an untracked PDF behind. Raising also makes SQS retry.
-        try:
-            s3_client.delete_object(settings.s3_generated_docs_bucket, s3_key)
-        except Exception:
-            logger.exception(
-                "Failed to remove untracked generated PDF",
-                extra={"generated_document_id": request.generated_document_id},
-            )
         raise
 
     total_ms = int((time.monotonic() - t_start) * 1000)
