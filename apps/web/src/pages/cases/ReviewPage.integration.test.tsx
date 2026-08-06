@@ -113,6 +113,33 @@ describe('ReviewPage (integration)', () => {
     expect(screen.getByText('Springfield, IL')).toBeInTheDocument();
   });
 
+  it('prefers saved case corrections over the original extraction', async () => {
+    const correctedCase: Case = {
+      ...MOCK_CASE,
+      deceasedInfo: { ...MOCK_CASE.deceasedInfo!, firstName: 'John' },
+    };
+    const extractedDoc: Document = {
+      ...PROCESSED_DOC,
+      extractedData: {
+        firstName: 'Jon',
+        lastName: 'Mitchell',
+        dateOfDeath: '2024-11-03',
+        placeOfDeath: 'Springfield, IL',
+        extractionConfidence: 0.5,
+        needsReview: true,
+      },
+    };
+    mockGetCase.mockResolvedValue(correctedCase);
+    mockGetDocuments.mockResolvedValue([extractedDoc]);
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('John')).toBeInTheDocument();
+    });
+    expect(screen.queryByText('Jon')).not.toBeInTheDocument();
+  });
+
   it('shows the uploaded document preview when a processed doc exists', async () => {
     mockGetCase.mockResolvedValue(MOCK_CASE);
     mockGetDocuments.mockResolvedValue([PROCESSED_DOC]);
