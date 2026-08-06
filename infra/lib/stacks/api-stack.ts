@@ -1,4 +1,5 @@
 import * as cdk from 'aws-cdk-lib';
+import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as ecs_patterns from 'aws-cdk-lib/aws-ecs-patterns';
@@ -23,6 +24,9 @@ interface ApiStackProps extends cdk.StackProps {
   database: DatabaseStack;
   /** Sentry ingest DSN. Omit or leave empty to disable error tracking. */
   sentryDsn?: string;
+  apiDomainName: string;
+  apiCertificateArn: string;
+  cloudFrontOriginFacingPrefixListId: string;
 }
 
 /**
@@ -30,7 +34,7 @@ interface ApiStackProps extends cdk.StackProps {
  *
  * - 512 vCPU / 1024 MB RAM per task (sufficient for POC)
  * - Auto-scaling: 1–4 tasks based on CPU utilisation
- * - ALB handles HTTP → HTTPS redirect (add ACM cert for HTTPS in prod)
+ * - ALB accepts HTTPS only from CloudFront origin-facing addresses
  * - Task role follows least-privilege: only S3, SQS, Secrets Manager access
  *
  * P4-06, P4-09
@@ -44,7 +48,23 @@ export class ApiStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: ApiStackProps) {
     super(scope, id, props);
 
-    const { config, network, storage, messaging, secrets, database, sentryDsn } = props;
+    const {
+      config,
+      network,
+      storage,
+      messaging,
+      secrets,
+      database,
+      sentryDsn,
+      apiDomainName,
+      apiCertificateArn,
+      cloudFrontOriginFacingPrefixListId,
+    } = props;
+    const apiCertificate = acm.Certificate.fromCertificateArn(
+      this,
+      'ApiCertificate',
+      apiCertificateArn,
+    );
 
     // ── Container image ────────────────────────────────────────────────────
 
@@ -120,9 +140,22 @@ export class ApiStack extends cdk.Stack {
       },
       loadBalancerName: 'tarpan-alb',
       publicLoadBalancer: true,
-      listenerPort: 80, // Add HTTPS + ACM cert for production
+      openListener: false,
+      domainName: apiDomainName,
+      certificate: apiCertificate,
+      protocol: elbv2.ApplicationProtocol.HTTPS,
+      listenerPort: 443,
+      redirectHTTP: false,
       healthCheckGracePeriod: cdk.Duration.seconds(60),
     });
+
+    // CloudFront's managed origin-facing prefix list prevents direct ALB
+    // callers from spoofing X-Forwarded-For while preserving client-IP keys.
+    service.loadBalancer.connections.allowFrom(
+      ec2.Peer.prefixList(cloudFrontOriginFacingPrefixListId),
+      ec2.Port.tcp(443),
+      'Allow HTTPS only from CloudFront origin-facing addresses',
+    );
 
     service.targetGroup.configureHealthCheck({
       path: '/api/v1/health',
@@ -165,7 +198,7 @@ export class ApiStack extends cdk.Stack {
 
     // ── Expose DNS name ───────────────────────────────────────────────────
 
-    this.loadBalancerDnsName = `http://${service.loadBalancer.loadBalancerDnsName}`;
+    this.loadBalancerDnsName = `https://${apiDomainName}`;
     this.loadBalancer = service.loadBalancer;
 
     // ── Outputs ───────────────────────────────────────────────────────────

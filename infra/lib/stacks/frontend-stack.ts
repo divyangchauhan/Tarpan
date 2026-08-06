@@ -51,11 +51,11 @@ export class FrontendStack extends cdk.Stack {
       autoDeleteObjects: true,
     });
 
-    // ── ALB origin (HTTP — ALB has no TLS cert for the POC) ───────────────
+    // ── ALB origin (HTTPS — direct ALB access is blocked by its SG) ───────
 
     const albOrigin = new cloudfront_origins.HttpOrigin(albHostname, {
-      protocolPolicy: cloudfront.OriginProtocolPolicy.HTTP_ONLY,
-      httpPort: 80,
+      protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
+      httpsPort: 443,
     });
 
     // ── CloudFront distribution ────────────────────────────────────────────

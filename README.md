@@ -162,14 +162,28 @@ cdk bootstrap aws://<ACCOUNT_ID>/<REGION>
 
 ```bash
 # POC (single NAT, DESTROY removal policies — easy teardown)
-cdk deploy --all
+cdk deploy --all \
+  --context apiDomainName=api.example.com \
+  --context apiCertificateArn=arn:aws:acm:us-east-1:123456789012:certificate/<CERT_ID> \
+  --context cloudFrontOriginFacingPrefixListId=pl-<REGION_ID>
 
 # Production (Multi-AZ RDS, VPC-isolated Lambda, backup + secret rotation)
-cdk deploy --all --context env=prod
+cdk deploy --all --context env=prod \
+  --context apiDomainName=api.example.com \
+  --context apiCertificateArn=arn:aws:acm:us-east-1:123456789012:certificate/<CERT_ID> \
+  --context cloudFrontOriginFacingPrefixListId=pl-<REGION_ID>
 
 # With CloudWatch alarm email
-cdk deploy --all --context alertEmail=ops@example.com
+cdk deploy --all --context alertEmail=ops@example.com \
+  --context apiDomainName=api.example.com \
+  --context apiCertificateArn=arn:aws:acm:us-east-1:123456789012:certificate/<CERT_ID> \
+  --context cloudFrontOriginFacingPrefixListId=pl-<REGION_ID>
 ```
+
+The prefix-list ID is the AWS-managed `com.amazonaws.global.cloudfront.origin-facing`
+prefix list in the deployment region. The ALB security group allows HTTPS only
+from that list, so the API can safely trust the two proxy hops when deriving the
+original client IP for throttling.
 
 Stacks deploy in dependency order:
 
