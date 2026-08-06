@@ -10,7 +10,9 @@ from typing import Any
 class JsonFormatter(logging.Formatter):
     """Format standard-library log records as one JSON object per line."""
 
-    _STANDARD_FIELDS = set(logging.LogRecord(None, 0, "", 0, "", (), None).__dict__)
+    # Keep the standard record fields out of the structured context.  The
+    # logger name must be a string here so this module also passes mypy.
+    _STANDARD_FIELDS = set(logging.LogRecord("root", 0, "", 0, "", (), None).__dict__)
 
     def format(self, record: logging.LogRecord) -> str:
         entry: dict[str, Any] = {
