@@ -373,7 +373,7 @@ Both callbacks use the `X-Internal-Secret` header (value from `INTERNAL_API_SECR
 
 - **NestJS running** → full round-trip completes for both pipelines.
 - **NestJS not running (processing)** → worker logs an error after extraction but extraction still succeeds.
-- **NestJS not running (generation)** → handler logs a warning but PDF is still uploaded to S3; status stays `GENERATING` in DB until the callback eventually reaches the API.
+- **NestJS not running (generation)** → handler retries the callback and keeps the PDF in S3 because the API may have committed `READY` before a network failure. After queue retries are exhausted, the generation DLQ remediation retries a terminal `FAILED` callback until the API accepts it.
 
 To silence callback errors without starting the API, set in `.env`:
 

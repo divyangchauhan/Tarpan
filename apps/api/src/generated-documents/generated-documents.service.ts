@@ -9,6 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { DocumentGenerationJob, DocumentStatus, GeneratedDocumentStatus } from '@tarpan/shared';
+import { CaseEntity } from '../entities/case.entity';
 import { GeneratedDocumentEntity } from '../entities/generated-document.entity';
 import { CasesService } from '../cases/cases.service';
 import { DocumentsService } from '../documents/documents.service';
@@ -17,6 +18,43 @@ import { S3Service } from '../aws/s3.service';
 import { TemplatesService } from '../templates/templates.service';
 import { CreateGeneratedDocumentDto } from './dto/create-generated-document.dto';
 import { GenerationResultDto } from './dto/generation-result.dto';
+
+function buildGenerationDeceased(
+  extractedData: NonNullable<DocumentGenerationJob['deceased']>,
+  deceasedInfo: CaseEntity['deceasedInfo'],
+): DocumentGenerationJob['deceased'] {
+  if (!deceasedInfo) return extractedData;
+
+  const result = { ...extractedData } as Record<string, unknown>;
+  const name = [deceasedInfo.firstName, deceasedInfo.middleName, deceasedInfo.lastName]
+    .filter(Boolean)
+    .join(' ');
+
+  if (name) {
+    result.full_name = name;
+    result.fullName = name;
+  }
+
+  const fields: Array<[keyof NonNullable<CaseEntity['deceasedInfo']>, string, string]> = [
+    ['firstName', 'first_name', 'firstName'],
+    ['middleName', 'middle_name', 'middleName'],
+    ['lastName', 'last_name', 'lastName'],
+    ['dateOfBirth', 'date_of_birth', 'dateOfBirth'],
+    ['dateOfDeath', 'date_of_death', 'dateOfDeath'],
+    ['placeOfDeath', 'place_of_death', 'placeOfDeath'],
+    ['socialSecurityNumber', 'social_security_number', 'socialSecurityNumber'],
+  ];
+
+  for (const [caseKey, snakeKey, camelKey] of fields) {
+    const value = deceasedInfo[caseKey];
+    if (value !== undefined) {
+      result[snakeKey] = value;
+      result[camelKey] = value;
+    }
+  }
+
+  return result as DocumentGenerationJob['deceased'];
+}
 
 @Injectable()
 export class GeneratedDocumentsService {
@@ -71,8 +109,10 @@ export class GeneratedDocumentsService {
       templateId,
       caseId,
       documentId: dto.documentId,
-      // extractedData is stored with snake_case keys (as-is from the Python processor)
-      deceased: document.extractedData as unknown as DocumentGenerationJob['deceased'],
+      deceased: buildGenerationDeceased(
+        document.extractedData as unknown as DocumentGenerationJob['deceased'],
+        caseEntity.deceasedInfo,
+      ),
       executorName: executorInfo.name,
       executorAddress: executorInfo.address,
       executorRelationship: executorInfo.relationship,
@@ -114,19 +154,30 @@ export class GeneratedDocumentsService {
   }
 
   async handleGenerationResult(dto: GenerationResultDto): Promise<GeneratedDocumentEntity> {
-    const doc = await this.generatedDocumentRepository.findOne({
+    // Make the state transition conditional in the database. A read followed
+    // by save is racy: concurrent READY/FAILED callbacks can both observe
+    // GENERATING and the later save can downgrade the terminal result.
+    await this.generatedDocumentRepository.update(
+      { id: dto.generatedDocumentId, status: GeneratedDocumentStatus.GENERATING },
+      {
+        status: dto.status,
+        ...(dto.s3Key !== undefined ? { s3Key: dto.s3Key } : {}),
+        ...(dto.errorMessage !== undefined ? { errorMessage: dto.errorMessage } : {}),
+      },
+    );
+
+    // Whether this callback won the conditional update or arrived after a
+    // terminal callback, return the current committed row. This also makes
+    // retries idempotent. A zero-row update may mean either a missing row or
+    // an already-terminal row, so distinguish those cases with a read.
+    const updated = await this.generatedDocumentRepository.findOne({
       where: { id: dto.generatedDocumentId },
     });
 
-    if (!doc) {
+    if (!updated) {
       throw new NotFoundException(`GeneratedDocument ${dto.generatedDocumentId} not found`);
     }
 
-    doc.status = dto.status;
-    if (dto.s3Key !== undefined) doc.s3Key = dto.s3Key;
-    if (dto.errorMessage !== undefined) doc.errorMessage = dto.errorMessage;
-
-    const updated = await this.generatedDocumentRepository.save(doc);
     this.logger.log(`Generation result for ${dto.generatedDocumentId}: status=${dto.status}`);
     return updated;
   }

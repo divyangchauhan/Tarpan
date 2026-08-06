@@ -35,3 +35,9 @@ def upload_object(bucket: str, key: str, data: bytes, content_type: str) -> None
     client = _get_client()
     logger.info("Uploading S3 object", extra={"bucket": bucket, "key": key})
     client.put_object(Bucket=bucket, Key=key, Body=data, ContentType=content_type)
+
+
+def delete_object(bucket: str, key: str) -> None:
+    """Delete one object after a generation callback cannot be delivered."""
+    client = _get_client()
+    client.delete_object(Bucket=bucket, Key=key)

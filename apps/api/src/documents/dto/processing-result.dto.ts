@@ -1,5 +1,15 @@
-import { IsEnum, IsObject, IsOptional, IsString, IsUUID } from 'class-validator';
-import { DocumentStatus, ExtractedCertificateData } from '@tarpan/shared';
+import { Type } from 'class-transformer';
+import {
+  IsEnum,
+  IsObject,
+  IsOptional,
+  IsString,
+  IsUUID,
+  ValidateIf,
+  ValidateNested,
+} from 'class-validator';
+import { DocumentStatus } from '@tarpan/shared';
+import { ExtractedCertificateDataDto } from './extracted-certificate-data.dto';
 
 // Allowed statuses for processing callback
 const ALLOWED_STATUSES = [DocumentStatus.PROCESSED, DocumentStatus.FAILED] as const;
@@ -12,10 +22,11 @@ export class ProcessingResultDto {
   @IsEnum(ALLOWED_STATUSES)
   status!: ProcessingStatus;
 
-  @IsOptional()
+  @ValidateIf((_, value: unknown) => value !== undefined)
   @IsObject()
-  // Free-form shape from Lambda — not validated beyond being an object
-  extractedData?: ExtractedCertificateData;
+  @ValidateNested()
+  @Type(() => ExtractedCertificateDataDto)
+  extractedData?: ExtractedCertificateDataDto;
 
   @IsOptional()
   @IsString()

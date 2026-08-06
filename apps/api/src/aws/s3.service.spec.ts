@@ -2,11 +2,15 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { S3Service } from './s3.service';
 
+const mockS3Send = jest.fn();
+
 // Mock the AWS SDK modules so tests don't need real credentials
 jest.mock('@aws-sdk/client-s3', () => ({
-  S3Client: jest.fn().mockImplementation(() => ({})),
+  S3Client: jest.fn().mockImplementation(() => ({ send: mockS3Send })),
   GetObjectCommand: jest.fn().mockImplementation((input: unknown) => ({ input })),
   PutObjectCommand: jest.fn().mockImplementation((input: unknown) => ({ input })),
+  ListObjectsV2Command: jest.fn().mockImplementation((input: unknown) => ({ input })),
+  DeleteObjectsCommand: jest.fn().mockImplementation((input: unknown) => ({ input })),
 }));
 
 jest.mock('@aws-sdk/s3-request-presigner', () => ({
@@ -14,7 +18,12 @@ jest.mock('@aws-sdk/s3-request-presigner', () => ({
 }));
 
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import {
+  DeleteObjectsCommand,
+  GetObjectCommand,
+  ListObjectsV2Command,
+  PutObjectCommand,
+} from '@aws-sdk/client-s3';
 
 const mockGetSignedUrl = getSignedUrl as jest.MockedFunction<typeof getSignedUrl>;
 
@@ -97,6 +106,44 @@ describe('S3Service', () => {
 
       expect(mockGetSignedUrl).toHaveBeenCalledWith(expect.anything(), expect.anything(), {
         expiresIn: 900,
+      });
+    });
+  });
+
+  describe('deletePrefix', () => {
+    it('deletes all objects across paginated S3 listings', async () => {
+      mockS3Send
+        .mockResolvedValueOnce({
+          Contents: [{ Key: 'cases/case-id/one.pdf' }],
+          IsTruncated: true,
+          NextContinuationToken: 'next-page',
+        })
+        .mockResolvedValueOnce({})
+        .mockResolvedValueOnce({
+          Contents: [{ Key: 'cases/case-id/two.pdf' }],
+          IsTruncated: false,
+        })
+        .mockResolvedValueOnce({});
+
+      await service.deletePrefix('uploads', 'cases/case-id/');
+
+      expect(mockS3Send).toHaveBeenCalledTimes(4);
+      expect(ListObjectsV2Command).toHaveBeenNthCalledWith(1, {
+        Bucket: 'uploads',
+        Prefix: 'cases/case-id/',
+        ContinuationToken: undefined,
+      });
+      expect(ListObjectsV2Command).toHaveBeenNthCalledWith(2, {
+        Bucket: 'uploads',
+        Prefix: 'cases/case-id/',
+        ContinuationToken: 'next-page',
+      });
+      expect(DeleteObjectsCommand).toHaveBeenCalledWith({
+        Bucket: 'uploads',
+        Delete: {
+          Objects: [{ Key: 'cases/case-id/one.pdf' }],
+          Quiet: true,
+        },
       });
     });
   });

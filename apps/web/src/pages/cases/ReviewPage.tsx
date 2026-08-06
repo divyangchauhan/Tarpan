@@ -101,7 +101,7 @@ export function ReviewPage(): JSX.Element {
 
   function resolveField(key: string, camel: string, snake: string, fallback: string | undefined): string | undefined {
     if (editedValues[key] !== undefined) return editedValues[key];
-    return exField(camel, snake) ?? fallback;
+    return fallback ?? exField(camel, snake);
   }
 
   const firstName = resolveField('firstName', 'firstName', 'first_name', deceased?.firstName);
