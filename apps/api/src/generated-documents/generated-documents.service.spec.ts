@@ -80,6 +80,7 @@ const mockGeneratedDoc: GeneratedDocumentEntity = {
 const mockGeneratedDocRepository = {
   create: jest.fn(),
   save: jest.fn(),
+  update: jest.fn(),
   find: jest.fn(),
   findOne: jest.fn(),
 };
@@ -328,19 +329,17 @@ describe('GeneratedDocumentsService', () => {
         s3Key: dto.s3Key,
       };
 
-      mockGeneratedDocRepository.findOne.mockResolvedValue({ ...mockGeneratedDoc });
-      mockGeneratedDocRepository.save.mockResolvedValue(updated);
+      mockGeneratedDocRepository.update.mockResolvedValue({ affected: 1 });
+      mockGeneratedDocRepository.findOne.mockResolvedValue(updated);
 
       const result = await service.handleGenerationResult(dto);
 
       expect(mockGeneratedDocRepository.findOne).toHaveBeenCalledWith({
         where: { id: 'gen-doc-id' },
       });
-      expect(mockGeneratedDocRepository.save).toHaveBeenCalledWith(
-        expect.objectContaining({
-          status: GeneratedDocumentStatus.READY,
-          s3Key: dto.s3Key,
-        }),
+      expect(mockGeneratedDocRepository.update).toHaveBeenCalledWith(
+        { id: 'gen-doc-id', status: GeneratedDocumentStatus.GENERATING },
+        { status: GeneratedDocumentStatus.READY, s3Key: dto.s3Key },
       );
       expect(result.status).toBe(GeneratedDocumentStatus.READY);
     });
@@ -358,16 +357,14 @@ describe('GeneratedDocumentsService', () => {
         errorMessage: dto.errorMessage,
       };
 
-      mockGeneratedDocRepository.findOne.mockResolvedValue({ ...mockGeneratedDoc });
-      mockGeneratedDocRepository.save.mockResolvedValue(updated);
+      mockGeneratedDocRepository.update.mockResolvedValue({ affected: 1 });
+      mockGeneratedDocRepository.findOne.mockResolvedValue(updated);
 
       const result = await service.handleGenerationResult(dto);
 
-      expect(mockGeneratedDocRepository.save).toHaveBeenCalledWith(
-        expect.objectContaining({
-          status: GeneratedDocumentStatus.FAILED,
-          errorMessage: dto.errorMessage,
-        }),
+      expect(mockGeneratedDocRepository.update).toHaveBeenCalledWith(
+        { id: 'gen-doc-id', status: GeneratedDocumentStatus.GENERATING },
+        { status: GeneratedDocumentStatus.FAILED, errorMessage: dto.errorMessage },
       );
       expect(result.status).toBe(GeneratedDocumentStatus.FAILED);
     });
@@ -394,13 +391,50 @@ describe('GeneratedDocumentsService', () => {
         status: GeneratedDocumentStatus.READY,
         s3Key: 'generated/case-id/ssa-721/gen-doc-id.pdf',
       };
+      mockGeneratedDocRepository.update.mockResolvedValue({ affected: 0 });
       mockGeneratedDocRepository.findOne.mockResolvedValue(ready);
-      mockGeneratedDocRepository.save.mockResolvedValue(ready);
 
       const result = await service.handleGenerationResult(dto);
 
       expect(result.status).toBe(GeneratedDocumentStatus.READY);
-      expect(mockGeneratedDocRepository.save).toHaveBeenCalledWith(ready);
+      expect(mockGeneratedDocRepository.update).toHaveBeenCalledWith(
+        { id: 'gen-doc-id', status: GeneratedDocumentStatus.GENERATING },
+        { status: GeneratedDocumentStatus.FAILED, errorMessage: dto.errorMessage },
+      );
+    });
+
+    it('allows only one concurrent callback to transition GENERATING', async () => {
+      let current = { ...mockGeneratedDoc };
+      mockGeneratedDocRepository.update.mockImplementation(
+        async (
+          criteria: { id: string; status: GeneratedDocumentStatus },
+          values: Partial<GeneratedDocumentEntity>,
+        ) => {
+          if (current.id !== criteria.id || current.status !== criteria.status) {
+            return { affected: 0 };
+          }
+          current = { ...current, ...values };
+          return { affected: 1 };
+        },
+      );
+      mockGeneratedDocRepository.findOne.mockImplementation(async () => current);
+
+      const [ready, failed] = await Promise.all([
+        service.handleGenerationResult({
+          generatedDocumentId: 'gen-doc-id',
+          status: GeneratedDocumentStatus.READY,
+          s3Key: 'generated/gen-doc-id.pdf',
+        }),
+        service.handleGenerationResult({
+          generatedDocumentId: 'gen-doc-id',
+          status: GeneratedDocumentStatus.FAILED,
+          errorMessage: 'late callback',
+        }),
+      ]);
+
+      expect(ready.status).toBe(GeneratedDocumentStatus.READY);
+      expect(failed.status).toBe(GeneratedDocumentStatus.READY);
+      expect(mockGeneratedDocRepository.update).toHaveBeenCalledTimes(2);
     });
   });
 });
