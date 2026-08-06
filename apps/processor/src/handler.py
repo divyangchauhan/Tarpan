@@ -195,10 +195,11 @@ def _handle_generation(event: dict[str, Any]) -> dict[str, Any]:
         try:
             api_client.report_generation_failure(request.generated_document_id, error_msg)
         except Exception:
-            logger.warning(
+            logger.exception(
                 "Failed to report generation failure to API",
                 extra={"generated_document_id": request.generated_document_id},
             )
+            raise
         return {
             "generatedDocumentId": request.generated_document_id,
             "status": "FAILED",
@@ -208,13 +209,23 @@ def _handle_generation(event: dict[str, Any]) -> dict[str, Any]:
     try:
         api_client.report_generation_success(request.generated_document_id, s3_key)
     except Exception:
-        logger.warning(
+        logger.exception(
             "Generated PDF uploaded to S3 but API callback failed",
             extra={
                 "generated_document_id": request.generated_document_id,
                 "s3_key": s3_key,
             },
         )
+        # Delete the artifact before retrying so a transient callback failure
+        # cannot leave an untracked PDF behind. Raising also makes SQS retry.
+        try:
+            s3_client.delete_object(settings.s3_generated_docs_bucket, s3_key)
+        except Exception:
+            logger.exception(
+                "Failed to remove untracked generated PDF",
+                extra={"generated_document_id": request.generated_document_id},
+            )
+        raise
 
     total_ms = int((time.monotonic() - t_start) * 1000)
     logger.info(

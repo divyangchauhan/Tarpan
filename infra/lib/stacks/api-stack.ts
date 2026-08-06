@@ -1,4 +1,5 @@
 import * as cdk from 'aws-cdk-lib';
+import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as ecs_patterns from 'aws-cdk-lib/aws-ecs-patterns';
@@ -23,6 +24,9 @@ interface ApiStackProps extends cdk.StackProps {
   database: DatabaseStack;
   /** Sentry ingest DSN. Omit or leave empty to disable error tracking. */
   sentryDsn?: string;
+  /** DNS name with an ACM certificate; required for encrypted CloudFront origin traffic. */
+  apiDomainName: string;
+  apiCertificateArn: string;
 }
 
 /**
@@ -44,7 +48,22 @@ export class ApiStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: ApiStackProps) {
     super(scope, id, props);
 
-    const { config, network, storage, messaging, secrets, database, sentryDsn } = props;
+    const {
+      config,
+      network,
+      storage,
+      messaging,
+      secrets,
+      database,
+      sentryDsn,
+      apiDomainName,
+      apiCertificateArn,
+    } = props;
+    const apiCertificate = acm.Certificate.fromCertificateArn(
+      this,
+      'ApiCertificate',
+      apiCertificateArn,
+    );
 
     // ── Container image ────────────────────────────────────────────────────
 
@@ -120,7 +139,11 @@ export class ApiStack extends cdk.Stack {
       },
       loadBalancerName: 'tarpan-alb',
       publicLoadBalancer: true,
-      listenerPort: 80, // Add HTTPS + ACM cert for production
+      domainName: apiDomainName,
+      certificate: apiCertificate,
+      protocol: elbv2.ApplicationProtocol.HTTPS,
+      listenerPort: 443,
+      redirectHTTP: true,
       healthCheckGracePeriod: cdk.Duration.seconds(60),
     });
 
@@ -149,9 +172,9 @@ export class ApiStack extends cdk.Stack {
 
     const taskRole = service.taskDefinition.taskRole;
 
-    // S3: generate pre-signed URLs (GetObject + PutObject), no direct read/write
+    // S3: generate pre-signed URLs and remove all case artifacts on deletion.
     storage.uploadsBucket.grantReadWrite(taskRole);
-    storage.generatedDocsBucket.grantRead(taskRole);
+    storage.generatedDocsBucket.grantReadWrite(taskRole);
 
     // SQS: publish to both queues
     messaging.processingQueue.grantSendMessages(taskRole);
@@ -165,7 +188,7 @@ export class ApiStack extends cdk.Stack {
 
     // ── Expose DNS name ───────────────────────────────────────────────────
 
-    this.loadBalancerDnsName = `http://${service.loadBalancer.loadBalancerDnsName}`;
+    this.loadBalancerDnsName = `https://${apiDomainName}`;
     this.loadBalancer = service.loadBalancer;
 
     // ── Outputs ───────────────────────────────────────────────────────────

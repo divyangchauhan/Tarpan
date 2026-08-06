@@ -191,11 +191,12 @@ class TestHandleGeneration:
         assert result["generatedDocumentId"] == "gen-123"
         assert "s3Key" in result
 
-    def test_api_callback_failure_still_returns_completed(self) -> None:
-        """PDF uploaded to S3 — callback 404 should not fail the generation."""
-        with self._patch_gen(success_side_effect=RuntimeError("404 Not Found")):
-            result = _handle_generation(_make_generation_event())
-        assert result["status"] == "COMPLETED"
+    def test_api_callback_failure_raises_for_sqs_retry(self) -> None:
+        """A failed callback must retry instead of leaving the DB GENERATING."""
+        with self._patch_gen(success_side_effect=RuntimeError("404 Not Found")), pytest.raises(
+            RuntimeError, match="404 Not Found"
+        ):
+            _handle_generation(_make_generation_event())
 
     def test_render_failure_returns_failed(self) -> None:
         with self._patch_gen(render_side_effect=RuntimeError("WeasyPrint crash")):
@@ -217,14 +218,13 @@ class TestHandleGeneration:
         mock_api.report_generation_failure.assert_called_once()
         assert mock_api.report_generation_failure.call_args[0][0] == "gen-xyz"
 
-    def test_report_failure_raising_does_not_propagate(self) -> None:
-        """If the failure callback itself errors, the handler should not raise."""
+    def test_report_failure_raising_propagates_for_sqs_retry(self) -> None:
+        """If the failure callback itself errors, the handler must retry."""
         with self._patch_gen(
             render_side_effect=RuntimeError("crash"),
             failure_side_effect=RuntimeError("API also down"),
-        ):
-            result = _handle_generation(_make_generation_event())
-        assert result["status"] == "FAILED"
+        ), pytest.raises(RuntimeError, match="API also down"):
+            _handle_generation(_make_generation_event())
 
 
 class TestContentTypeFromKey:
