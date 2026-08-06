@@ -13,8 +13,8 @@ import { EnvironmentConfig } from '../environment-config';
 
 interface FrontendStackProps extends cdk.StackProps {
   config: EnvironmentConfig;
-  /** ALB DNS name (with http:// prefix) from ApiStack — used as CloudFront origin for /api/* */
-  albDnsName: string;
+  /** DNS hostname covered by the ALB certificate and resolving to the ALB. */
+  apiOriginDomainName: string;
 }
 
 /**
@@ -38,7 +38,7 @@ export class FrontendStack extends cdk.Stack {
     super(scope, id, props);
 
     const { config } = props;
-    const albHostname = props.albDnsName.replace(/^https?:\/\//, '');
+    const originHostname = props.apiOriginDomainName.replace(/^https?:\/\//, '');
 
     // ── S3 bucket (private — CloudFront OAC only) ─────────────────────────
 
@@ -53,7 +53,9 @@ export class FrontendStack extends cdk.Stack {
 
     // ── ALB origin (HTTPS — direct ALB access is blocked by its SG) ───────
 
-    const albOrigin = new cloudfront_origins.HttpOrigin(albHostname, {
+    // CloudFront uses this hostname for both DNS resolution and TLS SNI. It
+    // must resolve to the ALB and be present in the ALB certificate SANs.
+    const albOrigin = new cloudfront_origins.HttpOrigin(originHostname, {
       protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
       httpsPort: 443,
     });
@@ -76,7 +78,7 @@ export class FrontendStack extends cdk.Stack {
         compress: true,
       },
       additionalBehaviors: {
-        // All API traffic goes through CloudFront → ALB over HTTP internally.
+        // All API traffic goes through CloudFront → ALB over HTTPS internally.
         // The browser sees HTTPS throughout — no mixed-content block.
         '/api/*': {
           origin: albOrigin,

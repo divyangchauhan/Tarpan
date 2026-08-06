@@ -25,6 +25,8 @@ interface ApiStackProps extends cdk.StackProps {
   /** Sentry ingest DSN. Omit or leave empty to disable error tracking. */
   sentryDsn?: string;
   apiDomainName: string;
+  /** DNS name used by CloudFront for the ALB TLS SNI/certificate check. */
+  apiOriginDomainName: string;
   apiCertificateArn: string;
   cloudFrontOriginFacingPrefixListId: string;
 }
@@ -57,6 +59,7 @@ export class ApiStack extends cdk.Stack {
       database,
       sentryDsn,
       apiDomainName,
+      apiOriginDomainName,
       apiCertificateArn,
       cloudFrontOriginFacingPrefixListId,
     } = props;
@@ -207,6 +210,13 @@ export class ApiStack extends cdk.Stack {
       value: this.loadBalancerDnsName,
       description: 'NestJS API base URL (set as VITE_API_URL in frontend build)',
       exportName: `${this.stackName}-ApiUrl`,
+    });
+
+    new cdk.CfnOutput(this, 'ApiOriginHostname', {
+      value: apiOriginDomainName,
+      description:
+        'DNS hostname CloudFront uses for the HTTPS ALB origin; it must resolve to this ALB and be covered by the ACM certificate',
+      exportName: `${this.stackName}-ApiOriginHostname`,
     });
   }
 }

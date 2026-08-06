@@ -164,18 +164,21 @@ cdk bootstrap aws://<ACCOUNT_ID>/<REGION>
 # POC (single NAT, DESTROY removal policies — easy teardown)
 cdk deploy --all \
   --context apiDomainName=api.example.com \
+  --context apiOriginDomainName=api-origin.example.com \
   --context apiCertificateArn=arn:aws:acm:us-east-1:123456789012:certificate/<CERT_ID> \
   --context cloudFrontOriginFacingPrefixListId=pl-<REGION_ID>
 
 # Production (Multi-AZ RDS, VPC-isolated Lambda, backup + secret rotation)
 cdk deploy --all --context env=prod \
   --context apiDomainName=api.example.com \
+  --context apiOriginDomainName=api-origin.example.com \
   --context apiCertificateArn=arn:aws:acm:us-east-1:123456789012:certificate/<CERT_ID> \
   --context cloudFrontOriginFacingPrefixListId=pl-<REGION_ID>
 
 # With CloudWatch alarm email
 cdk deploy --all --context alertEmail=ops@example.com \
   --context apiDomainName=api.example.com \
+  --context apiOriginDomainName=api-origin.example.com \
   --context apiCertificateArn=arn:aws:acm:us-east-1:123456789012:certificate/<CERT_ID> \
   --context cloudFrontOriginFacingPrefixListId=pl-<REGION_ID>
 ```
@@ -185,6 +188,12 @@ prefix list in the deployment region. The ALB security group allows HTTPS only
 from that list, so the API can safely trust the two proxy hops when deriving the
 original client IP for throttling.
 
+`apiOriginDomainName` is the hostname CloudFront uses to connect to the ALB. Create
+an A/AAAA alias (or equivalent DNS record) for it pointing to the ALB, and ensure
+the ACM certificate identified by `apiCertificateArn` includes that hostname (as a
+SAN if it differs from `apiDomainName`). CloudFront uses this name for TLS SNI;
+using the ALB-generated `*.amazonaws.com` hostname will fail certificate validation.
+
 Stacks deploy in dependency order:
 
 | Stack                  | What it provisions                                         |
@@ -193,7 +202,7 @@ Stacks deploy in dependency order:
 | `TarpanStorage`        | S3 upload and generated-docs buckets                       |
 | `TarpanMessaging`      | SQS processing + generation queues, DLQs                   |
 | `TarpanSecrets`        | Secrets Manager entries for all app secrets                |
-| `TarpanDatabase`       | RDS PostgreSQL 16                                          |
+| `TarpanDatabase`        | RDS PostgreSQL 16                                          |
 | `TarpanLambda`         | Python processor Lambda with SQS triggers                  |
 | `TarpanApi`            | ECS Fargate + ALB for the NestJS API                       |
 | `TarpanFrontend`       | CloudFront + S3 for the React app                          |
