@@ -91,8 +91,7 @@ export function UploadPage(): JSX.Element {
         fontSize: 15, color: 'var(--text-muted)', marginBottom: 40,
         lineHeight: 1.6, animation: 'fadeInUp 0.35s 60ms both',
       }}>
-        Our AI will read the document and extract the necessary information.<br />
-        Your file is encrypted and never shared.
+        Our AI will read the document and extract the necessary information.
       </p>
 
       <div style={{

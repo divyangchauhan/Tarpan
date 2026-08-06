@@ -54,6 +54,9 @@ Claude API calls take 5–30 seconds. Synchronous HTTP would require long-pollin
 **S3 pre-signed URLs, not API-mediated transfers.**
 Death certificates are sensitive PII. Pre-signed URLs (15-minute TTL) let the browser upload directly to S3 and let the Lambda download directly from S3 — the file bytes never pass through API server memory.
 
+The document is sent to Anthropic for AI extraction. It is not accurate to describe
+the upload as never shared.
+
 **Two CDK environment profiles: `poc` and `prod`.**
 `poc` uses a single NAT gateway, public Fargate subnets, and `DESTROY` removal policies — cheap to spin up and tear down. `prod` adds Multi-AZ RDS, VPC-isolated Lambda, private Fargate subnets, 35-day backup retention, and 30-day secret rotation. Toggled with `--context env=prod`.
 
