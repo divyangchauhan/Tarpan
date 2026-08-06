@@ -6,6 +6,7 @@ import * as lambda_event_sources from 'aws-cdk-lib/aws-lambda-event-sources';
 import * as ecr_assets from 'aws-cdk-lib/aws-ecr-assets';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as logs from 'aws-cdk-lib/aws-logs';
+import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { Construct } from 'constructs';
 import { EnvironmentConfig } from '../environment-config';
 import { NetworkStack } from './network-stack';
@@ -23,6 +24,23 @@ interface LambdaStackProps extends cdk.StackProps {
   apiCallbackUrl: string;
   /** Sentry ingest DSN. Omit or leave empty to disable error tracking. */
   sentryDsn?: string;
+}
+
+/**
+ * Wire exhausted generation jobs back through the processor. The handler
+ * recognizes this queue by its event-source ARN and reports a terminal
+ * FAILED callback; failed callbacks are returned to SQS for retry.
+ */
+export function addGenerationDlqEventSource(
+  processorFn: lambda.IFunction,
+  generationDlq: sqs.IQueue,
+): void {
+  processorFn.addEventSource(
+    new lambda_event_sources.SqsEventSource(generationDlq, {
+      batchSize: 1,
+      reportBatchItemFailures: true,
+    }),
+  );
 }
 
 /**
@@ -81,6 +99,7 @@ export class LambdaStack extends cdk.Stack {
         S3_GENERATED_DOCS_BUCKET: storage.generatedDocsBucket.bucketName,
         SQS_DOCUMENT_PROCESSING_QUEUE_URL: messaging.processingQueue.queueUrl,
         SQS_DOCUMENT_GENERATION_QUEUE_URL: messaging.generationQueue.queueUrl,
+        GENERATION_DLQ_ARN: messaging.generationDlq.queueArn,
         API_CALLBACK_URL: apiCallbackUrl,
         ...(sentryDsn ? { SENTRY_DSN: sentryDsn, SENTRY_ENVIRONMENT: config.deploymentEnv } : {}),
       },
@@ -111,6 +130,7 @@ export class LambdaStack extends cdk.Stack {
     // SQS: consume from both queues (Lambda event source does this but explicit is clearer)
     messaging.processingQueue.grantConsumeMessages(this.processorFn);
     messaging.generationQueue.grantConsumeMessages(this.processorFn);
+    messaging.generationDlq.grantConsumeMessages(this.processorFn);
 
     // ── SQS Event Source Mappings ─────────────────────────────────────────
 
@@ -129,6 +149,11 @@ export class LambdaStack extends cdk.Stack {
         reportBatchItemFailures: true,
       }),
     );
+
+    // Exhausted generation jobs must eventually transition out of GENERATING.
+    // The same idempotent callback path is used, and failed callbacks keep the
+    // DLQ message available for another attempt until the API recovers.
+    addGenerationDlqEventSource(this.processorFn, messaging.generationDlq);
 
     // ── CloudWatch Logs ────────────────────────────────────────────────────
 

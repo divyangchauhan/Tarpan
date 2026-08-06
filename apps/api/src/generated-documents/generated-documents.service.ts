@@ -114,19 +114,30 @@ export class GeneratedDocumentsService {
   }
 
   async handleGenerationResult(dto: GenerationResultDto): Promise<GeneratedDocumentEntity> {
-    const doc = await this.generatedDocumentRepository.findOne({
+    // Make the state transition conditional in the database. A read followed
+    // by save is racy: concurrent READY/FAILED callbacks can both observe
+    // GENERATING and the later save can downgrade the terminal result.
+    await this.generatedDocumentRepository.update(
+      { id: dto.generatedDocumentId, status: GeneratedDocumentStatus.GENERATING },
+      {
+        status: dto.status,
+        ...(dto.s3Key !== undefined ? { s3Key: dto.s3Key } : {}),
+        ...(dto.errorMessage !== undefined ? { errorMessage: dto.errorMessage } : {}),
+      },
+    );
+
+    // Whether this callback won the conditional update or arrived after a
+    // terminal callback, return the current committed row. This also makes
+    // retries idempotent. A zero-row update may mean either a missing row or
+    // an already-terminal row, so distinguish those cases with a read.
+    const updated = await this.generatedDocumentRepository.findOne({
       where: { id: dto.generatedDocumentId },
     });
 
-    if (!doc) {
+    if (!updated) {
       throw new NotFoundException(`GeneratedDocument ${dto.generatedDocumentId} not found`);
     }
 
-    doc.status = dto.status;
-    if (dto.s3Key !== undefined) doc.s3Key = dto.s3Key;
-    if (dto.errorMessage !== undefined) doc.errorMessage = dto.errorMessage;
-
-    const updated = await this.generatedDocumentRepository.save(doc);
     this.logger.log(`Generation result for ${dto.generatedDocumentId}: status=${dto.status}`);
     return updated;
   }

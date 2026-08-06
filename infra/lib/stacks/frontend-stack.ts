@@ -13,7 +13,7 @@ import { EnvironmentConfig } from '../environment-config';
 
 interface FrontendStackProps extends cdk.StackProps {
   config: EnvironmentConfig;
-  /** ALB DNS name (with http:// prefix) from ApiStack — used as CloudFront origin for /api/* */
+  /** API hostname covered by the ALB ACM certificate, used as the CloudFront origin. */
   albDnsName: string;
 }
 
@@ -51,11 +51,11 @@ export class FrontendStack extends cdk.Stack {
       autoDeleteObjects: true,
     });
 
-    // ── ALB origin (HTTP — ALB has no TLS cert for the POC) ───────────────
+    // ── ALB origin (HTTPS — CloudFront-to-ALB traffic is encrypted) ───────
 
     const albOrigin = new cloudfront_origins.HttpOrigin(albHostname, {
-      protocolPolicy: cloudfront.OriginProtocolPolicy.HTTP_ONLY,
-      httpPort: 80,
+      protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
+      httpsPort: 443,
     });
 
     // ── CloudFront distribution ────────────────────────────────────────────
@@ -76,8 +76,7 @@ export class FrontendStack extends cdk.Stack {
         compress: true,
       },
       additionalBehaviors: {
-        // All API traffic goes through CloudFront → ALB over HTTP internally.
-        // The browser sees HTTPS throughout — no mixed-content block.
+        // All API traffic goes through CloudFront → ALB over HTTPS internally.
         '/api/*': {
           origin: albOrigin,
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.HTTPS_ONLY,

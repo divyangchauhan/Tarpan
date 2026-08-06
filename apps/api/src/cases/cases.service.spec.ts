@@ -3,6 +3,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { CaseStatus } from '@tarpan/shared';
 import { CaseEntity } from '../entities/case.entity';
+import { S3Service } from '../aws/s3.service';
+import { ConfigService } from '@nestjs/config';
 import { CasesService } from './cases.service';
 import { CreateCaseDto } from './dto/create-case.dto';
 import { UpdateCaseDto } from './dto/update-case.dto';
@@ -36,6 +38,9 @@ const mockCaseRepository = {
   remove: jest.fn(),
 };
 
+const mockS3Service = { deletePrefix: jest.fn() };
+const mockConfigService = { getOrThrow: jest.fn() };
+
 describe('CasesService', () => {
   let service: CasesService;
 
@@ -47,11 +52,17 @@ describe('CasesService', () => {
           provide: getRepositoryToken(CaseEntity),
           useValue: mockCaseRepository,
         },
+        { provide: S3Service, useValue: mockS3Service },
+        { provide: ConfigService, useValue: mockConfigService },
       ],
     }).compile();
 
     service = module.get<CasesService>(CasesService);
     jest.clearAllMocks();
+    mockConfigService.getOrThrow.mockImplementation((key: string) =>
+      key === 'S3_UPLOADS_BUCKET' ? 'uploads' : 'generated-docs',
+    );
+    mockS3Service.deletePrefix.mockResolvedValue(undefined);
   });
 
   describe('create', () => {
@@ -119,6 +130,30 @@ describe('CasesService', () => {
       await expect(service.findOne('user-id', 'non-existent-id')).rejects.toThrow(
         NotFoundException,
       );
+    });
+  });
+
+  describe('remove', () => {
+    it('deletes case files from both S3 buckets before removing the case row', async () => {
+      mockCaseRepository.findOne.mockResolvedValue(mockCase);
+      mockCaseRepository.remove.mockResolvedValue(mockCase);
+
+      await service.remove('user-id', 'case-id');
+
+      expect(mockS3Service.deletePrefix).toHaveBeenCalledWith('uploads', 'cases/case-id/');
+      expect(mockS3Service.deletePrefix).toHaveBeenCalledWith(
+        'generated-docs',
+        'generated/case-id/',
+      );
+      expect(mockCaseRepository.remove).toHaveBeenCalledWith(mockCase);
+    });
+
+    it('does not remove the database row when S3 cleanup fails', async () => {
+      mockCaseRepository.findOne.mockResolvedValue(mockCase);
+      mockS3Service.deletePrefix.mockRejectedValue(new Error('S3 unavailable'));
+
+      await expect(service.remove('user-id', 'case-id')).rejects.toThrow('S3 unavailable');
+      expect(mockCaseRepository.remove).not.toHaveBeenCalled();
     });
   });
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
-import { DeploymentEnv, getConfig } from '../lib/environment-config';
+import { getConfig } from '../lib/environment-config';
 import { NetworkStack } from '../lib/stacks/network-stack';
 import { StorageStack } from '../lib/stacks/storage-stack';
 import { MessagingStack } from '../lib/stacks/messaging-stack';
@@ -23,11 +23,20 @@ const app = new cdk.App();
  *
  * Defaults to 'poc' if not specified.
  */
-const deploymentEnv = (app.node.tryGetContext('env') as DeploymentEnv) ?? 'poc';
+const deploymentEnv = (app.node.tryGetContext('env') as string | undefined) ?? 'poc';
 if (deploymentEnv !== 'poc' && deploymentEnv !== 'prod') {
   throw new Error(`Invalid --context env="${deploymentEnv}". Must be "poc" or "prod".`);
 }
 const config = getConfig(deploymentEnv);
+
+const apiDomainName = app.node.tryGetContext('apiDomainName') as string | undefined;
+const apiCertificateArn = app.node.tryGetContext('apiCertificateArn') as string | undefined;
+if (!apiDomainName || !apiCertificateArn) {
+  throw new Error(
+    'apiDomainName and apiCertificateArn context values are required. ' +
+      'The ALB and CloudFront origin use HTTPS.',
+  );
+}
 
 /**
  * Optional Sentry DSN — pass via context to enable error tracking in both the
@@ -44,8 +53,12 @@ const sentryDsn = app.node.tryGetContext('sentryDsn') as string | undefined;
  *   cdk deploy --all --context env=prod --context account=123456789012 --context region=us-east-1
  */
 const env: cdk.Environment = {
-  account: app.node.tryGetContext('account') ?? process.env['CDK_DEFAULT_ACCOUNT'],
-  region: app.node.tryGetContext('region') ?? process.env['CDK_DEFAULT_REGION'] ?? 'us-east-1',
+  account:
+    (app.node.tryGetContext('account') as string | undefined) ?? process.env['CDK_DEFAULT_ACCOUNT'],
+  region:
+    (app.node.tryGetContext('region') as string | undefined) ??
+    process.env['CDK_DEFAULT_REGION'] ??
+    'us-east-1',
 };
 
 const stackProps: cdk.StackProps = { env };
@@ -85,6 +98,8 @@ const api = new ApiStack(app, 'TarpanApi', {
   secrets,
   database,
   sentryDsn,
+  apiDomainName,
+  apiCertificateArn,
 });
 
 const lambdaStack = new LambdaStack(app, 'TarpanLambda', {
