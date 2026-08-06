@@ -64,19 +64,19 @@ Death certificates are sensitive PII. Pre-signed URLs (15-minute TTL) let the br
 
 ## Stack
 
-| Layer              | Technology                                                            |
-| ------------------ | --------------------------------------------------------------------- |
-| Frontend           | React 18, Vite, Tailwind CSS, React Router                            |
-| API                | NestJS (TypeScript), TypeORM, Socket.io, JWT auth                     |
-| Document processor | Python 3.11, Anthropic SDK, PDFPlumber, Pillow, WeasyPrint, Jinja2    |
-| Database           | PostgreSQL 16 (RDS / local Docker)                                    |
-| Queue              | AWS SQS (processing + generation queues, each with DLQ)               |
-| Storage            | AWS S3 (uploads bucket + generated-docs bucket)                       |
+| Layer              | Technology                                            |
+|--------------------|-------------------------------------------------------|
+| Frontend           | React 18, Vite, Tailwind CSS, React Router            |
+| API                | NestJS (TypeScript), TypeORM, Socket.io, JWT auth     |
+| Document processor | Python 3.11, Anthropic SDK, PDFPlumber, Pillow, WeasyPrint, Jinja2 |
+| Database           | PostgreSQL 16 (RDS / local Docker)                    |
+| Queue              | AWS SQS (processing + generation queues, each with DLQ) |
+| Storage            | AWS S3 (uploads bucket + generated-docs bucket)       |
 | Compute            | AWS Lambda (processor), ECS Fargate (API), CloudFront + S3 (frontend) |
-| Infrastructure     | AWS CDK (TypeScript), 10 stacks                                       |
-| Observability      | CloudWatch dashboards + SNS alarms, Sentry (API + Lambda)             |
-| Local dev          | Docker Compose (PostgreSQL 16, LocalStack 3.5)                        |
-| Build              | pnpm workspaces + Turborepo                                           |
+| Infrastructure     | AWS CDK (TypeScript), 10 stacks                       |
+| Observability      | CloudWatch dashboards + SNS alarms, Sentry (API + Lambda) |
+| Local dev          | Docker Compose (PostgreSQL 16, LocalStack 3.5)        |
+| Build              | pnpm workspaces + Turborepo                           |
 
 ---
 
@@ -164,37 +164,50 @@ cdk bootstrap aws://<ACCOUNT_ID>/<REGION>
 # POC (single NAT, DESTROY removal policies — easy teardown)
 cdk deploy --all \
   --context apiDomainName=api.example.com \
-  --context apiCertificateArn=arn:aws:acm:us-east-1:123456789012:certificate/<CERT_ID>
+  --context apiOriginDomainName=api-origin.example.com \
+  --context apiCertificateArn=arn:aws:acm:us-east-1:123456789012:certificate/<CERT_ID> \
+  --context cloudFrontOriginFacingPrefixListId=pl-<REGION_ID>
 
 # Production (Multi-AZ RDS, VPC-isolated Lambda, backup + secret rotation)
 cdk deploy --all --context env=prod \
   --context apiDomainName=api.example.com \
-  --context apiCertificateArn=arn:aws:acm:us-east-1:123456789012:certificate/<CERT_ID>
+  --context apiOriginDomainName=api-origin.example.com \
+  --context apiCertificateArn=arn:aws:acm:us-east-1:123456789012:certificate/<CERT_ID> \
+  --context cloudFrontOriginFacingPrefixListId=pl-<REGION_ID>
 
 # With CloudWatch alarm email
 cdk deploy --all --context alertEmail=ops@example.com \
   --context apiDomainName=api.example.com \
-  --context apiCertificateArn=arn:aws:acm:us-east-1:123456789012:certificate/<CERT_ID>
+  --context apiOriginDomainName=api-origin.example.com \
+  --context apiCertificateArn=arn:aws:acm:us-east-1:123456789012:certificate/<CERT_ID> \
+  --context cloudFrontOriginFacingPrefixListId=pl-<REGION_ID>
 ```
 
-The API hostname must resolve to the ALB and the ACM certificate must cover it
-in the deployment region. CloudFront connects to the ALB over HTTPS; deployments
-without these values are rejected rather than falling back to a plain-HTTP origin.
+The prefix-list ID is the AWS-managed `com.amazonaws.global.cloudfront.origin-facing`
+prefix list in the deployment region. The ALB security group allows HTTPS only
+from that list, so the API can safely trust the two proxy hops when deriving the
+original client IP for throttling.
+
+`apiOriginDomainName` is the hostname CloudFront uses to connect to the ALB. Create
+an A/AAAA alias (or equivalent DNS record) for it pointing to the ALB, and ensure
+the ACM certificate identified by `apiCertificateArn` includes that hostname (as a
+SAN if it differs from `apiDomainName`). CloudFront uses this name for TLS SNI;
+using the ALB-generated `*.amazonaws.com` hostname will fail certificate validation.
 
 Stacks deploy in dependency order:
 
-| Stack                 | What it provisions                          |
-| --------------------- | ------------------------------------------- |
-| `TarpanNetwork`       | VPC, subnets, NAT gateway, security groups  |
-| `TarpanStorage`       | S3 upload and generated-docs buckets        |
-| `TarpanMessaging`     | SQS processing + generation queues, DLQs    |
-| `TarpanSecrets`       | Secrets Manager entries for all app secrets |
-| `TarpanDatabase`      | RDS PostgreSQL 16                           |
-| `TarpanLambda`        | Python processor Lambda with SQS triggers   |
-| `TarpanApi`           | ECS Fargate + ALB for the NestJS API        |
-| `TarpanFrontend`      | CloudFront + S3 for the React app           |
-| `TarpanObservability` | CloudWatch dashboard + SNS alarms           |
-| `TarpanBackup`        | AWS Backup plan (prod: 35-day retention)    |
+| Stack                  | What it provisions                                         |
+|------------------------|------------------------------------------------------------|
+| `TarpanNetwork`        | VPC, subnets, NAT gateway, security groups                 |
+| `TarpanStorage`        | S3 upload and generated-docs buckets                       |
+| `TarpanMessaging`      | SQS processing + generation queues, DLQs                   |
+| `TarpanSecrets`        | Secrets Manager entries for all app secrets                |
+| `TarpanDatabase`        | RDS PostgreSQL 16                                          |
+| `TarpanLambda`         | Python processor Lambda with SQS triggers                  |
+| `TarpanApi`            | ECS Fargate + ALB for the NestJS API                       |
+| `TarpanFrontend`       | CloudFront + S3 for the React app                          |
+| `TarpanObservability`  | CloudWatch dashboard + SNS alarms                          |
+| `TarpanBackup`         | AWS Backup plan (prod: 35-day retention)                   |
 
 ### Post-deploy steps
 

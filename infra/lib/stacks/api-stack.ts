@@ -24,9 +24,11 @@ interface ApiStackProps extends cdk.StackProps {
   database: DatabaseStack;
   /** Sentry ingest DSN. Omit or leave empty to disable error tracking. */
   sentryDsn?: string;
-  /** DNS name with an ACM certificate; required for encrypted CloudFront origin traffic. */
   apiDomainName: string;
+  /** DNS name used by CloudFront for the ALB TLS SNI/certificate check. */
+  apiOriginDomainName: string;
   apiCertificateArn: string;
+  cloudFrontOriginFacingPrefixListId: string;
 }
 
 /**
@@ -34,7 +36,7 @@ interface ApiStackProps extends cdk.StackProps {
  *
  * - 512 vCPU / 1024 MB RAM per task (sufficient for POC)
  * - Auto-scaling: 1–4 tasks based on CPU utilisation
- * - ALB handles HTTP → HTTPS redirect (add ACM cert for HTTPS in prod)
+ * - ALB accepts HTTPS only from CloudFront origin-facing addresses
  * - Task role follows least-privilege: only S3, SQS, Secrets Manager access
  *
  * P4-06, P4-09
@@ -57,7 +59,9 @@ export class ApiStack extends cdk.Stack {
       database,
       sentryDsn,
       apiDomainName,
+      apiOriginDomainName,
       apiCertificateArn,
+      cloudFrontOriginFacingPrefixListId,
     } = props;
     const apiCertificate = acm.Certificate.fromCertificateArn(
       this,
@@ -139,13 +143,22 @@ export class ApiStack extends cdk.Stack {
       },
       loadBalancerName: 'tarpan-alb',
       publicLoadBalancer: true,
+      openListener: false,
       domainName: apiDomainName,
       certificate: apiCertificate,
       protocol: elbv2.ApplicationProtocol.HTTPS,
       listenerPort: 443,
-      redirectHTTP: true,
+      redirectHTTP: false,
       healthCheckGracePeriod: cdk.Duration.seconds(60),
     });
+
+    // CloudFront's managed origin-facing prefix list prevents direct ALB
+    // callers from spoofing X-Forwarded-For while preserving client-IP keys.
+    service.loadBalancer.connections.allowFrom(
+      ec2.Peer.prefixList(cloudFrontOriginFacingPrefixListId),
+      ec2.Port.tcp(443),
+      'Allow HTTPS only from CloudFront origin-facing addresses',
+    );
 
     service.targetGroup.configureHealthCheck({
       path: '/api/v1/health',
@@ -172,9 +185,9 @@ export class ApiStack extends cdk.Stack {
 
     const taskRole = service.taskDefinition.taskRole;
 
-    // S3: generate pre-signed URLs and remove all case artifacts on deletion.
+    // S3: generate pre-signed URLs (GetObject + PutObject), no direct read/write
     storage.uploadsBucket.grantReadWrite(taskRole);
-    storage.generatedDocsBucket.grantReadWrite(taskRole);
+    storage.generatedDocsBucket.grantRead(taskRole);
 
     // SQS: publish to both queues
     messaging.processingQueue.grantSendMessages(taskRole);
@@ -197,6 +210,13 @@ export class ApiStack extends cdk.Stack {
       value: this.loadBalancerDnsName,
       description: 'NestJS API base URL (set as VITE_API_URL in frontend build)',
       exportName: `${this.stackName}-ApiUrl`,
+    });
+
+    new cdk.CfnOutput(this, 'ApiOriginHostname', {
+      value: apiOriginDomainName,
+      description:
+        'DNS hostname CloudFront uses for the HTTPS ALB origin; it must resolve to this ALB and be covered by the ACM certificate',
+      exportName: `${this.stackName}-ApiOriginHostname`,
     });
   }
 }

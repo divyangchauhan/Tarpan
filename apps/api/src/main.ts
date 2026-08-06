@@ -4,11 +4,18 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { SentryGlobalFilter } from '@sentry/nestjs/setup';
 import { AppModule } from './app.module';
+import { JsonLogger } from './common/logging/json-logger';
+import { configureTrustedProxy } from './common/http/trust-proxy';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, {
     cors: true,
+    logger: new JsonLogger(),
   });
+
+  // CloudFront forwards through the ALB before reaching Express. Trust only
+  // those two proxy hops so throttling keys requests by the original client IP.
+  configureTrustedProxy(app);
 
   // Sentry global filter — captures unhandled exceptions and reports to Sentry
   app.useGlobalFilters(new SentryGlobalFilter(app.getHttpAdapter()));

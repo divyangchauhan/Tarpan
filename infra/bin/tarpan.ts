@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
-import { getConfig } from '../lib/environment-config';
+import { DeploymentEnv, getConfig } from '../lib/environment-config';
 import { NetworkStack } from '../lib/stacks/network-stack';
 import { StorageStack } from '../lib/stacks/storage-stack';
 import { MessagingStack } from '../lib/stacks/messaging-stack';
@@ -23,18 +23,33 @@ const app = new cdk.App();
  *
  * Defaults to 'poc' if not specified.
  */
-const deploymentEnv = (app.node.tryGetContext('env') as string | undefined) ?? 'poc';
-if (deploymentEnv !== 'poc' && deploymentEnv !== 'prod') {
-  throw new Error(`Invalid --context env="${deploymentEnv}". Must be "poc" or "prod".`);
+const deploymentEnvValue = app.node.tryGetContext('env') as string | undefined;
+if (
+  deploymentEnvValue !== undefined &&
+  deploymentEnvValue !== 'poc' &&
+  deploymentEnvValue !== 'prod'
+) {
+  throw new Error(`Invalid --context env="${deploymentEnvValue}". Must be "poc" or "prod".`);
 }
+const deploymentEnv: DeploymentEnv = deploymentEnvValue === 'prod' ? 'prod' : 'poc';
 const config = getConfig(deploymentEnv);
 
 const apiDomainName = app.node.tryGetContext('apiDomainName') as string | undefined;
+const apiOriginDomainName = app.node.tryGetContext('apiOriginDomainName') as string | undefined;
 const apiCertificateArn = app.node.tryGetContext('apiCertificateArn') as string | undefined;
-if (!apiDomainName || !apiCertificateArn) {
+const cloudFrontOriginFacingPrefixListId = app.node.tryGetContext(
+  'cloudFrontOriginFacingPrefixListId',
+) as string | undefined;
+if (
+  !apiDomainName ||
+  !apiOriginDomainName ||
+  !apiCertificateArn ||
+  !cloudFrontOriginFacingPrefixListId
+) {
   throw new Error(
-    'apiDomainName and apiCertificateArn context values are required. ' +
-      'The ALB and CloudFront origin use HTTPS.',
+    'apiDomainName, apiOriginDomainName, apiCertificateArn, and ' +
+      'cloudFrontOriginFacingPrefixListId are required. apiOriginDomainName must resolve to the ALB ' +
+      'and be covered by the ACM certificate. The ALB is HTTPS-only and restricted to CloudFront origin traffic.',
   );
 }
 
@@ -99,7 +114,9 @@ const api = new ApiStack(app, 'TarpanApi', {
   database,
   sentryDsn,
   apiDomainName,
+  apiOriginDomainName,
   apiCertificateArn,
+  cloudFrontOriginFacingPrefixListId,
 });
 
 const lambdaStack = new LambdaStack(app, 'TarpanLambda', {
@@ -119,7 +136,7 @@ const lambdaStack = new LambdaStack(app, 'TarpanLambda', {
 new FrontendStack(app, 'TarpanFrontend', {
   ...stackProps,
   config,
-  albDnsName: api.loadBalancerDnsName,
+  apiOriginDomainName,
 });
 
 // ── Observability ─────────────────────────────────────────────────────────

@@ -16,7 +16,10 @@ from sentry_sdk.integrations.aws_lambda import AwsLambdaIntegration
 
 from src import api_client, extractor, pdf_processor, s3_client, template_engine
 from src.config import settings
+from src.logging_config import configure_logging
 from src.models import GenerationRequest
+
+configure_logging()
 
 # Initialize Sentry at module load time so it wraps the Lambda handler.
 # No-op when SENTRY_DSN is absent or empty.

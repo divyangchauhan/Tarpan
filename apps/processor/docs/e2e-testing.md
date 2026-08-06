@@ -160,13 +160,13 @@ Press `Ctrl+C` to stop.
 #### Expected log output
 
 ```
-INFO worker          Worker started, polling queues: ['http://localhost:4566/.../tarpan-document-processing', 'http://localhost:4566/.../tarpan-document-generation']
-INFO src.s3_client   Downloading object  bucket=tarpan-uploads  key=documents/test-doc-001.pdf
-INFO src.pdf_processor Using text extraction for PDF  text_length=2098
-INFO src.extractor   Calling Claude API for extraction  block_count=1
-INFO src.extractor   Extraction complete
-INFO src.api_client  Reporting processing result  document_id=test-doc-001  status=PROCESSED
-INFO worker          Message deleted from queue  message_id=...
+{"timestamp":"2026-08-06T12:00:00+00:00","level":"INFO","logger":"worker","message":"Worker started, polling queues","queue_urls":["http://localhost:4566/.../tarpan-document-processing","http://localhost:4566/.../tarpan-document-generation"]}
+{"timestamp":"2026-08-06T12:00:01+00:00","level":"INFO","logger":"src.s3_client","message":"Downloading object","bucket":"tarpan-uploads","key":"documents/test-doc-001.pdf"}
+{"timestamp":"2026-08-06T12:00:01+00:00","level":"INFO","logger":"src.pdf_processor","message":"Using text extraction for PDF","text_length":2098}
+{"timestamp":"2026-08-06T12:00:02+00:00","level":"INFO","logger":"src.extractor","message":"Calling Claude API for extraction","block_count":1}
+{"timestamp":"2026-08-06T12:00:03+00:00","level":"INFO","logger":"src.extractor","message":"Extraction complete"}
+{"timestamp":"2026-08-06T12:00:03+00:00","level":"INFO","logger":"src.api_client","message":"Reporting processing result","document_id":"test-doc-001","status":"PROCESSED"}
+{"timestamp":"2026-08-06T12:00:03+00:00","level":"INFO","logger":"worker","message":"Message deleted from queue","message_id":"..."}
 ```
 
 For the scanned fixture you will see instead:

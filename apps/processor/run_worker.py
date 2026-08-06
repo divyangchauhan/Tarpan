@@ -8,7 +8,6 @@ Mimics the SQS → Lambda trigger that CDK wires up in production.
 Press Ctrl+C to stop.
 """
 
-import json
 import logging
 import time
 from typing import Any
@@ -17,11 +16,9 @@ import boto3
 
 from src.config import settings
 from src.handler import handler
+from src.logging_config import configure_logging
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s %(name)s %(message)s",
-)
+configure_logging()
 logger = logging.getLogger("worker")
 
 _QUEUES = [
