@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
-import { ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { TerminusModule } from '@nestjs/terminus';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -32,6 +33,11 @@ import { TemplatesModule } from './templates/templates.module';
     EventsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    // Apply @Throttle() metadata to every HTTP request. Routes can opt out
+    // explicitly with @SkipThrottle() (health checks and internal callbacks).
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+  ],
 })
 export class AppModule {}
