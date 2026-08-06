@@ -9,6 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { DocumentGenerationJob, DocumentStatus, GeneratedDocumentStatus } from '@tarpan/shared';
+import { CaseEntity } from '../entities/case.entity';
 import { GeneratedDocumentEntity } from '../entities/generated-document.entity';
 import { CasesService } from '../cases/cases.service';
 import { DocumentsService } from '../documents/documents.service';
@@ -17,6 +18,43 @@ import { S3Service } from '../aws/s3.service';
 import { TemplatesService } from '../templates/templates.service';
 import { CreateGeneratedDocumentDto } from './dto/create-generated-document.dto';
 import { GenerationResultDto } from './dto/generation-result.dto';
+
+function buildGenerationDeceased(
+  extractedData: NonNullable<DocumentGenerationJob['deceased']>,
+  deceasedInfo: CaseEntity['deceasedInfo'],
+): DocumentGenerationJob['deceased'] {
+  if (!deceasedInfo) return extractedData;
+
+  const result = { ...extractedData } as Record<string, unknown>;
+  const name = [deceasedInfo.firstName, deceasedInfo.middleName, deceasedInfo.lastName]
+    .filter(Boolean)
+    .join(' ');
+
+  if (name) {
+    result.full_name = name;
+    result.fullName = name;
+  }
+
+  const fields: Array<[keyof NonNullable<CaseEntity['deceasedInfo']>, string, string]> = [
+    ['firstName', 'first_name', 'firstName'],
+    ['middleName', 'middle_name', 'middleName'],
+    ['lastName', 'last_name', 'lastName'],
+    ['dateOfBirth', 'date_of_birth', 'dateOfBirth'],
+    ['dateOfDeath', 'date_of_death', 'dateOfDeath'],
+    ['placeOfDeath', 'place_of_death', 'placeOfDeath'],
+    ['socialSecurityNumber', 'social_security_number', 'socialSecurityNumber'],
+  ];
+
+  for (const [caseKey, snakeKey, camelKey] of fields) {
+    const value = deceasedInfo[caseKey];
+    if (value !== undefined) {
+      result[snakeKey] = value;
+      result[camelKey] = value;
+    }
+  }
+
+  return result as DocumentGenerationJob['deceased'];
+}
 
 @Injectable()
 export class GeneratedDocumentsService {
@@ -71,8 +109,10 @@ export class GeneratedDocumentsService {
       templateId,
       caseId,
       documentId: dto.documentId,
-      // extractedData is stored with snake_case keys (as-is from the Python processor)
-      deceased: document.extractedData as unknown as DocumentGenerationJob['deceased'],
+      deceased: buildGenerationDeceased(
+        document.extractedData as unknown as DocumentGenerationJob['deceased'],
+        caseEntity.deceasedInfo,
+      ),
       executorName: executorInfo.name,
       executorAddress: executorInfo.address,
       executorRelationship: executorInfo.relationship,

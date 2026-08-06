@@ -174,6 +174,42 @@ describe('GeneratedDocumentsService', () => {
       expect(result).toEqual(mockGeneratedDoc);
     });
 
+    it('should use reviewed deceased values in the generation job', async () => {
+      mockCasesService.findOne.mockResolvedValue({
+        ...mockCase,
+        deceasedInfo: {
+          ...mockCase.deceasedInfo,
+          firstName: 'John',
+          middleName: 'A.',
+          lastName: 'Corrected',
+        },
+      });
+      mockDocumentsService.findOne.mockResolvedValue({
+        ...mockDocument,
+        extractedData: {
+          full_name: 'Jon Wrong',
+          first_name: 'Jon',
+          last_name: 'Wrong',
+          date_of_death: '2024-11-20',
+          place_of_death: 'Springfield, IL',
+        },
+      });
+
+      await service.create('user-id', 'case-id', dto);
+
+      expect(mockSqsService.sendMessage).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          deceased: expect.objectContaining({
+            full_name: 'John A. Corrected',
+            first_name: 'John',
+            last_name: 'Corrected',
+          }),
+        }),
+      );
+    });
+
     it('should use the correct template ID for every institution type', async () => {
       const cases: Array<[InstitutionType, string]> = [
         // Government
