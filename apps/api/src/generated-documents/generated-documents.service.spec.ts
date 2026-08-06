@@ -406,7 +406,7 @@ describe('GeneratedDocumentsService', () => {
     it('allows only one concurrent callback to transition GENERATING', async () => {
       let current = { ...mockGeneratedDoc };
       mockGeneratedDocRepository.update.mockImplementation(
-        async (
+        (
           criteria: { id: string; status: GeneratedDocumentStatus },
           values: Partial<GeneratedDocumentEntity>,
         ) => {
@@ -417,7 +417,7 @@ describe('GeneratedDocumentsService', () => {
           return { affected: 1 };
         },
       );
-      mockGeneratedDocRepository.findOne.mockImplementation(async () => current);
+      mockGeneratedDocRepository.findOne.mockImplementation(() => current);
 
       const [ready, failed] = await Promise.all([
         service.handleGenerationResult({
